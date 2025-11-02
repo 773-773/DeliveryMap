@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黒モダンA 月表示付き（PocketBase版）</title>
+<title>黒モダンA 月表示付き（PocketBase対応版）</title>
 <style>
 body { font-family: sans-serif; margin:0; padding:6px; background:#0d0d0d; color:#fff; }
 #requestBtn { display:inline-block; margin:2px 0 8px 0; font-size:0.7em; color:#66ff99; text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; }
@@ -40,11 +40,13 @@ h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
 
 <div id="storeContainer"></div>
 
-<script type="module">
-import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+<!-- ✅ PocketBase公式UMDビルド（module禁止環境でも動く） -->
+<script src="https://unpkg.com/pocketbase@0.21.2/dist/pocketbase.umd.js"></script>
+
+<script>
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
-// ---- 🟢 ログイン状態の確認 ----
+// ---- ログイン状態の確認 ----
 if (!pb.authStore.isValid) {
   console.log("未ログイン: 投票時にログイン画面へ誘導します");
 } else {
@@ -105,7 +107,7 @@ function renderStores(stores){
     }else{
       const sel=document.createElement("select");voteOptions.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});
       const btn=document.createElement("button");btn.textContent="投票";
-      btn.onclick=()=>vote(s.id,sel.value);
+      btn.onclick=function(){vote(s.id,sel.value)};
       voteBox.appendChild(sel);voteBox.appendChild(btn);
     }
     left.appendChild(voteBox);
@@ -117,18 +119,21 @@ function renderStores(stores){
       const acc=document.createElement("button");acc.className="accordion";acc.textContent=`${m}の結果`;
       const panel=document.createElement("div");panel.className="panel";
       let txt="";voteOptions.forEach(v=>{const c=s.votes?.[m]?.[v]||0;txt+=`・${v}: ${c}人 `;});
-      panel.textContent=txt;acc.onclick=()=>panel.style.display=panel.style.display==="block"?"none":"block";right.appendChild(acc);right.appendChild(panel);
+      panel.textContent=txt;
+      acc.onclick=function(){panel.style.display=panel.style.display==="block"?"none":"block"};
+      right.appendChild(acc);right.appendChild(panel);
     });
 
-    card.appendChild(left);card.appendChild(right);container.appendChild(card);
+    card.appendChild(left);
+    card.appendChild(right);
+    container.appendChild(card);
   });
 }
 
 async function vote(id,choice){
-  // ---- 🟡 ログインチェック追加 ----
   if (!pb.authStore.isValid) {
     alert("投票するにはログインが必要です。ログインページへ移動します。");
-    window.location.href = "/login.html";  // ← あなたのログインページパスに合わせて変更
+    window.location.href = "/login.html";
     return;
   }
 
@@ -136,7 +141,9 @@ async function vote(id,choice){
   if(localStorage.getItem(key)){alert("今月は投票済");return;}
   try{
     const s=await pb.collection("stores").getOne(id);
-    const votes=s.votes||{};votes[currentMonth]=votes[currentMonth]||{};votes[currentMonth][choice]=(votes[currentMonth][choice]||0)+1;
+    const votes=s.votes||{};
+    votes[currentMonth]=votes[currentMonth]||{};
+    votes[currentMonth][choice]=(votes[currentMonth][choice]||0)+1;
     await pb.collection("stores").update(id,{votes});
     localStorage.setItem(key,"1");
     loadPage();
@@ -147,4 +154,4 @@ loadPage();
 </script>
 </body>
 </html>
-<!-- force update #午後 -->
+<!-- force update #PocketBase_UMD -->
