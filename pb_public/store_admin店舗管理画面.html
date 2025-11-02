@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>店舗管理画面（PocketBase版・住所分割編集）</title>
+<style>
+  body {
+    font-family: sans-serif;
+    background: #111;
+    color: #fff;
+    margin: 20px;
+  }
+  input {
+    padding: 6px;
+    margin: 4px 0;
+    font-size: 14px;
+    border-radius: 6px;
+    border: none;
+  }
+  #searchName {
+    width: 60%;
+    max-width: 400px;
+  }
+  button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 6px;
+    background: #0f0;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .store-card {
+    border: 1px solid #333;
+    background: #222;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(255,255,255,0.1);
+  }
+  .store-card input {
+    width: 95%;
+  }
+</style>
+
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+
+// === PocketBase 接続 ===
+const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+// === 検索 ===
+window.searchStore = async () => {
+  const keyword = document.getElementById("searchName").value.trim();
+  const resultsDiv = document.getElementById("results");
+  resultsDiv.innerHTML = "検索中...";
+
+  try {
+    // PocketBaseの全件取得（最大200件）
+    const resultList = await pb.collection("stores").getList(1, 200, { sort: "name" });
+
+    // 部分一致フィルタ
+    const matched = resultList.items.filter(store => (store.name || "").includes(keyword));
+
+    if (matched.length === 0) {
+      resultsDiv.innerHTML = "該当する店舗がありません。";
+      return;
+    }
+
+    resultsDiv.innerHTML = "";
+    matched.forEach(store => {
+      const div = document.createElement("div");
+      div.className = "store-card";
+      div.innerHTML = `
+        <b>店舗名：</b><br>
+        <input type="text" id="name_${store.id}" value="${store.name || ""}"><br>
+        <b>都道府県：</b><br>
+        <input type="text" id="prefecture_${store.id}" value="${store.prefecture || ""}"><br>
+        <b>市区町村：</b><br>
+        <input type="text" id="city_${store.id}" value="${store.city || ""}"><br>
+        <b>それ以降の住所：</b><br>
+        <input type="text" id="address_${store.id}" value="${store.address || ""}"><br>
+        <b>電話番号：</b><br>
+        <input type="text" id="tel_${store.id}" value="${store.tel || ""}"><br>
+        <button onclick="updateStore('${store.id}')">更新</button>
+      `;
+      resultsDiv.appendChild(div);
+    });
+  } catch (err) {
+    console.error("PocketBase取得エラー:", err);
+    resultsDiv.innerHTML = "データ取得エラー。";
+  }
+};
+
+// === 更新 ===
+window.updateStore = async (id) => {
+  const name = document.getElementById(`name_${id}`).value.trim();
+  const prefecture = document.getElementById(`prefecture_${id}`).value.trim();
+  const city = document.getElementById(`city_${id}`).value.trim();
+  const address = document.getElementById(`address_${id}`).value.trim();
+  const tel = document.getElementById(`tel_${id}`).value.trim();
+
+  if (!name) return alert("店舗名は必須です");
+
+  try {
+    await pb.collection("stores").update(id, {
+      name,
+      prefecture,
+      city,
+      address,
+      tel,
+    });
+    alert("✅ 更新しました");
+  } catch (err) {
+    console.error("更新エラー:", err);
+    alert("❌ 更新に失敗しました");
+  }
+};
+</script>
+</head>
+
+<body>
+<h2>店舗管理画面（PocketBase版・住所分割編集）</h2>
+<input type="text" id="searchName" placeholder="店舗名で検索">
+<button onclick="searchStore()">検索</button>
+
+<div id="results" style="margin-top:20px;"></div>
+</body>
+</html>

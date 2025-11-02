@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>黒モダンA 月表示付き（PocketBase版）</title>
+<style>
+body { font-family: sans-serif; margin:0; padding:6px; background:#0d0d0d; color:#fff; }
+#requestBtn { display:inline-block; margin:2px 0 8px 0; font-size:0.7em; color:#66ff99; text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; }
+h2 { margin-bottom:4px; line-height:1.2em; }
+h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
+.searchContainer { display:flex; flex-direction:column; gap:4px; margin-bottom:8px; }
+.searchContainer div { display:flex; gap:4px; }
+.searchContainer input, .searchContainer select { padding:6px; border-radius:6px; border:1px solid #333; font-size:0.9em; flex:1; background:#111; color:#fff; }
+.searchContainer button { padding:6px; border-radius:6px; border:1px solid #333; font-size:0.9em; cursor:pointer; background:#ffa500; color:#000; }
+.storeCard { display:flex; justify-content:space-between; padding:6px; margin-bottom:6px; border:1px solid #222; border-radius:6px; background:#111; font-size:0.8em; }
+.leftColumn { flex:1; margin-right:6px; display:flex; flex-direction:column; gap:4px; }
+.storeName { font-weight:bold; color:#66ff99; }
+.address { font-size:0.7em; color:#ccc; }
+.rightColumn { flex:1; background:#1a1a1a; padding:4px; border-radius:4px; font-size:0.7em; text-align:left; }
+.voteContainer { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+.voteCount { font-weight:bold; color:#ff6600; }
+.monthLabel { color:#fff; font-weight:bold; }
+.accordion { font-size:0.7em; padding:2px 4px; margin-top:2px; background:#333; border:none; border-radius:3px; cursor:pointer; width:100%; text-align:left; color:#fff; }
+.panel { display:none; font-size:0.7em; padding-left:4px; background:#222; border-radius:2px; margin-bottom:2px; color:#ccc; }
+</style>
+</head>
+<body>
+<h2>調理待ち時間予測<small>※お店到着後に商品受取までにかかった時間</small></h2>
+<button id="requestBtn" onclick="location.href='request.html'">掲載店舗を申請する</button>
+
+<div class="searchContainer">
+  <input id="nameInput" placeholder="店舗名で検索">
+  <div>
+    <select id="prefSelect"><option value="">都道府県を選択</option></select>
+    <select id="citySelect" style="display:none;"><option value="">市区町村を選択</option></select>
+  </div>
+  <button id="searchBtn">検索</button>
+</div>
+
+<div id="storeContainer"></div>
+
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+// ---- 🟢 ログイン状態の確認 ----
+if (!pb.authStore.isValid) {
+  console.log("未ログイン: 投票時にログイン画面へ誘導します");
+} else {
+  console.log("ログイン中:", pb.authStore.model?.email);
+}
+
+// 都道府県リスト
+const prefs=["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
+const prefSelect=document.getElementById("prefSelect");
+prefs.forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p;prefSelect.appendChild(o);});
+const citySelect=document.getElementById("citySelect");
+
+let currentPage=1,pageSize=20;
+const voteOptions=["ほぼなし","2〜3分","5〜10分","10分以上"];
+const now=new Date(),currentMonth=`${now.getFullYear()}年${now.getMonth()+1}月`;
+const pastMonths=[...Array(2)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-i-1,1);return `${d.getFullYear()}年${d.getMonth()+1}月`;});
+let browserId=localStorage.getItem("browserId");if(!browserId){browserId="id-"+Math.random().toString(36).slice(2);localStorage.setItem("browserId",browserId);}
+
+prefSelect.onchange=async()=>{
+  const pref=prefSelect.value;
+  if(!pref){citySelect.style.display="none";return;}
+  const res=await pb.collection("stores").getList(1,500,{filter:`prefecture="${pref}"`});
+  const cities=[...new Set(res.items.map(i=>i.city).filter(Boolean))].sort();
+  citySelect.innerHTML='<option value="">市区町村を選択</option>';
+  cities.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;citySelect.appendChild(o);});
+  citySelect.style.display="block";
+};
+
+document.getElementById("searchBtn").onclick=()=>loadPage(1);
+
+async function loadPage(page=1){
+  const container=document.getElementById("storeContainer");
+  container.innerHTML="<p>読み込み中...</p>";
+  const name=document.getElementById("nameInput").value.trim();
+  const pref=prefSelect.value,city=citySelect.value;
+  let filter="";
+  if(name)filter+=`name~"${name}"`;
+  if(pref)filter+=(filter?" && ":"")+`prefecture="${pref}"`;
+  if(city)filter+=(filter?" && ":"")+`city="${city}"`;
+  try{
+    const list=await pb.collection("stores").getList(page,pageSize,{filter,sort:"name"});
+    renderStores(list.items);
+  }catch(e){console.error(e);container.textContent="読み込みエラー";}
+}
+
+function renderStores(stores){
+  const container=document.getElementById("storeContainer");
+  container.innerHTML="";
+  if(!stores.length){container.textContent="該当店舗なし";return;}
+  stores.forEach(s=>{
+    const card=document.createElement("div");card.className="storeCard";
+    const left=document.createElement("div");left.className="leftColumn";
+    left.innerHTML=`<div class="storeName">${s.name}</div><div class="address">${s.prefecture||""} ${s.city||""} ${s.address||""}</div>`;
+    const voteBox=document.createElement("div");voteBox.className="voteContainer";
+    const votedKey=`${s.id}-${currentMonth}-${browserId}`;
+    if(localStorage.getItem(votedKey)){
+      const tag=document.createElement("span");tag.textContent="今月は投票済";tag.style.background="#ffa500";tag.style.color="#000";tag.style.padding="2px 4px";tag.style.borderRadius="4px";voteBox.appendChild(tag);
+    }else{
+      const sel=document.createElement("select");voteOptions.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});
+      const btn=document.createElement("button");btn.textContent="投票";
+      btn.onclick=()=>vote(s.id,sel.value);
+      voteBox.appendChild(sel);voteBox.appendChild(btn);
+    }
+    left.appendChild(voteBox);
+
+    const right=document.createElement("div");right.className="rightColumn";
+    let nowLine="";voteOptions.forEach(v=>{const c=s.votes?.[currentMonth]?.[v]||0;nowLine+=`・${v}: <span class='voteCount'>${c}人</span> `;});
+    right.innerHTML=`<div>${currentMonth} ${nowLine}</div>`;
+    pastMonths.forEach(m=>{
+      const acc=document.createElement("button");acc.className="accordion";acc.textContent=`${m}の結果`;
+      const panel=document.createElement("div");panel.className="panel";
+      let txt="";voteOptions.forEach(v=>{const c=s.votes?.[m]?.[v]||0;txt+=`・${v}: ${c}人 `;});
+      panel.textContent=txt;acc.onclick=()=>panel.style.display=panel.style.display==="block"?"none":"block";right.appendChild(acc);right.appendChild(panel);
+    });
+
+    card.appendChild(left);card.appendChild(right);container.appendChild(card);
+  });
+}
+
+async function vote(id,choice){
+  // ---- 🟡 ログインチェック追加 ----
+  if (!pb.authStore.isValid) {
+    alert("投票するにはログインが必要です。ログインページへ移動します。");
+    window.location.href = "/login.html";  // ← あなたのログインページパスに合わせて変更
+    return;
+  }
+
+  const key=`${id}-${currentMonth}-${browserId}`;
+  if(localStorage.getItem(key)){alert("今月は投票済");return;}
+  try{
+    const s=await pb.collection("stores").getOne(id);
+    const votes=s.votes||{};votes[currentMonth]=votes[currentMonth]||{};votes[currentMonth][choice]=(votes[currentMonth][choice]||0)+1;
+    await pb.collection("stores").update(id,{votes});
+    localStorage.setItem(key,"1");
+    loadPage();
+  }catch(e){console.error("投票エラー",e);}
+}
+
+loadPage();
+</script>
+</body>
+</html>

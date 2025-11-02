@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>ログイン</title>
+  <style>
+    body { background:#111; color:#fff; font-family:sans-serif; padding:20px; }
+    input, button { display:block; margin:8px 0; padding:8px; width:100%; max-width:300px; }
+    button { background:#66ff99; border:none; cursor:pointer; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <h2>ログイン</h2>
+  <form id="loginForm">
+    <input type="email" id="email" placeholder="メールアドレス" required>
+    <input type="password" id="password" placeholder="パスワード" required>
+    <button type="submit">ログイン</button>
+  </form>
+  <p id="msg"></p>
+
+  <script type="module">
+  import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
+  const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+  const form = document.getElementById("loginForm");
+  const msg = document.getElementById("msg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await pb.collection("users").authWithPassword(form.email.value, form.password.value);
+      msg.textContent = "ログイン成功！";
+      // ログインしたらトップに戻す
+      window.location.href = "/";
+    } catch (err) {
+      msg.textContent = "ログイン失敗：" + err.message;
+    }
+  });
+  </script>
+</body>
+</html>

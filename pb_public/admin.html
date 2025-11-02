@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>店舗申請 承認（PocketBase対応）</title>
+<style>
+  :root{--bg:#0d0d0d;--card:#1a1a1a;--muted:#ccc;--accent:#66ff99;--danger:#ff6666;--edit:#ffaa00}
+  body{margin:0;padding:12px;font-family:sans-serif;background:var(--bg);color:#fff}
+  h2{color:var(--accent);margin:0 0 12px 0}
+  #requestsContainer{display:flex;flex-direction:column;gap:8px}
+
+  .requestCard{background:var(--card);border:1px solid #666;border-radius:8px;padding:10px}
+  .requestRow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .fieldLabel{width:92px;font-size:0.9em;color:var(--muted);min-width:80px}
+  .fieldValue{font-size:0.95em}
+  .buttonGroup{margin-top:8px;display:flex;gap:8px;flex-wrap:wrap}
+  button{padding:6px 10px;border-radius:6px;border:none;cursor:pointer}
+  .approveBtn{background:var(--accent);color:#000}
+  .rejectBtn{background:var(--danger);color:#000}
+  .editBtn{background:var(--edit);color:#000}
+
+  /* 編集モーダル */
+  .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:2000;align-items:center;justify-content:center}
+  .modalInner{background:#111;border-radius:8px;padding:14px;width:94%;max-width:520px;color:#fff}
+  .modalInner h3{margin:0 0 8px 0;color:var(--accent)}
+  .formRow{margin:8px 0}
+  input[type="text"], select{width:100%;padding:8px;border-radius:6px;border:1px solid #333;background:#222;color:#fff}
+
+  .modalActions{display:flex;gap:8px;justify-content:space-between;margin-top:12px}
+  .saveBtn{background:var(--accent);color:#000;padding:8px;border-radius:6px}
+  .cancelBtn{background:#ff6666;color:#000;padding:8px;border-radius:6px}
+
+  /* 候補モーダル */
+  .candidateList{margin-top:8px;border-top:1px dashed #333;padding-top:8px;color:var(--muted);font-size:0.9em}
+  .candidateItem{padding:6px;border-radius:6px;background:#0f0f0f;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+  .candidateItem small{color:#aaa}
+  .candidateSelect{margin-right:8px}
+</style>
+</head>
+<body>
+
+<h2>店舗申請 承認管理（PocketBase版）</h2>
+<div id="requestsContainer">読み込み中…</div>
+
+<!-- 編集モーダル -->
+<div id="editModal" class="modal" role="dialog" aria-hidden="true">
+  <div class="modalInner">
+    <h3>申請内容を編集</h3>
+    <div class="formRow"><label>店舗名</label><input id="m_name" type="text" /></div>
+    <div class="formRow"><label>都道府県</label><select id="m_pref"><option value="">都道府県を選択</option></select></div>
+    <div class="formRow"><label>市区町村</label><select id="m_city"><option value="">市区町村を選択</option></select></div>
+    <div class="formRow"><label>以下住所</label><input id="m_addr" type="text" /></div>
+    <div class="modalActions">
+      <button class="saveBtn" id="m_save">保存</button>
+      <button class="cancelBtn" id="m_cancel">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- 候補確認モーダル -->
+<div id="candidateModal" class="modal" role="dialog" aria-hidden="true">
+  <div class="modalInner">
+    <h3>既存店舗候補が見つかりました</h3>
+    <div id="candidateContainer" class="candidateList"></div>
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end">
+      <button id="useExistingBtn" class="cancelBtn">既存店舗で却下</button>
+      <button id="forceApproveBtn" class="saveBtn">新規として承認</button>
+    </div>
+  </div>
+</div>
+
+<!-- ここにスクリプトを最後に置く -->
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+
+document.addEventListener("DOMContentLoaded", () => {
+  const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+  const requestsContainer = document.getElementById('requestsContainer');
+  const editModal = document.getElementById('editModal');
+  const m_name = document.getElementById('m_name');
+  const m_pref = document.getElementById('m_pref');
+  const m_city = document.getElementById('m_city');
+  const m_addr = document.getElementById('m_addr');
+  const m_save = document.getElementById('m_save');
+  const m_cancel = document.getElementById('m_cancel');
+
+  const candidateModal = document.getElementById('candidateModal');
+  const candidateContainer = document.getElementById('candidateContainer');
+  const useExistingBtn = document.getElementById('useExistingBtn');
+  const forceApproveBtn = document.getElementById('forceApproveBtn');
+
+  let allRequests = [];
+  let allStores = [];
+  let currentRequest = null;
+  let selectedCandidateId = null;
+
+  const prefectures = [
+    "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+    "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+    "新潟県","富山県","石川県","福井県","山梨県","長野県",
+    "岐阜県","静岡県","愛知県","三重県",
+    "滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県",
+    "鳥取県","島根県","岡山県","広島県","山口県",
+    "徳島県","香川県","愛媛県","高知県",
+    "福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"
+  ];
+
+  prefectures.forEach(p=>{
+    const opt=document.createElement('option');
+    opt.value=p; opt.textContent=p;
+    m_pref.appendChild(opt);
+  });
+
+  async function loadAllData(){
+    const [reqList, storeList] = await Promise.all([
+      pb.collection("storeRequests").getFullList({ sort:"-created" }),
+      pb.collection("stores").getFullList({ sort:"-created" })
+    ]);
+    allRequests = reqList;
+    allStores = storeList;
+    renderRequests();
+  }
+
+  function renderRequests(){
+    requestsContainer.innerHTML='';
+    if(allRequests.length===0){
+      requestsContainer.textContent='申請はありません';
+      return;
+    }
+    allRequests.forEach(r=>{
+      const card=document.createElement('div');
+      card.className='requestCard';
+      card.innerHTML=`
+        <div class="requestRow"><div class="fieldLabel">店舗名</div><div class="fieldValue">${escapeHtml(r.name)}</div></div>
+        <div class="requestRow"><div class="fieldLabel">都道府県</div><div class="fieldValue">${escapeHtml(r.prefecture)}</div></div>
+        <div class="requestRow"><div class="fieldLabel">市区町村</div><div class="fieldValue">${escapeHtml(r.city)}</div></div>
+        <div class="requestRow"><div class="fieldLabel">住所</div><div class="fieldValue">${escapeHtml(r.address)}</div></div>
+      `;
+      const grp=document.createElement('div');
+      grp.className='buttonGroup';
+
+      const editBtn=document.createElement('button');
+      editBtn.className='editBtn'; editBtn.textContent='編集';
+      editBtn.onclick=()=>{
+        currentRequest=r;
+        m_name.value=r.name||'';
+        m_pref.value=r.prefecture||'';
+        fillCityOptions(m_pref.value);
+        m_city.value=r.city||'';
+        m_addr.value=r.address||'';
+        editModal.style.display='flex';
+      };
+
+      const approveBtn=document.createElement('button');
+      approveBtn.className='approveBtn'; approveBtn.textContent='承認';
+      approveBtn.onclick=()=>showCandidateModal(r);
+
+      const rejectBtn=document.createElement('button');
+      rejectBtn.className='rejectBtn'; rejectBtn.textContent='却下';
+      rejectBtn.onclick=async()=>{
+        if(!confirm('本当に却下しますか？'))return;
+        await pb.collection("storeRequests").delete(r.id);
+        alert('却下しました');
+        loadAllData();
+      };
+
+      grp.append(editBtn,approveBtn,rejectBtn);
+      card.appendChild(grp);
+      requestsContainer.appendChild(card);
+    });
+  }
+
+  function escapeHtml(str=''){return str.replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[s]));}
+
+  function fillCityOptions(pref){
+    if(!pref){m_city.innerHTML='<option value="">市区町村を選択</option>';return;}
+    const cities=[...new Set(allRequests.filter(r=>r.prefecture===pref).map(r=>r.city).filter(Boolean))].sort();
+    m_city.innerHTML='<option value="">市区町村を選択</option>'+cities.map(c=>`<option value="${c}">${c}</option>`).join('');
+  }
+
+  function findSimilarStores(req){
+    const nameLower=(req.name||'').toLowerCase();
+    return allStores
+      .filter(s=>s.prefecture===req.prefecture&&s.city===req.city)
+      .map(s=>{
+        const sname=(s.name||'').toLowerCase();
+        let score=0;
+        if(sname===nameLower)score+=100;
+        if(sname.includes(nameLower))score+=50;
+        if(nameLower.includes(sname))score+=40;
+        return {...s,score};
+      })
+      .filter(x=>x.score>0).sort((a,b)=>b.score-a.score);
+  }
+
+  function showCandidateModal(r){
+    currentRequest=r;
+    const candidates=findSimilarStores(r);
+    candidateContainer.innerHTML='';
+    if(candidates.length===0){
+      if(confirm('候補なし。新規登録しますか？')) approveAsNew();
+      return;
+    }
+    candidates.forEach(c=>{
+      const item=document.createElement('div');
+      item.className='candidateItem';
+      const radio=document.createElement('input');
+      radio.type='radio'; radio.name='candidate'; radio.value=c.id;
+      radio.onclick=()=>selectedCandidateId=c.id;
+      const text=document.createElement('div');
+      text.innerHTML=`<b>${escapeHtml(c.name)}</b><br><small>${escapeHtml(c.prefecture)} ${escapeHtml(c.city)} ${escapeHtml(c.address||'')}</small>`;
+      item.append(radio,text);
+      candidateContainer.appendChild(item);
+    });
+    candidateModal.style.display='flex';
+  }
+
+  useExistingBtn.onclick=async()=>{
+    if(!selectedCandidateId){alert('候補を選んでください');return;}
+    if(!confirm('既存店舗に統合（却下）しますか？'))return;
+    await pb.collection("storeRequests").delete(currentRequest.id);
+    candidateModal.style.display='none';
+    alert('申請を却下しました');
+    loadAllData();
+  };
+
+  forceApproveBtn.onclick=()=>approveAsNew();
+
+  async function approveAsNew(){
+    await pb.collection("stores").create({
+      name: currentRequest.name,
+      prefecture: currentRequest.prefecture,
+      city: currentRequest.city,
+      address: currentRequest.address,
+      votes: {}
+    });
+    await pb.collection("storeRequests").delete(currentRequest.id);
+    candidateModal.style.display='none';
+    alert('承認して新規登録しました');
+    loadAllData();
+  }
+
+  m_save.onclick=async()=>{
+    if(!currentRequest)return;
+    const data={
+      name:m_name.value.trim(),
+      prefecture:m_pref.value,
+      city:m_city.value,
+      address:m_addr.value.trim()
+    };
+    await pb.collection("storeRequests").update(currentRequest.id,data);
+    editModal.style.display='none';
+    loadAllData();
+  };
+
+  m_cancel.onclick=()=>editModal.style.display='none';
+  editModal.addEventListener('click',e=>{if(e.target===editModal)editModal.style.display='none';});
+  candidateModal.addEventListener('click',e=>{if(e.target===candidateModal)candidateModal.style.display='none';});
+
+  loadAllData();
+});
+</script>
+</body>
+</html>

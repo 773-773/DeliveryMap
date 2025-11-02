@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>新規登録</title>
+  <style>
+    body { background:#111; color:#fff; font-family:sans-serif; padding:20px; }
+    input, button { display:block; margin:8px 0; padding:8px; width:100%; max-width:300px; }
+    button { background:#66ff99; border:none; cursor:pointer; border-radius:6px; }
+  </style>
+</head>
+<body>
+  <h2>新規登録</h2>
+  <form id="signupForm">
+    <input type="email" id="email" placeholder="メールアドレス" required>
+    <input type="password" id="password" placeholder="パスワード" required>
+    <button type="submit">登録する</button>
+  </form>
+  <p id="msg"></p>
+
+  <script type="module">
+  import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
+  const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+  const form = document.getElementById("signupForm");
+  const msg = document.getElementById("msg");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await pb.collection("users").create({
+        email: form.email.value,
+        password: form.password.value,
+        passwordConfirm: form.password.value
+      });
+      msg.textContent = "登録完了！ログインページへ移動してください。";
+    } catch (err) {
+      msg.textContent = "登録失敗：" + err.message;
+    }
+  });
+  </script>
+</body>
+</html>

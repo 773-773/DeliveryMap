@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>店舗一括登録（PocketBase対応）</title>
+<style>
+  body {
+    background-color: #000;
+    color: #fff;
+    font-family: "Helvetica Neue", sans-serif;
+    padding: 20px;
+  }
+  textarea {
+    width: 100%;
+    height: 200px;
+    margin-bottom: 10px;
+    background: #111;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 10px;
+    font-size: 14px;
+  }
+  button {
+    background-color: #2ecc71;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    margin-right: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover { opacity: 0.8; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  th, td {
+    border: 1px solid #555;
+    padding: 8px;
+    text-align: left;
+  }
+  th { background: #222; }
+  td[contenteditable="true"] { background: #111; }
+  tr.duplicate { background-color: #440000; } /* 重複行は赤系 */
+  #status { margin-top: 10px; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<h2>📦 店舗一括登録ツール（PocketBase対応）</h2>
+<p>下記に <b>店名＋住所</b> を改行区切りで入力してください。</p>
+
+<textarea id="inputData" placeholder="例：
+マクドナルド渋谷店東京都渋谷区道玄坂2-11-1
+吉野家新宿店東京都新宿区西新宿1-7-1
+"></textarea>
+
+<div>
+  <button id="parseBtn">自動判別＋重複チェック</button>
+  <button id="registerBtn">登録</button>
+</div>
+
+<div id="status"></div>
+
+<table id="previewTable" style="display:none;">
+  <thead>
+    <tr>
+      <th>登録</th>
+      <th>店名</th>
+      <th>都道府県</th>
+      <th>市区町村</th>
+      <th>住所</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+// 都道府県リスト
+const prefectures = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+  "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+  "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+  "熊本県","大分県","宮崎県","鹿児島県","沖縄県"
+];
+
+const inputData = document.getElementById("inputData");
+const parseBtn = document.getElementById("parseBtn");
+const registerBtn = document.getElementById("registerBtn");
+const previewTable = document.getElementById("previewTable");
+const tbody = previewTable.querySelector("tbody");
+const status = document.getElementById("status");
+
+let parsedData = [];
+let existingStores = [];
+
+// ===== PocketBase から既存データを取得 =====
+async function fetchExistingStores() {
+  try {
+    const resultList = await pb.collection("stores").getList(1, 200, { sort: "name" });
+    existingStores = resultList.items.map(s => ({ name: s.name, city: s.city }));
+  } catch (err) {
+    console.error("PocketBase取得エラー:", err);
+    status.textContent = "⚠️ 既存データ取得に失敗しました。";
+  }
+}
+
+// ===== 自動判別＋重複チェック =====
+parseBtn.addEventListener("click", async () => {
+  await fetchExistingStores();
+
+  const lines = inputData.value.split("\n").map(l => l.trim()).filter(l => l);
+  parsedData = [];
+
+  lines.forEach(line => {
+    let pref = prefectures.find(p => line.includes(p));
+    if (!pref) return;
+
+    let [namePart, addressPart] = line.split(pref);
+    let cityMatch = addressPart.match(/^(.*?[市区町村])/);
+    let city = cityMatch ? cityMatch[1] : "";
+    let addr = addressPart.replace(city, "").trim();
+
+    const isDuplicate = existingStores.some(s => s.name === namePart.trim() && s.city === city);
+
+    parsedData.push({
+      name: namePart.trim(),
+      prefecture: pref,
+      city: city,
+      address: addr,
+      duplicate: isDuplicate,
+      register: true
+    });
+  });
+
+  renderTable(parsedData);
+  status.textContent = `${parsedData.length} 件を自動判別しました。重複は赤背景で表示しています。`;
+});
+
+// ===== テーブル描画 =====
+function renderTable(data) {
+  previewTable.style.display = "table";
+  tbody.innerHTML = "";
+
+  data.forEach((d) => {
+    const row = document.createElement("tr");
+    if (d.duplicate) row.classList.add("duplicate");
+
+    // チェックボックス
+    const checkCell = document.createElement("td");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = d.register;
+    checkbox.addEventListener("change", () => d.register = checkbox.checked);
+    checkCell.appendChild(checkbox);
+    row.appendChild(checkCell);
+
+    ["name", "prefecture", "city", "address"].forEach(key => {
+      const cell = document.createElement("td");
+      cell.textContent = d[key];
+      cell.contentEditable = "true";
+      cell.addEventListener("input", () => d[key] = cell.textContent.trim());
+      row.appendChild(cell);
+    });
+
+    tbody.appendChild(row);
+  });
+}
+
+// ===== 登録処理 =====
+registerBtn.addEventListener("click", async () => {
+  if (!parsedData.length) { alert("データを入力して自動判別してください。"); return; }
+  const toRegister = parsedData.filter(d => d.register);
+  if (!toRegister.length) { alert("チェックされたデータがありません。"); return; }
+
+  if (!confirm(`${toRegister.length} 件を登録します。よろしいですか？`)) return;
+
+  let addedCount = 0, skippedCount = 0;
+
+  for (const item of toRegister) {
+    try {
+      // 重複チェック
+      const check = await pb.collection("stores").getList(1, 1, {
+        filter: `name="${item.name}" && city="${item.city}"`
+      });
+      if (check.items.length > 0) {
+        console.warn("重複スキップ:", item.name);
+        skippedCount++;
+        continue;
+      }
+
+      await pb.collection("stores").create({
+        name: item.name,
+        prefecture: item.prefecture,
+        city: item.city,
+        address: item.address,
+        createdAt: new Date().toISOString()
+      });
+      addedCount++;
+    } catch (err) {
+      console.error("登録エラー:", err);
+    }
+  }
+
+  status.textContent = `✅ ${addedCount} 件を登録完了（${skippedCount} 件は重複スキップ）`;
+});
+</script>
+
+</body>
+</html>
