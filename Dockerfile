@@ -1,16 +1,32 @@
+
+# ベース：軽量 Alpine Linux
 FROM alpine:3.18
 
 WORKDIR /app
 
-RUN apk add --no-cache wget unzip bash
+RUN apk add --no-cache wget unzip bash ca-certificates
 
-RUN wget https://github.com/pocketbase/pocketbase/releases/latest/download/pocketbase_0.31.0_linux_amd64.zip -O pocketbase.zip
-RUN unzip pocketbase.zip -d .
-RUN chmod +x pocketbase
+ARG PB_VERSION=0.24.4
+ENV PB_FILE=pocketbase_${PB_VERSION}_linux_amd64.zip
 
-# ←ここで事前にデータ削除
-RUN rm -rf pb_data
+RUN wget -O pocketbase.zip "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${PB_FILE}" \
+  && unzip pocketbase.zip -d . \
+  && rm pocketbase.zip \
+  && chmod +x /app/pocketbase
 
-# ←起動時にも必ず削除するように変更（commandで指定）
-CMD sh -c "rm -rf pb_data && ./pocketbase serve --http=0.0.0.0:10000"
+# ✅ あなたの public フォルダをコピー
+COPY pb_public /app/pb_public
 
+# ✅ バックアップZIP
+COPY buckup_2025_10_31.zip /app/buckup_2025_10_31.zip
+
+# ✅ start.sh を確実に使う
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+VOLUME /app/pb_data
+
+EXPOSE 8080
+
+# ✅ RenderがPocketBaseを直接起動しないように完全固定
+ENTRYPOINT ["sh", "/app/start.sh"]
