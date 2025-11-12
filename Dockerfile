@@ -1,14 +1,3 @@
-COPY pb_hooks /app/pb_hooks
-
-
-
-
-
-
-
-# ✅ 公開フォルダとメールテンプレートを含める
-COPY pb_public /app/pb_public
-COPY pb_hooks /app/pb_hooks
 # ベース：軽量 Alpine Linux
 FROM alpine:3.18
 
@@ -24,13 +13,13 @@ ENV PB_FILE=pocketbase_${PB_VERSION}_linux_amd64.zip
 
 # ✅ PocketBase 本体を取得
 RUN wget -O pocketbase.zip "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/${PB_FILE}" \
-  && unzip pocketbase.zip -d . \
-  && rm pocketbase.zip \
-  && chmod +x /app/pocketbase
+    && unzip pocketbase.zip -d . \
+    && rm pocketbase.zip \
+    && chmod +x /app/pocketbase
 
-# ✅ pb_public フォルダ（HTML群）をコンテナにコピー
-# 🚨 注意: 「../pb_public」ではなく「pb_public」
+# ✅ 公開フォルダとメールテンプレートを含める
 COPY pb_public /app/pb_public
+COPY pb_hooks  /app/pb_hooks
 
 # ✅ （一時的に無効化）バックアップZIPのコピーを停止
 # COPY buckup_2025_10_31.zip /app/buckup_2025_10_31.zip
@@ -47,3 +36,4 @@ EXPOSE 8080
 
 # ✅ PocketBase を start.sh 経由で起動
 ENTRYPOINT ["sh", "/app/start.sh"]
+
