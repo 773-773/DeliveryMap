@@ -3,10 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黒モダンA 月表示付き（PocketBase版）</title>
+<title>黒モダンA 月表示付き（PocketBase版・日次投票対応）</title>
 <style>
 body { font-family: sans-serif; margin:0; padding:6px; background:#0d0d0d; color:#fff; }
-#requestBtn { display:inline-block; margin:2px 0 8px 0; font-size:0.7em; color:#66ff99; text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; }
+header { display:flex; justify-content:space-between; align-items:center; padding:6px; background:#111; border-bottom:1px solid #222; }
+header .status { font-size:0.8em; color:#ccc; }
+#logoutBtn { background:#333; color:#fff; border:none; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.8em; }
+#logoutBtn:hover { background:#555; }
+#requestBtn { display:inline-block; margin:6px 0 8px 0; font-size:0.7em; color:#66ff99; text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; }
 h2 { margin-bottom:4px; line-height:1.2em; }
 h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
 .searchContainer { display:flex; flex-direction:column; gap:4px; margin-bottom:8px; }
@@ -23,9 +27,30 @@ h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
 .monthLabel { color:#fff; font-weight:bold; }
 .accordion { font-size:0.7em; padding:2px 4px; margin-top:2px; background:#333; border:none; border-radius:3px; cursor:pointer; width:100%; text-align:left; color:#fff; }
 .panel { display:none; font-size:0.7em; padding-left:4px; background:#222; border-radius:2px; margin-bottom:2px; color:#ccc; }
+
+/* 🔹 モーダル */
+#loginModal {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  justify-content:center; align-items:center; z-index:9999;
+}
+#loginModal .box {
+  background:#111; padding:20px; border-radius:10px; text-align:center; width:280px;
+}
+#loginModal button {
+  width:100%; padding:8px; margin-top:8px; border:none; border-radius:6px; cursor:pointer;
+}
+#googleLoginBtn { background:#fff; color:#000; }
+#emailLoginBtn { background:#66ff99; color:#000; }
+#closeModalBtn { background:#333; color:#fff; }
 </style>
 </head>
 <body>
+
+<header>
+  <div class="status" id="userStatus">未ログイン</div>
+  <button id="logoutBtn" style="display:none;">ログアウト</button>
+</header>
+
 <h2>調理待ち時間予測<small>※お店到着後に商品受取までにかかった時間</small></h2>
 <button id="requestBtn" onclick="location.href='request.html'">掲載店舗を申請する</button>
 
@@ -40,16 +65,37 @@ h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
 
 <div id="storeContainer"></div>
 
+<!-- 🟢 ログイン選択モーダル -->
+<div id="loginModal">
+  <div class="box">
+    <h3 style="margin-top:0;">ログインが必要です</h3>
+    <p style="font-size:0.9em; color:#ccc;">どの方法でログインしますか？</p>
+    <button id="googleLoginBtn">Googleでログイン</button>
+    <button id="emailLoginBtn">メールアドレスでログイン</button>
+    <button id="closeModalBtn">キャンセル</button>
+  </div>
+</div>
+
 <script type="module">
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
-// ---- 🟢 ログイン状態の確認 ----
-if (!pb.authStore.isValid) {
-  console.log("未ログイン: 投票時にログイン画面へ誘導します");
-} else {
-  console.log("ログイン中:", pb.authStore.model?.email);
+// 🟢 ログイン状態のUI更新関数
+function updateUserStatus() {
+  const status = document.getElementById("userStatus");
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (pb.authStore.isValid) {
+    const email = pb.authStore.model?.email || "ログイン中";
+    status.textContent = `ログイン中: ${email}`;
+    logoutBtn.style.display = "inline-block";
+  } else {
+    status.textContent = "未ログイン";
+    logoutBtn.style.display = "none";
+  }
 }
+
+// ---- ページロード時に状態確認 ----
+updateUserStatus();
 
 // 都道府県リスト
 const prefs=["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
@@ -58,8 +104,9 @@ prefs.forEach(p=>{const o=document.createElement("option");o.value=p;o.textConte
 const citySelect=document.getElementById("citySelect");
 
 let currentPage=1,pageSize=20;
-const voteOptions=["ほぼなし","2〜3分","5〜10分","10分以上"];
+const voteOptions=["なし","2〜3分","5〜10分","10分以上"];
 const now=new Date(),currentMonth=`${now.getFullYear()}年${now.getMonth()+1}月`;
+const todayKey=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
 const pastMonths=[...Array(2)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-i-1,1);return `${d.getFullYear()}年${d.getMonth()+1}月`;});
 let browserId=localStorage.getItem("browserId");if(!browserId){browserId="id-"+Math.random().toString(36).slice(2);localStorage.setItem("browserId",browserId);}
 
@@ -99,9 +146,9 @@ function renderStores(stores){
     const left=document.createElement("div");left.className="leftColumn";
     left.innerHTML=`<div class="storeName">${s.name}</div><div class="address">${s.prefecture||""} ${s.city||""} ${s.address||""}</div>`;
     const voteBox=document.createElement("div");voteBox.className="voteContainer";
-    const votedKey=`${s.id}-${currentMonth}-${browserId}`;
+    const votedKey=`${s.id}-${todayKey}-${browserId}`;
     if(localStorage.getItem(votedKey)){
-      const tag=document.createElement("span");tag.textContent="今月は投票済";tag.style.background="#ffa500";tag.style.color="#000";tag.style.padding="2px 4px";tag.style.borderRadius="4px";voteBox.appendChild(tag);
+      const tag=document.createElement("span");tag.textContent="今日は投票済";tag.style.background="#ffa500";tag.style.color="#000";tag.style.padding="2px 4px";tag.style.borderRadius="4px";voteBox.appendChild(tag);
     }else{
       const sel=document.createElement("select");voteOptions.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});
       const btn=document.createElement("button");btn.textContent="投票";
@@ -124,24 +171,63 @@ function renderStores(stores){
   });
 }
 
-async function vote(id,choice){
-  // ---- 🟡 ログインチェック追加 ----
+// ✅ 日次制限版 vote()
+async function vote(id, choice) {
   if (!pb.authStore.isValid) {
-    alert("投票するにはログインが必要です。ログインページへ移動します。");
-    window.location.href = "/login.html";  // ← あなたのログインページパスに合わせて変更
+    document.getElementById("loginModal").style.display = "flex";
+    window.pendingVote = { id, choice };
+    return;
+  }
+  await executeVote(id, choice);
+}
+
+async function executeVote(id, choice) {
+  const key = `${id}-${todayKey}-${browserId}`;
+  if (localStorage.getItem(key)) {
+    alert("今日はすでに投票済です。");
     return;
   }
 
-  const key=`${id}-${currentMonth}-${browserId}`;
-  if(localStorage.getItem(key)){alert("今月は投票済");return;}
-  try{
-    const s=await pb.collection("stores").getOne(id);
-    const votes=s.votes||{};votes[currentMonth]=votes[currentMonth]||{};votes[currentMonth][choice]=(votes[currentMonth][choice]||0)+1;
-    await pb.collection("stores").update(id,{votes});
-    localStorage.setItem(key,"1");
+  try {
+    const s = await pb.collection("stores").getOne(id);
+    const votes = s.votes || {};
+    votes[currentMonth] = votes[currentMonth] || {};
+    votes[currentMonth][choice] = (votes[currentMonth][choice] || 0) + 1;
+
+    await pb.collection("stores").update(id, { votes });
+    localStorage.setItem(key, "1");
+    alert("投票が完了しました！");
     loadPage();
-  }catch(e){console.error("投票エラー",e);}
+  } catch (e) {
+    console.error("投票エラー", e);
+    alert("投票に失敗しました。");
+  }
 }
+
+// 🟢 モーダルボタン
+document.getElementById("googleLoginBtn").onclick = async () => {
+  try {
+    const authData = await pb.collection("users").authWithOAuth2({ provider: "google" });
+    console.log("✅ Googleログイン成功:", authData);
+    document.getElementById("loginModal").style.display = "none";
+    updateUserStatus();
+    const { id, choice } = window.pendingVote;
+    if (id && choice) await executeVote(id, choice);
+  } catch (err) {
+    console.error("❌ Googleログイン失敗:", err);
+    alert("ログインに失敗しました。");
+  }
+};
+
+document.getElementById("emailLoginBtn").onclick = () => alert("メールアドレスでのログイン機能は開発中です。");
+document.getElementById("closeModalBtn").onclick = () => (document.getElementById("loginModal").style.display = "none");
+
+// 🟣 ログアウトボタン
+document.getElementById("logoutBtn").onclick = () => {
+  pb.authStore.clear();
+  updateUserStatus();
+  alert("ログアウトしました。");
+};
 
 loadPage();
 </script>

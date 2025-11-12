@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>新規登録 - FoodDeliveryEye</title>
+  <style>
+    body {
+      background:#0d0d0d;
+      color:#fff;
+      font-family:"Inter","Noto Sans JP",sans-serif;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      margin:0;
+    }
+    .card {
+      background:#111;
+      border:1px solid #222;
+      border-radius:16px;
+      padding:40px 30px;
+      box-shadow:0 0 15px rgba(0,0,0,0.4);
+      width:90%;
+      max-width:360px;
+      text-align:center;
+    }
+    h1 {
+      color:#66ff99;
+      margin-bottom:4px;
+      font-size:1.6em;
+      letter-spacing:1px;
+    }
+    p.subtitle {
+      color:#aaa;
+      font-size:0.9em;
+      margin-bottom:20px;
+    }
+    input {
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #333;
+      background:#1a1a1a;
+      color:#fff;
+      margin-bottom:12px;
+      font-size:0.95em;
+      outline:none;
+      transition:border 0.2s;
+    }
+    input:focus { border-color:#66ff99; }
+    .btn {
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      font-weight:bold;
+      font-size:1em;
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    .btn-signup {
+      background:#66ff99;
+      color:#000;
+    }
+    .btn-signup:hover {
+      background:#80ffb2;
+    }
+    #msg {
+      color:#ccc;
+      margin-top:15px;
+      font-size:0.9em;
+      min-height:1.2em;
+    }
+    .login-link {
+      margin-top:18px;
+      font-size:0.8em;
+      color:#888;
+    }
+    .login-link a {
+      color:#66ff99;
+      text-decoration:none;
+      font-weight:600;
+      transition:color 0.2s;
+    }
+    .login-link a:hover {
+      color:#80ffb2;
+      text-decoration:underline;
+    }
+    footer {
+      margin-top:40px;
+      font-size:0.75em;
+      color:#555;
+      letter-spacing:0.3px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>FoodDeliveryEye</h1>
+    <p class="subtitle">メールアドレスで新規登録</p>
+
+    <!-- 新規登録フォーム -->
+    <form id="signupForm">
+      <input type="email" id="email" placeholder="メールアドレス" required>
+      <input type="password" id="password" placeholder="パスワード（6文字以上）" required minlength="6">
+      <button class="btn btn-signup" type="submit">登録する</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <!-- ログインページ案内 -->
+    <div class="login-link">
+      すでにアカウントをお持ちの方は
+      <a href="/login.html">こちら</a>
+    </div>
+  </div>
+
+  <footer>© 2025 FoodDeliveryEye</footer>
+
+  <script type="module">
+    import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
+    const pb = new PocketBase("https://delivery-eye.onrender.com");
+    const form = document.getElementById("signupForm");
+    const msg = document.getElementById("msg");
+
+    // ✉️ 新規登録処理
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value.trim();
+      const password = e.target.password.value.trim();
+
+      try {
+        // 新規ユーザー作成
+        await pb.collection("users").create({
+          email,
+          password,
+          passwordConfirm: password
+        });
+
+        // 確認メール送信（PocketBase設定で有効なら自動）
+        msg.textContent = "✅ 登録完了！ログイン画面へ移動します…";
+        msg.style.color = "#66ff99";
+
+        // 2秒後にログインページへ
+        setTimeout(()=>window.location.href="login.html", 2000);
+      } catch (err) {
+        msg.textContent = "⚠️ 登録失敗：" + err.message;
+        msg.style.color = "#ff7777";
+      }
+    });
+  </script>
+
+</body>
+</html>

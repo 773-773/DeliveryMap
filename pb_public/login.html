@@ -2,40 +2,218 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>ログイン</title>
+  <title>ログイン - FoodDeliveryEye</title>
   <style>
-    body { background:#111; color:#fff; font-family:sans-serif; padding:20px; }
-    input, button { display:block; margin:8px 0; padding:8px; width:100%; max-width:300px; }
-    button { background:#66ff99; border:none; cursor:pointer; border-radius:6px; }
+    body {
+      background:#0d0d0d;
+      color:#fff;
+      font-family:"Inter","Noto Sans JP",sans-serif;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      margin:0;
+    }
+    .card {
+      background:#111;
+      border:1px solid #222;
+      border-radius:16px;
+      padding:40px 30px;
+      box-shadow:0 0 15px rgba(0,0,0,0.4);
+      width:90%;
+      max-width:360px;
+      text-align:center;
+    }
+    h1 {
+      color:#66ff99;
+      margin-bottom:4px;
+      font-size:1.6em;
+      letter-spacing:1px;
+    }
+    p.subtitle {
+      color:#aaa;
+      font-size:0.9em;
+      margin-bottom:20px;
+    }
+    input {
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #333;
+      background:#1a1a1a;
+      color:#fff;
+      margin-bottom:12px;
+      font-size:0.95em;
+      outline:none;
+      transition:border 0.2s;
+    }
+    input:focus { border-color:#66ff99; }
+    .btn {
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      font-weight:bold;
+      font-size:1em;
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    .btn-login {
+      background:#66ff99;
+      color:#000;
+    }
+    .btn-login:hover { background:#80ffb2; }
+
+    /* 本物Googleボタン */
+    .google-btn {
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      background:#fff;
+      color:#3c4043;
+      font-weight:500;
+      border-radius:8px;
+      border:1px solid #dadce0;
+      box-shadow:0 1px 3px rgba(0,0,0,0.1);
+      transition:all 0.2s ease;
+      margin-top:10px;
+      width:100%;
+      height:44px;
+    }
+    .google-btn:hover {
+      background:#f8f9fa;
+      transform:scale(1.02);
+      box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    }
+    .google-icon {
+      width:20px;
+      height:20px;
+    }
+
+    .btn-logout {
+      background:#ff4444;
+      color:#fff;
+      margin-top:20px;
+      display:none;
+    }
+    #msg {
+      color:#ccc;
+      margin-top:15px;
+      font-size:0.9em;
+      min-height:1.2em;
+    }
+
+    .signup-link {
+      margin-top:18px;
+      font-size:0.8em;
+      color:#888;
+    }
+    .signup-link a {
+      color:#66ff99;
+      text-decoration:none;
+      font-weight:600;
+      transition:color 0.2s;
+    }
+    .signup-link a:hover {
+      color:#80ffb2;
+      text-decoration:underline;
+    }
+
+    footer {
+      margin-top:40px;
+      font-size:0.75em;
+      color:#555;
+      letter-spacing:0.3px;
+    }
   </style>
 </head>
 <body>
-  <h2>ログイン</h2>
-  <form id="loginForm">
-    <input type="email" id="email" placeholder="メールアドレス" required>
-    <input type="password" id="password" placeholder="パスワード" required>
-    <button type="submit">ログイン</button>
-  </form>
-  <p id="msg"></p>
+
+  <div class="card">
+    <h1>FoodDeliveryEye</h1>
+    <p class="subtitle">ログインして投票や店舗申請を行えます</p>
+
+    <!-- メールログイン -->
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="メールアドレス" required>
+      <input type="password" id="password" placeholder="パスワード" required>
+      <button class="btn btn-login" type="submit">メールでログイン</button>
+    </form>
+
+    <!-- Googleログイン -->
+    <button id="googleBtn" class="google-btn">
+      <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.94 0 6.64 1.71 8.17 3.14l6-5.82C34.29 3.43 29.57 1 24 1 14.83 1 7.03 6.64 3.44 14.41l7.41 5.76C12.29 14.33 17.62 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.11 24.49c0-1.6-.14-3.12-.41-4.59H24v8.7h12.48c-.55 2.95-2.23 5.46-4.76 7.15l7.37 5.73c4.3-3.97 6.77-9.83 6.77-17z"/>
+        <path fill="#FBBC05" d="M10.85 28.17c-.65-1.94-1.02-4.02-1.02-6.17s.37-4.23 1.02-6.17L3.44 10.07A22.931 22.931 0 0 0 1 22c0 3.64.87 7.08 2.44 10.13l7.41-5.76z"/>
+        <path fill="#34A853" d="M24 46c5.57 0 10.23-1.83 13.64-4.95l-7.37-5.73c-2.03 1.36-4.63 2.17-7.27 2.17-6.38 0-11.71-4.83-13.15-11.23l-7.41 5.76C7.03 41.36 14.83 46 24 46z"/>
+      </svg>
+      <span>Googleでログイン</span>
+    </button>
+
+    <!-- ログアウト -->
+    <button class="btn btn-logout" id="logoutBtn">ログアウト</button>
+
+    <p id="msg"></p>
+
+    <!-- 新規登録案内 -->
+    <div class="signup-link">
+      アカウントをお持ちでない方は
+      <a href="/signup.html">こちら</a>
+    </div>
+  </div>
+
+  <footer>© 2025 FoodDeliveryEye</footer>
 
   <script type="module">
-  import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
-  const pb = new PocketBase("https://delivery-eye.onrender.com");
+    import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
+    const pb = new PocketBase("https://delivery-eye.onrender.com");
+    const msg = document.getElementById("msg");
+    const logoutBtn = document.getElementById("logoutBtn");
 
-  const form = document.getElementById("loginForm");
-  const msg = document.getElementById("msg");
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try {
-      await pb.collection("users").authWithPassword(form.email.value, form.password.value);
-      msg.textContent = "ログイン成功！";
-      // ログインしたらトップに戻す
-      window.location.href = "/";
-    } catch (err) {
-      msg.textContent = "ログイン失敗：" + err.message;
+    // 🟢 ログイン保持
+    if (pb.authStore.isValid) {
+      msg.textContent = "ログイン中：" + (pb.authStore.model?.email || "Googleユーザー");
+      logoutBtn.style.display = "block";
     }
-  });
+
+    // 📧 メールログイン
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+      try {
+        await pb.collection("users").authWithPassword(email, password);
+        msg.textContent = "✅ ログイン成功！";
+        localStorage.setItem("pb_auth", pb.authStore.exportToString());
+        setTimeout(()=>window.location.href="vote.html", 1000);
+      } catch (err) {
+        msg.textContent = "⚠️ ログイン失敗：" + err.message;
+      }
+    });
+
+    // 🔵 Googleログイン
+    document.getElementById("googleBtn").onclick = async () => {
+      try {
+        const authData = await pb.collection("users").authWithOAuth2({ provider: "google" });
+        msg.textContent = "✅ Googleログイン成功！";
+        localStorage.setItem("pb_auth", pb.authStore.exportToString());
+        setTimeout(()=>window.location.href="vote.html", 1000);
+      } catch (err) {
+        msg.textContent = "⚠️ Googleログイン失敗：" + err.message;
+      }
+    };
+
+    // 🔴 ログアウト
+    logoutBtn.onclick = () => {
+      pb.authStore.clear();
+      localStorage.removeItem("pb_auth");
+      msg.textContent = "ログアウトしました";
+      logoutBtn.style.display = "none";
+    };
   </script>
+
 </body>
 </html>
