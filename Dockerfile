@@ -17,14 +17,14 @@ RUN wget -O pocketbase.zip "https://github.com/pocketbase/pocketbase/releases/do
     && rm pocketbase.zip \
     && chmod +x /app/pocketbase
 
-# ✅ 公開フォルダ (HTML)
+# ✅ 公開フォルダをコピー
 COPY pb_public /app/pb_public
 
-# ✅ pb_hooks (メールテンプレート)
+# ✅ メールテンプレート (pb_hooks) をコピー
 COPY pb_hooks /app/pb_hooks
 RUN chmod -R 755 /app/pb_hooks
 
-# ✅ 起動スクリプト
+# ✅ 起動スクリプトをコピー
 COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
