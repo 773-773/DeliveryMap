@@ -17,9 +17,11 @@ RUN wget -O pocketbase.zip "https://github.com/pocketbase/pocketbase/releases/do
     && rm pocketbase.zip \
     && chmod +x /app/pocketbase
 
-# ✅ 公開フォルダとメールテンプレートを含める
+# ✅ 公開フォルダ (HTML) をコピー
 COPY pb_public /app/pb_public
-COPY pb_hooks  /app/pb_hooks
+
+# ✅ メールテンプレート (pb_hooks) をコピー
+COPY pb_hooks /app/pb_hooks
 RUN chmod -R 755 /app/pb_hooks
 
 # ✅ 起動スクリプトをコピー
@@ -34,3 +36,4 @@ EXPOSE 8080
 
 # ✅ PocketBase を start.sh 経由で起動
 ENTRYPOINT ["sh", "/app/start.sh"]
+
