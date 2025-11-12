@@ -1,3 +1,12 @@
+
+
+
+
+
+
+# ✅ 公開フォルダとメールテンプレートを含める
+COPY pb_public /app/pb_public
+COPY pb_hooks /app/pb_hooks
 # ベース：軽量 Alpine Linux
 FROM alpine:3.18
 
