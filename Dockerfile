@@ -1,3 +1,5 @@
+COPY pb_hooks /app/pb_hooks
+
 
 
 
