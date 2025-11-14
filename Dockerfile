@@ -33,3 +33,6 @@ EXPOSE 8080
 
 # ✅ PocketBase を start.sh 経由で起動
 ENTRYPOINT ["sh", "/app/start.sh"]
+
+COPY pb_hooks /app/pb_hooks
+RUN chmod -R 755 /app/pb_hooks
