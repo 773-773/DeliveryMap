@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>メールアドレスの確認</title>
+</head>
+<body style="font-family: 'Helvetica Neue', sans-serif; background:#f8f9fa; padding:24px; color:#333;">
+  <div style="max-width:500px; margin:auto; background:#fff; border-radius:10px; padding:30px; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <h2 style="color:#00c853; text-align:center;">FoodDeliveryEye へようこそ！</h2>
+    <p>この度はご登録ありがとうございます。<br>
+    以下のボタンをクリックして、メールアドレスの確認を完了してください。</p>
+
+    <div style="text-align:center; margin:30px 0;">
+      <a href="{{ .VerificationURL }}" style="background:#00c853; color:#fff; text-decoration:none; padding:12px 30px; border-radius:6px; font-weight:bold;">メールを確認する</a>
+    </div>
+
+    <p style="font-size:0.9em; color:#555;">※このメールに心当たりがない場合は破棄してください。</p>
+    <p style="font-size:0.8em; color:#999; text-align:center;">© 2025 FoodDeliveryEye</p>
+  </div>
+</body>
+</html>
+git add pb_hooks/emails/verify_email.html
+
+git commit -m "add japanese verify email template"
+git push
+
+
+
+
