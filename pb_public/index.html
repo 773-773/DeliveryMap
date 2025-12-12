@@ -5,27 +5,84 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FoodDeliveryEye</title>
 <style>
-body { margin:0; background:#0d0d0d; color:#fff; font-family:sans-serif; text-align:center; }
-header { background:#000; padding:20px 10px; border-bottom:1px solid #222; }
-h1 { color:#00ff88; font-size:26px; margin:0; letter-spacing:1px; }
-.subtitle { color:#bbb; font-size:13px; margin-top:6px; letter-spacing:0.5px; }
-.menu { display:flex; flex-direction:column; align-items:center; margin-top:40px; gap:18px; }
-.menu a { display:block; width:260px; padding:14px 0; border-radius:10px; background:#111; border:1px solid #222; color:#00ffcc; text-decoration:none; font-weight:bold; letter-spacing:0.5px; transition:all 0.2s; }
-.menu a:hover { background:#00ffcc; color:#000; transform:scale(1.02); }
-footer { margin-top:60px; color:#444; font-size:12px; padding-bottom:20px; }
+body {
+  margin:0; background:#0d0d0d; color:#fff;
+  font-family:sans-serif; text-align:center;
+}
+
+header {
+  background:#000; padding:20px 10px;
+  border-bottom:1px solid #222;
+}
+
+h1 {
+  color:#00ff88; font-size:26px; margin:0;
+  letter-spacing:1px;
+}
+
+/* ✔ サブタイトル小さく・さりげなく */
+.subtitle {
+  color:rgba(200, 200, 200, 0.55);
+  font-size:11px;
+  margin-top:6px;
+  letter-spacing:0.4px;
+}
+
+/* ✔ このサイトについて（超さりげないリンク） */
+.aboutTop {
+  display:inline-block;
+  margin-top:18px;
+  font-size:13px;
+  color:rgba(0,255,204,0.45); /* かなり薄め */
+  text-decoration:none;
+  transition:all 0.15s ease;
+}
+.aboutTop:hover {
+  color:#00ffcc; /* ホバー時だけ濃く */
+}
+
+/* 下のメニュー */
+.menu {
+  display:flex; flex-direction:column;
+  align-items:center; margin-top:35px; gap:18px;
+}
+
+.menu a {
+  display:block; width:260px; padding:14px 0;
+  border-radius:10px; background:#111;
+  border:1px solid #222; color:#00ffcc;
+  text-decoration:none; font-weight:bold;
+  letter-spacing:0.5px; transition:all 0.2s;
+}
+.menu a:hover {
+  background:#00ffcc; color:#000;
+  transform:scale(1.02);
+}
+
+footer {
+  margin-top:60px; color:#444;
+  font-size:12px; padding-bottom:20px;
+}
 </style>
 </head>
 <body>
+
 <header>
   <h1>FoodDeliveryEye</h1>
-  <div class="subtitle">配達員目線のリアルな声</div>
+  <div class="subtitle">フーデリ配達員のリアルな声が集まる場所</div>
 </header>
 
+<!-- ✔ さりげない「このサイトについて」 -->
+<a href="about.html" class="aboutTop">このサイトについて</a>
+
+<!-- 下のメニュー -->
 <div class="menu">
   <a href="vote.html">🍱 調理待ち時間予測</a>
-  <a href="request.html">🏪 掲載店舗を申請する</a>
+  <a href="tower.html">🏙 タワマン所要時間予測</a>
+  <a href="bbs.html">💬 掲示板</a>
 </div>
 
 <footer>© FoodDeliveryEye</footer>
+
 </body>
 </html>
