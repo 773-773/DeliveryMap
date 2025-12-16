@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>タワマン 入館情報</title>
+
+<style>
+  body{
+    background:#0d0d0d;
+    color:#fff;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;
+    margin:0;
+    padding:10px;
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px;
+    background:#111;
+    border-bottom:1px solid #222;
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  header .status{ font-size:.8em; color:#ccc; }
+  #logoutBtn{
+    background:#333;color:#fff;border:none;
+    padding:4px 10px;border-radius:6px;cursor:pointer;font-size:.8em;
+  }
+
+  h2{ margin:12px 2px 6px; }
+
+  /* サブ説明＋申請リンク */
+  .subRow{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin:0 2px 10px;
+  }
+  .sub{
+    font-size:.8em;
+    color:#bbb;
+    margin:0;
+    line-height:1.35;
+    flex:1;
+  }
+  .applyLink{
+    font-size:.78em;
+    color:#66ff99;
+    text-decoration:none;
+    white-space:nowrap;
+    opacity:.95;
+  }
+  .applyLink:hover{ text-decoration:underline; }
+
+  .searchContainer{
+    margin:10px 0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .searchContainer input,
+  .searchContainer select{
+    padding:10px;
+    background:#111;
+    color:#fff;
+    border:1px solid #333;
+    border-radius:8px;
+  }
+  .searchContainer button{
+    padding:10px;
+    background:#ffa500;
+    color:#000;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:700;
+  }
+
+  .storeCard{
+    background:#111;
+    border:1px solid #222;
+    border-radius:10px;
+    padding:12px;
+    margin-bottom:10px;
+    font-size:.9em;
+  }
+  .title{
+    font-weight:800;
+    color:#66ff99;
+    margin-bottom:6px;
+    line-height:1.25;
+  }
+  .addr{ color:#ccc; margin-bottom:10px; line-height:1.35; }
+
+  .row{
+    display:flex;
+    gap:10px;
+    align-items:flex-start;
+    margin:6px 0;
+  }
+  .label{
+    width:78px;
+    flex:0 0 78px;
+    color:#aaa;
+  }
+  .value{
+    flex:1;
+    color:#eee;
+    white-space:pre-wrap;
+    line-height:1.35;
+  }
+
+  .actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+    align-items:center;
+  }
+
+  .btn{
+    border:none;
+    border-radius:10px;
+    padding:7px 10px;
+    cursor:pointer;
+    font-weight:800;
+    font-size:.8em;
+  }
+  .btnEntry{ background:#1f3a2a; color:#9bffbf; border:1px solid rgba(102,255,153,.25); }
+  .btnReport{ background:#1a1a1a; color:#aaa; border:1px solid rgba(255,255,255,.10); font-weight:700; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  /* 承認待ち（グレー表示） */
+  .pendingPill{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:.78em;
+    border:1px solid rgba(255,255,255,.10);
+    background:#141414;
+    color:#bdbdbd;
+    user-select:none;
+  }
+  .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:#8f8f8f;
+    display:inline-block;
+  }
+
+  /* モーダル共通 */
+  .modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.72);
+    justify-content:center;
+    align-items:center;
+    z-index:10000;
+    padding:14px;
+  }
+  .modal .box{
+    width:min(380px, 100%);
+    background:#111;
+    border:1px solid #222;
+    border-radius:12px;
+    padding:16px;
+  }
+  .modal h3{ margin:0 0 10px; }
+  .modal .muted{ color:#bbb; font-size:.82em; line-height:1.35; }
+
+  .choiceBlock{ text-align:left; margin-top:8px; }
+  .textarea{
+    width:100%;
+    margin-top:10px;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #333;
+    background:#0f0f0f;
+    color:#fff;
+    min-height:90px;
+    resize:vertical;
+  }
+  .small{ font-size:.8em; color:#bbb; margin-top:6px; line-height:1.35; }
+
+  .modal button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:800;
+  }
+
+  /* login */
+  #googleLoginBtn{ background:#fff; color:#000; }
+  #emailLoginBtn{ background:#66ff99; color:#000; }
+  #closeModalBtn{ background:#333; color:#fff; }
+
+  /* report */
+  .select{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #333;
+    background:#111;
+    color:#fff;
+    margin-top:10px;
+  }
+  #sendReportBtn{ background:#66ff99;color:#000; }
+  #closeReportBtn{ background:#333;color:#fff; }
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="status" id="userStatus">未ログイン</div>
+  <button id="logoutBtn" style="display:none;">ログアウト</button>
+</header>
+
+<h2>タワマン 入館情報</h2>
+
+<div class="subRow">
+  <p class="sub">マンション名・住所・入館方法・備考のみ表示（入館方法はユーザー申請→管理人承認）</p>
+  <a class="applyLink" href="tower_request.html">マンション掲載申請はこちら</a>
+</div>
+
+<div class="searchContainer">
+  <input id="nameInput" placeholder="建物名で検索">
+  <select id="prefSelect"><option value="">都道府県</option></select>
+  <select id="citySelect" style="display:none;"><option value="">市区町村</option></select>
+  <button id="searchBtn">検索</button>
+</div>
+
+<div id="list"></div>
+
+<div id="loginModal" class="modal">
+  <div class="box">
+    <h3>ログインが必要です</h3>
+    <button id="googleLoginBtn">Googleでログイン</button>
+    <button id="emailLoginBtn">メールアドレスでログイン</button>
+    <button id="closeModalBtn">閉じる</button>
+  </div>
+</div>
+
+<div id="entryModal" class="modal">
+  <div class="box">
+    <h3>入館方法の申請</h3>
+
+    <div class="choiceBlock">
+      <label><input type="radio" name="entryType" value="正面可"> 正面可</label><br>
+      <label><input type="radio" name="entryType" value="正面入り口で手続き"> 正面入り口で手続き</label><br>
+      <label><input type="radio" name="entryType" value="防災センター経由"> 防災センター経由</label><br>
+      <label><input type="radio" name="entryType" value="その他"> その他</label>
+    </div>
+
+    <textarea id="entryComment" class="textarea" placeholder="詳細（任意）"></textarea>
+    <div class="small">※ 管理人が承認したら、この物件への入館方法申請はできなくなります。</div>
+
+    <button id="sendEntryBtn" style="background:#66ff99;color:#000;">送信</button>
+    <button id="closeEntryBtn" style="background:#333;color:#fff;">閉じる</button>
+  </div>
+</div>
+
+<div id="reportModal" class="modal">
+  <div class="box">
+    <h3>報告</h3>
+    <div class="muted" id="reportInfo"></div>
+
+    <select id="reportReason" class="select">
+      <option value="">理由を選択</option>
+      <option value="情報が違う">情報が違う</option>
+      <option value="入館方法が変わった">入館方法が変わった</option>
+      <option value="備考を追加したい">備考を追加したい</option>
+      <option value="その他">その他</option>
+    </select>
+
+    <textarea id="reportComment" class="textarea" placeholder="詳細（必須）"></textarea>
+    <div class="small">※ 送信すると towerReports に保存されます。</div>
+
+    <button id="sendReportBtn">送信</button>
+    <button id="closeReportBtn">閉じる</button>
+  </div>
+</div>
+
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+const list = document.getElementById("list");
+const prefSelect = document.getElementById("prefSelect");
+const citySelect = document.getElementById("citySelect");
+
+let currentTowerId = null;
+let pendingAction = null; // {type:'entry'|'report', towerId, payload}
+
+let browserId = localStorage.getItem("towerBrowserId");
+if (!browserId) {
+  browserId = "id-" + Math.random().toString(36).slice(2);
+  localStorage.setItem("towerBrowserId", browserId);
+}
+
+/* 都道府県 */
+const prefs = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+  "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+  "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+  "熊本県","大分県","宮崎県","鹿児島県","沖縄県"
+];
+prefs.forEach(p => {
+  const o = document.createElement("option");
+  o.value = p;
+  o.textContent = p;
+  prefSelect.appendChild(o);
+});
+
+/* ログイン表示 */
+function updateStatus() {
+  const st = document.getElementById("userStatus");
+  const lo = document.getElementById("logoutBtn");
+  if (pb.authStore.isValid) {
+    st.textContent = "ログイン中：" + (pb.authStore.model?.email || "");
+    lo.style.display = "inline-block";
+  } else {
+    st.textContent = "未ログイン";
+    lo.style.display = "none";
+  }
+}
+updateStatus();
+
+/* 市区町村ロード */
+prefSelect.onchange = async () => {
+  const pref = prefSelect.value;
+  if (!pref) {
+    citySelect.style.display = "none";
+    return;
+  }
+  const res = await pb.collection("towers").getList(1, 500, { filter: `prefecture='${escapeFilter(pref)}'` });
+  const cities = [...new Set(res.items.map(i => i.city).filter(Boolean))].sort();
+  citySelect.innerHTML = '<option value="">市区町村</option>';
+  cities.forEach(c => {
+    const o = document.createElement("option");
+    o.value = c;
+    o.textContent = c;
+    citySelect.appendChild(o);
+  });
+  citySelect.style.display = "block";
+};
+
+document.getElementById("searchBtn").onclick = () => loadList();
+
+/* 一覧ロード */
+async function loadList() {
+  list.innerHTML = "読み込み中…";
+
+  let filter = "";
+  const name = document.getElementById("nameInput").value.trim();
+  const pref = prefSelect.value;
+  const city = citySelect.value;
+
+  if (name) filter += `name~"${escapeFilter(name)}"`;
+  if (pref) filter += (filter ? " && " : "") + `prefecture='${escapeFilter(pref)}'`;
+  if (city) filter += (filter ? " && " : "") + `city='${escapeFilter(city)}'`;
+
+  const res = await pb.collection("towers").getList(1, 500, { filter, sort: "name" });
+  await renderList(res.items);
+}
+
+/* 承認済み判定 */
+function isEntryLocked(t){
+  if (!!t.entryApproved) return true;
+  const et = (t.entryType ?? "").toString().trim();
+  if (et && et !== "未設定") return true;
+  return false;
+}
+
+/* 申請済チェック（同一ブラウザがpending出してたら「承認待ち」表示） */
+async function hasPendingRequest(towerId) {
+  try {
+    await pb.collection("entry_requests").getFirstListItem(
+      `towerId='${escapeFilter(towerId)}' && browserId='${escapeFilter(browserId)}' && status='pending'`
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/* リスト表示 */
+async function renderList(items) {
+  list.innerHTML = "";
+  if (!items.length) {
+    list.textContent = "該当なし";
+    return;
+  }
+
+  for (const t of items) {
+    const card = document.createElement("div");
+    card.className = "storeCard";
+
+    const title = document.createElement("div");
+    title.className = "title";
+    title.textContent = t.name || "（名称未設定）";
+
+    const addr = document.createElement("div");
+    addr.className = "addr";
+    addr.textContent = `${t.prefecture || ""} ${t.city || ""} ${t.address || ""}`.trim();
+
+    // 入館方法
+    const entryRow = document.createElement("div");
+    entryRow.className = "row";
+    const entryLabel = document.createElement("div");
+    entryLabel.className = "label";
+    entryLabel.textContent = "入館方法";
+    const entryVal = document.createElement("div");
+    entryVal.className = "value";
+    const entryText = (t.entryType && String(t.entryType).trim()) ? t.entryType : "未設定";
+    entryVal.textContent = entryText;
+    entryRow.appendChild(entryLabel);
+    entryRow.appendChild(entryVal);
+
+    // 備考
+    const memoRow = document.createElement("div");
+    memoRow.className = "row";
+    const memoLabel = document.createElement("div");
+    memoLabel.className = "label";
+    memoLabel.textContent = "備考";
+    const memoVal = document.createElement("div");
+    memoVal.className = "value";
+    const memoText = (t.memo && String(t.memo).trim()) ? t.memo : "なし";
+    memoVal.textContent = memoText;
+    memoRow.appendChild(memoLabel);
+    memoRow.appendChild(memoVal);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+
+    // 入館方法UI
+    const locked = isEntryLocked(t);
+    if (!locked) {
+      const entryPending = await hasPendingRequest(t.id);
+      if (entryPending) {
+        const pill = document.createElement("div");
+        pill.className = "pendingPill";
+        pill.innerHTML = `<span class="dot"></span> 入館方法：承認待ち`;
+        actions.appendChild(pill);
+      } else {
+        const b = document.createElement("button");
+        b.className = "btn btnEntry";
+        b.textContent = "入館方法を申請";
+        b.onclick = () => openEntryModal(t.id);
+        actions.appendChild(b);
+      }
+    }
+
+    // 報告ボタン（towerReportsへ送る）
+    const report = document.createElement("button");
+    report.className = "btn btnReport";
+    report.textContent = "報告";
+    report.onclick = () => openReportModal(t);
+    actions.appendChild(report);
+
+    card.appendChild(title);
+    card.appendChild(addr);
+    card.appendChild(entryRow);
+    card.appendChild(memoRow);
+    card.appendChild(actions);
+
+    list.appendChild(card);
+  }
+}
+
+/* 入館申請 */
+function openEntryModal(towerId) {
+  currentTowerId = towerId;
+  document.getElementById("entryComment").value = "";
+  document.querySelectorAll("input[name='entryType']").forEach(x => x.checked = false);
+  document.getElementById("entryModal").style.display = "flex";
+}
+document.getElementById("closeEntryBtn").onclick = () => {
+  document.getElementById("entryModal").style.display = "none";
+};
+
+document.getElementById("sendEntryBtn").onclick = async () => {
+  const sel = document.querySelector("input[name='entryType']:checked");
+  if (!sel) return alert("入館方法を選択してください");
+  const comment = document.getElementById("entryComment").value.trim();
+
+  if (!pb.authStore.isValid) {
+    document.getElementById("entryModal").style.display = "none";
+    document.getElementById("loginModal").style.display = "flex";
+    pendingAction = { type:"entry", towerId: currentTowerId, payload: { method: sel.value, comment } };
+    return;
+  }
+
+  await sendEntryRequest(currentTowerId, sel.value, comment);
+};
+
+async function sendEntryRequest(towerId, method, comment) {
+  try {
+    const t = await pb.collection("towers").getOne(towerId);
+    if (isEntryLocked(t)) {
+      alert("この物件の入館方法は承認済（または設定済）のため申請できません。");
+      return;
+    }
+
+    const already = await hasPendingRequest(towerId);
+    if (already) {
+      alert("既に申請済（承認待ち）です。");
+      return;
+    }
+
+    await pb.collection("entry_requests").create({
+      towerId,
+      method,
+      comment,
+      browserId,
+      status: "pending"
+    });
+
+    alert("入館方法を申請しました。ありがとうございます。");
+    document.getElementById("entryModal").style.display = "none";
+    loadList();
+  } catch (e) {
+    console.error("entry_requests create error", e);
+    alert("申請の送信に失敗しました: " + (e?.message || e));
+  }
+}
+
+/* ===== 報告（towerReports） ===== */
+let currentReportTowerId = null;
+
+function openReportModal(tower){
+  currentReportTowerId = tower.id;
+
+  const info = document.getElementById("reportInfo");
+  info.innerHTML =
+    `建物：<b>${escapeHtml(tower.name || "（名称未設定）")}</b><br>` +
+    `住所：${escapeHtml(`${tower.prefecture||""} ${tower.city||""} ${tower.address||""}`.trim())}`;
+
+  document.getElementById("reportReason").value = "";
+  document.getElementById("reportComment").value = "";
+  document.getElementById("reportModal").style.display = "flex";
+}
+
+document.getElementById("closeReportBtn").onclick = () => {
+  document.getElementById("reportModal").style.display = "none";
+  currentReportTowerId = null;
+};
+
+document.getElementById("sendReportBtn").onclick = async () => {
+  const reason = document.getElementById("reportReason").value.trim();
+  const comment = document.getElementById("reportComment").value.trim();
+
+  if (!reason) return alert("理由を選択してください");
+  if (!comment) return alert("詳細（コメント）を書いてください");
+
+  if (!pb.authStore.isValid) {
+    document.getElementById("reportModal").style.display = "none";
+    document.getElementById("loginModal").style.display = "flex";
+    pendingAction = { type:"report", towerId: currentReportTowerId, payload: { reason, comment } };
+    return;
+  }
+
+  await sendTowerReport(currentReportTowerId, reason, comment);
+};
+
+async function sendTowerReport(towerId, reason, comment){
+  try{
+    await pb.collection("towerReports").create({
+      towerId,
+      reason,
+      comment,
+      browserId
+    });
+
+    alert("報告を送信しました。ありがとうございます。");
+    document.getElementById("reportModal").style.display = "none";
+    currentReportTowerId = null;
+  }catch(e){
+    console.error("towerReports create error", e);
+    alert("報告の送信に失敗しました: " + (e?.message || e));
+  }
+}
+
+/* ログイン処理 */
+document.getElementById("googleLoginBtn").onclick = async () => {
+  try {
+    await pb.collection("users").authWithOAuth2({ provider: "google" });
+    document.getElementById("loginModal").style.display = "none";
+    updateStatus();
+
+    if (pendingAction) {
+      const a = pendingAction;
+      pendingAction = null;
+
+      if (a.type === "entry") {
+        await sendEntryRequest(a.towerId, a.payload.method, a.payload.comment);
+      }
+      if (a.type === "report") {
+        await sendTowerReport(a.towerId, a.payload.reason, a.payload.comment);
+      }
+    }
+  } catch (e) {
+    console.error("login error", e);
+    alert("ログイン失敗");
+  }
+};
+document.getElementById("emailLoginBtn").onclick = () => {
+  alert("メールログインはこのHTMLでは未実装（必要なら実装する）。");
+};
+document.getElementById("closeModalBtn").onclick = () => {
+  document.getElementById("loginModal").style.display = "none";
+};
+document.getElementById("logoutBtn").onclick = () => {
+  pb.authStore.clear();
+  updateStatus();
+  loadList();
+};
+
+/* util */
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function escapeFilter(s){
+  return String(s ?? "").replaceAll("\\", "\\\\").replaceAll("'", "\\'");
+}
+
+/* 初期読み込み */
+loadList();
+</script>
+
+</body>
+</html>
