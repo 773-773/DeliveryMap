@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アンケート | FoodDeliveryEye</title>
+
+<style>
+:root{
+  --bg-main:#07070b;
+  --bg-elevated:#0c0c12;
+  --accent:#5bff9c;
+  --accent-soft: rgba(91, 255, 156, 0.28);
+  --accent2:#23ffd1;
+  --text-main:#f5f5f7;
+  --text-muted:rgba(245,245,247,0.62);
+  --border-soft: rgba(255,255,255,0.08);
+  --border-hair: rgba(255,255,255,0.06);
+  --danger: rgba(255,182,182,.95);
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,"Inter","Noto Sans JP",sans-serif;
+  color:var(--text-main);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(91,255,156,0.09) 0, transparent 55%),
+    radial-gradient(circle at 90% 90%, rgba(255,255,255,0.03) 0, transparent 55%),
+    linear-gradient(180deg, #050507 0%, #07070b 60%, #050507 100%);
+}
+.page{
+  max-width:1040px;
+  margin:0 auto;
+  padding:18px 14px 42px;
+}
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(5,5,8,0.72);
+  border:1px solid var(--border-hair);
+  backdrop-filter:blur(22px);
+  box-shadow:0 18px 60px rgba(0,0,0,0.62);
+  margin-bottom:14px;
+}
+.logoArea{ display:flex; align-items:center; gap:10px; min-width:0; }
+.logoMark{
+  width:34px;height:34px;border-radius:50%;
+  background:
+    radial-gradient(circle at 30% 0%, rgba(255,255,255,0.95) 0, transparent 48%),
+    radial-gradient(circle at 80% 80%, rgba(91,255,156,0.95) 0, transparent 55%),
+    #0f1020;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 22px rgba(91,255,156,0.35);
+  flex:0 0 auto;
+}
+.logoMark span{ font-size:15px; font-weight:900; color:#050814; }
+.logoTextMain{ font-weight:900; font-size:16px; letter-spacing:0.08em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.logoTextSub{ font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+.headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
+
+/* share icons */
+.shareRow{ display:flex; align-items:center; gap:8px; flex:0 0 auto; }
+.iconBtn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:40px;
+  height:36px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.02);
+  cursor:pointer;
+  transition:all 0.16s ease;
+  box-shadow:0 10px 26px rgba(0,0,0,0.35);
+}
+.iconBtn:hover{ background:rgba(255,255,255,0.06); transform:translateY(-1px); }
+.iconBtn:active{ transform:translateY(0px); }
+.iconBtn svg{ width:18px; height:18px; fill:#f5f5f7; opacity:0.92; }
+.copyToast{ font-size:10px; color:var(--text-muted); min-height:14px; margin-left:6px; }
+
+/* nav */
+nav{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+nav a{
+  color:var(--text-muted);
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  font-size:12px;
+  transition:all 0.16s ease;
+  white-space:nowrap;
+  font-weight:900;
+}
+nav a:hover{ color:var(--text-main); background:rgba(255,255,255,0.05); }
+nav .primary{
+  color:#050814;
+  background:var(--accent);
+  border-color:transparent;
+  box-shadow:0 0 18px var(--accent-soft);
+}
+nav .primary:hover{ background:#7affb2; }
+
+/* top */
+.topTools{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin: 6px 2px 14px;
+  flex-wrap:wrap;
+}
+.pillBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  border-radius:999px;
+  padding:10px 12px;
+  text-decoration:none;
+  font-weight:900;
+  font-size:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(10,10,16,0.72);
+  color:rgba(245,245,247,0.90);
+  box-shadow:0 14px 42px rgba(0,0,0,0.55);
+  transition:all .16s ease;
+}
+.pillBtn:hover{ background:rgba(255,255,255,0.05); transform:translateY(-1px); }
+.pillDot{ width:9px; height:9px; border-radius:50%; background:var(--accent); box-shadow:0 0 14px rgba(91,255,156,.35); }
+
+.pillWrap{ display:flex; align-items:center; justify-content:space-between; gap:12px; flex:1; min-width:0; }
+.pillLeftFill{
+  flex:1;
+  min-width:0;
+  height:44px;
+  display:flex;
+  align-items:center;
+  padding-left:18px;
+  font-size:13px;
+  font-weight:700;
+  color:rgba(245,245,247,0.75);
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.015);
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+
+/* poll list */
+.list{ display:flex; flex-direction:column; gap:12px; }
+.card{
+  position:relative;
+  padding:18px 16px 16px;
+  border-radius:22px;
+  background:rgba(10,10,16,0.88);
+  border:1px solid var(--border-hair);
+  box-shadow:0 18px 50px rgba(0,0,0,0.65);
+  overflow:hidden;
+}
+.cardHead{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+.q{
+  font-size:16px;
+  font-weight:900;
+  line-height:1.5;
+  margin:0;
+}
+.meta{
+  font-size:11px;
+  color:rgba(245,245,247,.45);
+  white-space:nowrap;
+}
+.choices{ margin-top:12px; display:flex; flex-direction:column; gap:10px; }
+
+.choiceBtn{
+  position:relative;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.03);
+  color:#fff;
+  font-size:14px;
+  font-weight:900;
+  cursor:pointer;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  overflow:hidden;
+  --pct:0;
+}
+.choiceBtn::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  width:calc(var(--pct) * 1%);
+  background:linear-gradient(90deg, rgba(91,255,156,.35), rgba(35,255,209,.25));
+  opacity:0;
+}
+.choiceBtn[data-show="1"]::before{ opacity:1; }
+.choiceBtn span{ position:relative; z-index:1; }
+.choiceBtn .pct{
+  font-size:12px;
+  min-width:54px;
+  text-align:right;
+  opacity:0;
+  color:rgba(245,245,247,0.78);
+}
+.choiceBtn[data-show="1"] .pct{ opacity:1; }
+
+.choiceBtn:hover{ background:rgba(255,255,255,0.06); border-color:rgba(91,255,156,0.22); }
+.choiceBtn.isLocked{ cursor:default; opacity:.92; }
+.choiceBtn.isLocked:hover{ background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.10); }
+
+.bottomRow{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:10px; }
+.count{ font-size:11px; color:rgba(245,245,247,.45); }
+.msg{ font-size:11px; color:#a7aed0; min-height:18px; white-space:pre-wrap; margin-top:8px; }
+.note{ margin-top:10px; font-size:11px; color:rgba(245,245,247,.55); line-height:1.6; }
+
+.systemMsg{
+  margin:12px 2px 0;
+  font-size:12px;
+  color:rgba(245,245,247,.70);
+  padding:12px 12px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.02);
+}
+.systemMsg b{ color:var(--text-main); }
+.systemMsg .err{ color: var(--danger); }
+
+footer{
+  margin-top:28px;
+  padding-top:12px;
+  border-top:1px solid rgba(255,255,255,0.05);
+  font-size:11px;
+  color:rgba(245,245,247,0.36);
+}
+
+/* pagination */
+.pager{
+  margin-top:18px;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+.pagerInner{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(0,0,0,0.22);
+  box-shadow:0 18px 55px rgba(0,0,0,0.58);
+}
+.pageBtns{ display:flex; align-items:center; gap:10px; }
+.pageBtn{
+  width:44px;
+  height:40px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.04);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.pageBtn:hover{ background:rgba(255,255,255,0.07); transform:translateY(-1px); }
+.pageBtn:active{ transform:translateY(0px); }
+.pageBtn.isActive{
+  background:#f0b246;
+  color:#050507;
+  border-color:transparent;
+  box-shadow:0 0 0 2px rgba(240,178,70,0.18), 0 12px 28px rgba(0,0,0,0.45);
+}
+.nextBtn{
+  height:40px;
+  padding:0 16px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.04);
+  color:#fff;
+  font-weight:900;
+  cursor:pointer;
+  transition:all .16s ease;
+}
+.nextBtn:hover{ background:rgba(255,255,255,0.07); transform:translateY(-1px); }
+.nextBtn:active{ transform:translateY(0px); }
+.nextBtn:disabled,.pageBtn:disabled{ opacity:.45; cursor:default; transform:none; }
+
+@media (max-width: 640px){
+  header{flex-direction:column;align-items:stretch;gap:10px}
+  .headerRight{flex-direction:column;align-items:stretch;gap:10px}
+  .shareRow{justify-content:flex-start}
+  nav{justify-content:flex-start}
+  .topTools{justify-content:flex-start}
+  .pillWrap{width:100%}
+  .pager{justify-content:flex-start}
+}
+</style>
+</head>
+
+<body>
+<div class="page">
+
+<header>
+  <div class="logoArea">
+    <div class="logoMark"><span>FE</span></div>
+    <div style="min-width:0;">
+      <div class="logoTextMain">FoodDeliveryEye</div>
+      <div class="logoTextSub">アンケート</div>
+    </div>
+  </div>
+
+  <div class="headerRight">
+    <div class="shareRow">
+      <a class="iconBtn" id="shareX" href="#" target="_blank" rel="noopener" aria-label="Xでシェア">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18.9 2H22l-6.8 7.8L23 22h-6.8l-5.3-6.7L4.8 22H2l7.4-8.5L1 2h7l4.8 6.1L18.9 2Zm-2.4 18h1.9L7.3 3.9H5.2L16.5 20Z"/>
+        </svg>
+      </a>
+      <a class="iconBtn" id="shareLine" href="#" target="_blank" rel="noopener" aria-label="LINEで送る">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 3C6.9 3 3 6.3 3 10.4c0 2.5 1.4 4.7 3.7 6.1l-.6 3.3c-.1.5.4.9.9.6l3.8-2.1c.7.1 1.4.2 2.2.2 5.1 0 9-3.3 9-7.4S17.1 3 12 3Zm-3 8.5h-1V9h1v2.5Zm3 0h-1V9h1v2.5Zm3 0h-1V9h1v2.5Z"/>
+        </svg>
+      </a>
+      <button class="iconBtn" id="copyLink" type="button" aria-label="リンクをコピー">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M16 1H6C4.9 1 4 1.9 4 3v12h2V3h10V1Zm3 4H10c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h9c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2Zm0 16H10V7h9v14Z"/>
+        </svg>
+      </button>
+      <span class="copyToast" id="copyToast"></span>
+    </div>
+
+    <nav>
+      <a href="about.html">このサイトについて</a>
+      <a href="login.html">ログイン</a>
+      <a href="signup.html" class="primary">新規登録</a>
+    </nav>
+  </div>
+</header>
+
+<div class="topTools">
+  <div class="pillWrap">
+    <div class="pillLeftFill">
+      みんなの声で、次のアンケートが決まります
+    </div>
+    <a class="pillBtn" href="poll_request.html" aria-label="アンケート案 募集中">
+      <span class="pillDot"></span>アンケート案 募集中
+    </a>
+  </div>
+</div>
+
+<div id="systemMsg" class="systemMsg" style="display:none"></div>
+<div class="list" id="pollList"></div>
+
+<div class="pager" id="pager" style="display:none">
+  <div class="pagerInner">
+    <div class="pageBtns" id="pageBtns"></div>
+    <button class="nextBtn" id="nextBtn" type="button">次へ</button>
+  </div>
+</div>
+
+<footer>© FoodDeliveryEye</footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
+
+<script>
+(() => {
+  const PB_URL = "https://delivery-eye.onrender.com";
+  const pb = new window.PocketBase(PB_URL);
+
+  // share
+  const pageUrl = window.location.href;
+  const text = "FoodDeliveryEye：配達員の体験を、みんなの安心と効率へ";
+  const shareX = document.getElementById("shareX");
+  const shareLine = document.getElementById("shareLine");
+  const copyLink = document.getElementById("copyLink");
+  const toast = document.getElementById("copyToast");
+
+  shareX.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(pageUrl)}`;
+  shareLine.href = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(pageUrl)}`;
+
+  function showToast(msg){
+    toast.textContent = msg;
+    setTimeout(()=>{ if(toast.textContent === msg) toast.textContent=""; }, 1600);
+  }
+  copyLink.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(pageUrl);
+      showToast("コピーしました");
+    } catch {
+      const tmp = document.createElement("textarea");
+      tmp.value = pageUrl;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand("copy");
+      tmp.remove();
+      showToast("コピーしました");
+    }
+  });
+
+  // error visible
+  const pollListEl = document.getElementById("pollList");
+  const systemMsgEl = document.getElementById("systemMsg");
+
+  // pagination
+  const pagerEl = document.getElementById("pager");
+  const pageBtnsEl = document.getElementById("pageBtns");
+  const nextBtnEl = document.getElementById("nextBtn");
+  const PER_PAGE = 15;
+  let topicsAll = [];
+  let currentPage = 1;
+
+  function escapeHtml(s){
+    return (s||"")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function sysMsg(html, isErr=false){
+    systemMsgEl.style.display = "block";
+    systemMsgEl.innerHTML = isErr ? `<span class="err">${html}</span>` : html;
+  }
+
+  window.addEventListener("error", (e)=>{
+    sysMsg("JSエラー: " + escapeHtml(e.message || "unknown"), true);
+  });
+  window.addEventListener("unhandledrejection", (e)=>{
+    sysMsg("Promiseエラー: " + escapeHtml(e.reason?.message || e.reason || "unknown"), true);
+  });
+
+  function lock(card, v){
+    card.querySelectorAll(".choiceBtn").forEach(b=>{
+      b.disabled = v;
+      b.classList.toggle("isLocked", v);
+    });
+  }
+
+  function indexToKey(idx){ return "c" + String(idx); }
+
+  async function getMyVote(topicId){
+    if(!pb.authStore.isValid) return null;
+    const me = pb.authStore.model?.id;
+    if(!me) return null;
+
+    try{
+      const item = await pb.collection("polls").getFirstListItem(
+        `topic="${topicId}" && user="${me}"`
+      );
+      if(item?.choiceKey) return String(item.choiceKey);
+      if(item?.choice) return String(item.choice);
+      if(item?.choiceIndex) return indexToKey(Number(item.choiceIndex));
+      return null;
+    }catch{
+      return null;
+    }
+  }
+
+  async function getCounts(topicId){
+    try{
+      const recs = await pb.collection("polls").getFullList({ filter:`topic="${topicId}"` });
+
+      // 最大4択前提（topicのchoice数は別で調整）
+      const counts = {1:0,2:0,3:0,4:0};
+
+      recs.forEach(r=>{
+        // ✅ どの形式でも数える
+        let idx = 0;
+        if(r.choiceIndex) idx = Number(r.choiceIndex);
+        else if(r.choiceKey) idx = Number(String(r.choiceKey).replace("c",""));
+        else if(r.choice) idx = Number(String(r.choice).replace("c",""));
+        if(counts[idx] !== undefined) counts[idx]++;
+      });
+
+      const total = Object.values(counts).reduce((a,b)=>a+b,0);
+      return {counts,total};
+    }catch{
+      return {counts:{1:0,2:0,3:0,4:0}, total:0, denied:true};
+    }
+  }
+
+  function renderResult(card, counts){
+    const total = Object.values(counts).reduce((a,b)=>a+b,0);
+
+    card.querySelectorAll(".choiceBtn").forEach(btn=>{
+      const idx = Number(btn.dataset.choiceIndex);
+      const pct = total ? Math.round((counts[idx]/total)*100) : 0;
+      btn.style.setProperty("--pct", pct);
+      btn.querySelector(".pct").textContent = pct + "%";
+      btn.dataset.show = "1";
+      btn.disabled = true;
+      btn.classList.add("isLocked");
+    });
+
+    card.querySelector(".count").textContent = total ? `${total}人が回答` : "0人が回答";
+  }
+
+  function buildCard(t){
+    const card = document.createElement("section");
+    card.className = "card";
+
+    const created10 = (t.created || "").slice(0,10);
+
+    const choices = [t.choice1,t.choice2,t.choice3,t.choice4]
+      .map(v => (v||"").trim())
+      .filter(Boolean);
+
+    const noteHtml = t.note ? `<div class="note">補足：${escapeHtml(t.note)}</div>` : "";
+
+    card.innerHTML = `
+      <div class="cardHead">
+        <p class="q">${escapeHtml(t.question || "")}</p>
+        <div class="meta">${escapeHtml(created10)}</div>
+      </div>
+
+      <div class="choices">
+        ${choices.map((c,i)=>`
+          <button type="button" class="choiceBtn" data-choice-index="${i+1}" data-show="0" style="--pct:0">
+            <span>${escapeHtml(c)}</span>
+            <span class="pct"></span>
+          </button>
+        `).join("")}
+      </div>
+
+      <div class="bottomRow"><div class="count"></div></div>
+      <div class="msg"></div>
+      ${noteHtml}
+    `;
+    return card;
+  }
+
+  async function attach(card, topic){
+    const msg = card.querySelector(".msg");
+
+    // 初期：投票済みなら結果表示
+    const myKey = await getMyVote(topic.id);
+    if(myKey){
+      const r = await getCounts(topic.id);
+      if(r.denied){
+        msg.textContent = "投票済み（結果の取得権限がありません）";
+        lock(card, true);
+        return;
+      }
+      renderResult(card, r.counts);
+      msg.textContent = "投票済みです。";
+      return;
+    }
+
+    // 未投票
+    card.querySelectorAll(".choiceBtn").forEach(btn=>{
+      btn.addEventListener("click", async ()=>{
+        msg.textContent = "";
+
+        if(!pb.authStore.isValid){
+          msg.textContent = "ログインが必要です。";
+          return;
+        }
+
+        lock(card, true);
+
+        const idx = Number(btn.dataset.choiceIndex);
+        const key = indexToKey(idx);
+
+        try{
+          await pb.collection("polls").create({
+            topic: topic.id,
+            user: pb.authStore.model.id,
+            choiceKey: key,
+            choiceIndex: idx,
+            choice: key
+          });
+          msg.textContent = "投票を反映しました。";
+        }catch(e){
+          // UNIQUE衝突など
+          msg.textContent = "投票済みです。";
+        }
+
+        const r = await getCounts(topic.id);
+        if(r.denied){
+          msg.textContent = msg.textContent || "投票しました（結果の取得権限がありません）";
+          return;
+        }
+        renderResult(card, r.counts);
+        msg.textContent = "投票済みです。";
+      });
+    });
+  }
+
+  function totalPages(){
+    return Math.max(1, Math.ceil(topicsAll.length / PER_PAGE));
+  }
+
+  function buildPager(){
+    const pages = totalPages();
+    if(pages <= 1){
+      pagerEl.style.display = "none";
+      return;
+    }
+    pagerEl.style.display = "flex";
+    pageBtnsEl.innerHTML = "";
+
+    for(let p=1; p<=pages; p++){
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "pageBtn" + (p === currentPage ? " isActive" : "");
+      b.textContent = String(p);
+      b.addEventListener("click", ()=>{
+        if(currentPage === p) return;
+        currentPage = p;
+        renderPage();
+      });
+      pageBtnsEl.appendChild(b);
+    }
+
+    nextBtnEl.disabled = currentPage >= pages;
+    nextBtnEl.onclick = ()=>{
+      const pages = totalPages();
+      if(currentPage < pages){
+        currentPage++;
+        renderPage();
+      }
+    };
+  }
+
+  async function renderPage(){
+    pollListEl.innerHTML = "";
+    systemMsgEl.style.display = "none";
+
+    const pages = totalPages();
+    if(currentPage > pages) currentPage = pages;
+
+    const start = (currentPage - 1) * PER_PAGE;
+    const slice = topicsAll.slice(start, start + PER_PAGE);
+
+    for(const t of slice){
+      const card = buildCard(t);
+      pollListEl.appendChild(card);
+      try{
+        await attach(card, t);
+      }catch{
+        card.querySelector(".msg").textContent = "このアンケートの表示中にエラーが出ました。";
+      }
+    }
+
+    buildPager();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  async function load(){
+    pollListEl.innerHTML = "";
+    systemMsgEl.style.display = "none";
+    pagerEl.style.display = "none";
+
+    let res;
+    try{
+      res = await pb.collection("poll_topics").getList(1,200,{
+        filter:`published=true && status!="archived"`,
+        sort:"-created"
+      });
+    }catch(err){
+      const m = err?.data?.message || err?.message || "unknown";
+      sysMsg(
+        `読み込み失敗：${escapeHtml(m)}<br><br>` +
+        `PocketBase側の <b>poll_topics の List/View ルール</b>が一般ユーザーに開いてない可能性があります。` +
+        `<br>List/View を <b>published=true</b> で読めるようにしてください。`,
+        true
+      );
+      return;
+    }
+
+    if(!res.items.length){
+      sysMsg("公開中のアンケートがありません。");
+      return;
+    }
+
+    topicsAll = res.items;
+    currentPage = 1;
+    renderPage();
+  }
+
+  load();
+})();
+</script>
+
+</body>
+</html>
