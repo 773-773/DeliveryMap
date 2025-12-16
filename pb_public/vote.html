@@ -3,52 +3,296 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>黒モダンA 月表示付き（PocketBase版・日次投票対応）</title>
-<style>
-body { font-family: sans-serif; margin:0; padding:6px; background:#0d0d0d; color:#fff; }
-header { display:flex; justify-content:space-between; align-items:center; padding:6px; background:#111; border-bottom:1px solid #222; }
-header .status { font-size:0.8em; color:#ccc; }
-#logoutBtn { background:#333; color:#fff; border:none; padding:4px 8px; border-radius:6px; cursor:pointer; font-size:0.8em; }
-#logoutBtn:hover { background:#555; }
-#requestBtn { display:inline-block; margin:6px 0 8px 0; font-size:0.7em; color:#66ff99; text-decoration:underline; background:none; border:none; padding:0; cursor:pointer; }
-h2 { margin-bottom:4px; line-height:1.2em; }
-h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
-.searchContainer { display:flex; flex-direction:column; gap:4px; margin-bottom:8px; }
-.searchContainer div { display:flex; gap:4px; }
-.searchContainer input, .searchContainer select { padding:6px; border-radius:6px; border:1px solid #333; font-size:0.9em; flex:1; background:#111; color:#fff; }
-.searchContainer button { padding:6px; border-radius:6px; border:1px solid #333; font-size:0.9em; cursor:pointer; background:#ffa500; color:#000; }
-.storeCard { display:flex; justify-content:space-between; padding:6px; margin-bottom:6px; border:1px solid #222; border-radius:6px; background:#111; font-size:0.8em; }
-.leftColumn { flex:1; margin-right:6px; display:flex; flex-direction:column; gap:4px; }
-.storeName { font-weight:bold; color:#66ff99; }
-.address { font-size:0.7em; color:#ccc; }
-.rightColumn { flex:1; background:#1a1a1a; padding:4px; border-radius:4px; font-size:0.7em; text-align:left; }
-.voteContainer { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
-.voteCount { font-weight:bold; color:#ff6600; }
-.monthLabel { color:#fff; font-weight:bold; }
-.accordion { font-size:0.7em; padding:2px 4px; margin-top:2px; background:#333; border:none; border-radius:3px; cursor:pointer; width:100%; text-align:left; color:#fff; }
-.panel { display:none; font-size:0.7em; padding-left:4px; background:#222; border-radius:2px; margin-bottom:2px; color:#ccc; }
+<title>黒モダンA 月表示付き（投票＋口コミ＋お気に入り）</title>
 
-/* 🔹 モーダル */
-#loginModal {
-  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
-  justify-content:center; align-items:center; z-index:9999;
+<style>
+body {
+  font-family: sans-serif;
+  margin:0;
+  padding:6px;
+  background:#0d0d0d;
+  color:#fff;
 }
-#loginModal .box {
-  background:#111; padding:20px; border-radius:10px; text-align:center; width:280px;
+
+header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:6px;
+  background:#111;
+  border-bottom:1px solid #222;
 }
-#loginModal button {
-  width:100%; padding:8px; margin-top:8px; border:none; border-radius:6px; cursor:pointer;
+
+header .status {
+  font-size:0.8em;
+  color:#ccc;
 }
-#googleLoginBtn { background:#fff; color:#000; }
-#emailLoginBtn { background:#66ff99; color:#000; }
-#closeModalBtn { background:#333; color:#fff; }
+
+#loginOpenBtn,
+#logoutBtn {
+  background:#333;
+  color:#fff;
+  border:none;
+  padding:4px 8px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:0.8em;
+}
+#loginOpenBtn:hover,
+#logoutBtn:hover { background:#555; }
+
+#requestBtn {
+  display:inline-block;
+  margin:6px 0 10px;
+  font-size:0.7em;
+  color:#66ff99;
+  background:none;
+  border:none;
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+h2 { margin-bottom:6px; }
+h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
+
+/* 検索 */
+.searchContainer {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:10px;
+}
+.searchContainer div { display:flex; gap:6px; }
+.searchContainer input,
+.searchContainer select {
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
+  font-size:0.9em;
+}
+.searchContainer button {
+  padding:6px;
+  border-radius:6px;
+  border:1px solid #333;
+  background:#ffa500;
+  color:#000;
+  cursor:pointer;
+  font-size:0.9em;
+}
+.favFilter {
+  font-size:0.8em;
+  color:#ccc;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+
+/* 店舗カード */
+.storeCard {
+  position:relative;
+  background:#111;
+  border:1px solid #222;
+  border-radius:10px;
+  padding:10px;
+  margin-bottom:12px;
+  box-shadow:0 2px 4px rgba(0,0,0,0.3);
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.storeName {
+  font-weight:bold;
+  font-size:1em;
+  color:#66ff99;
+}
+.address {
+  font-size:0.75em;
+  color:#bbb;
+}
+
+/* 平均評価表示 */
+.avgRating {
+  font-size:0.8em;
+  color:#ccc;
+  margin-top:2px;
+}
+
+.voteContainer {
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+.voteCount { color:#ff6600; font-weight:bold; }
+
+.rightColumn {
+  margin-top:4px;
+  background:#1a1a1a;
+  padding:8px;
+  border-radius:6px;
+  font-size:0.75em;
+}
+
+.accordion {
+  width:100%;
+  text-align:left;
+  margin-top:6px;
+  padding:4px;
+  background:#333;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+  cursor:pointer;
+}
+.panel {
+  display:none;
+  background:#222;
+  border-radius:4px;
+  padding:6px;
+  margin-top:4px;
+  color:#ccc;
+  font-size:0.7em;
+}
+
+/* 口コミタブ */
+.reviewToggleBtn {
+  margin-top:6px;
+  background:#222;
+  border:1px solid #333;
+  color:#66ff99;
+  padding:6px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:0.8em;
+  text-align:center;
+}
+
+.reviewPanel {
+  display:none;
+  background:#1a1a1a;
+  border:1px solid #333;
+  padding:8px;
+  border-radius:6px;
+  margin-top:6px;
+  font-size:0.75em;
+}
+
+/* 星評価（投稿用） */
+.starWrap { display:flex; gap:4px; cursor:pointer; margin-bottom:4px; }
+.star { font-size:22px; color:#444; }
+.star.active { color:#ffcc00; }
+
+/* お気に入りボタン */
+.favoriteBtn {
+  position:absolute;
+  top:6px;
+  right:6px;
+  border:none;
+  background:transparent;
+  font-size:20px;
+  cursor:pointer;
+  color:#666;
+}
+.favoriteBtn.active {
+  color:#ff6699;
+}
+
+/* 店舗報告ボタン（目立たないリンク風） */
+.storeReportBtn {
+  align-self:flex-end;
+  font-size:0.65em;
+  color:#777;
+  background:none;
+  border:none;
+  padding:0;
+  margin-top:2px;
+  text-decoration:underline;
+  cursor:pointer;
+}
+
+/* 店舗報告モーダル */
+#storeReportModal {
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.7);
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+.modal-box {
+  background:#111;
+  padding:20px;
+  border-radius:10px;
+  width:280px;
+  text-align:center;
+}
+.modal-box h3 {
+  margin:0 0 8px;
+}
+.modal-box p {
+  color:#ccc;
+  font-size:0.9em;
+  margin:0 0 10px;
+}
+#storeReportModal button {
+  width:100%;
+  padding:8px;
+  margin-top:8px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.reportReasonOption {
+  background:#222;
+  color:#fff;
+  font-size:0.8em;
+}
+.reportReasonOption.selected {
+  background:#555;
+}
+#submitStoreReportBtn {
+  background:#66ff99;
+  color:#000;
+  font-size:0.85em;
+}
+#closeStoreReportBtn {
+  background:#333;
+  color:#fff;
+  font-size:0.8em;
+}
+
+/* ページネーション */
+#pagination {
+  margin:12px 0 4px;
+  text-align:center;
+  font-size:0.8em;
+}
+#pagination button {
+  padding:4px 10px;
+  margin:0 3px;
+  border-radius:6px;
+  border:1px solid #333;
+  background:#222;
+  color:#fff;
+  cursor:pointer;
+}
+#pagination .pageNumBtn.current {
+  background:#ffa500;
+  color:#000;
+  cursor:default;
+}
 </style>
 </head>
 <body>
 
 <header>
   <div class="status" id="userStatus">未ログイン</div>
-  <button id="logoutBtn" style="display:none;">ログアウト</button>
+  <div>
+    <button id="loginOpenBtn">ログイン</button>
+    <button id="logoutBtn" style="display:none;">ログアウト</button>
+  </div>
 </header>
 
 <h2>調理待ち時間予測<small>※お店到着後に商品受取までにかかった時間</small></h2>
@@ -60,19 +304,34 @@ h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
     <select id="prefSelect"><option value="">都道府県を選択</option></select>
     <select id="citySelect" style="display:none;"><option value="">市区町村を選択</option></select>
   </div>
-  <button id="searchBtn">検索</button>
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <button id="searchBtn">検索</button>
+    <label class="favFilter">
+      <input type="checkbox" id="favOnlyCheckbox">
+      お気に入りのみ
+    </label>
+  </div>
 </div>
 
 <div id="storeContainer"></div>
+<div id="pagination"></div>
 
-<!-- 🟢 ログイン選択モーダル -->
-<div id="loginModal">
-  <div class="box">
-    <h3 style="margin-top:0;">ログインが必要です</h3>
-    <p style="font-size:0.9em; color:#ccc;">どの方法でログインしますか？</p>
-    <button id="googleLoginBtn">Googleでログイン</button>
-    <button id="emailLoginBtn">メールアドレスでログイン</button>
-    <button id="closeModalBtn">キャンセル</button>
+<!-- 店舗情報報告モーダル -->
+<div id="storeReportModal">
+  <div class="modal-box">
+    <h3>店舗情報の報告</h3>
+    <p>報告理由を選んでください。</p>
+    <button data-reason="1" class="reportReasonOption">
+      1. 店舗情報が間違っている（名前、住所等）
+    </button>
+    <button data-reason="2" class="reportReasonOption">
+      2. すでに登録してある店舗（二重登録）
+    </button>
+    <button data-reason="3" class="reportReasonOption">
+      3. 存在しない店舗
+    </button>
+    <button id="submitStoreReportBtn">送信</button>
+    <button id="closeStoreReportBtn">キャンセル</button>
   </div>
 </div>
 
@@ -80,156 +339,815 @@ h2 small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
-// 🟢 ログイン状態のUI更新関数
-function updateUserStatus() {
-  const status = document.getElementById("userStatus");
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (pb.authStore.isValid) {
-    const email = pb.authStore.model?.email || "ログイン中";
-    status.textContent = `ログイン中: ${email}`;
-    logoutBtn.style.display = "inline-block";
+/* ========================
+   共通・ユーティリティ
+======================== */
+function updateUserStatus(){
+  const u  = document.getElementById("userStatus");
+  const lo = document.getElementById("logoutBtn");
+  const li = document.getElementById("loginOpenBtn");
+  if(pb.authStore.isValid){
+    u.textContent = "ログイン中: " + (pb.authStore.model.email || "");
+    lo.style.display = "inline-block";
+    li.style.display = "none";
   } else {
-    status.textContent = "未ログイン";
-    logoutBtn.style.display = "none";
+    u.textContent = "未ログイン";
+    lo.style.display = "none";
+    li.style.display = "inline-block";
   }
 }
-
-// ---- ページロード時に状態確認 ----
 updateUserStatus();
 
-// 都道府県リスト
-const prefs=["北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"];
+function redirectToLogin(){
+  alert("ログインが必要です。ログイン画面に移動します。");
+  window.location.href = "login.html";
+}
+
+function escapeHtml(s){
+  return s.replace(/[&<>"']/g, c=>({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
+}
+
+function normalizeForFilter(text){
+  return text.normalize("NFKC").toLowerCase().replace(/\s+/g,"");
+}
+function containsNGWordsEnhanced(text){
+  const t = normalizeForFilter(text);
+  const ngWords = [
+    "しね","死ね","ころす","殺す","きも","キモ","きしょ","キショ",
+    "ごみ","ゴミ","かす","カス","ばか","バカ","あほ","アホ",
+    "ぶす","ブス","でぶ","デブ","はげ","ハゲ",
+    "ちえおくれ","知恵遅れ","しょうがい","障害",
+    "くず","クズ","ざこ","雑魚","にんげんのくず",
+    "しんで","殺したい"
+  ];
+  return ngWords.some(w => t.includes(w));
+}
+function containsUrl(text){
+  return /https?:\/\/|www\./i.test(text);
+}
+function looksLikeEmojiSpam(text){
+  const codePoints = Array.from(text);
+  let emojiCount = 0;
+  for(const ch of codePoints){
+    const cp = ch.codePointAt(0);
+    if(
+      (cp >= 0x1F300 && cp <= 0x1FAFF) ||
+      (cp >= 0x2600 && cp <= 0x27BF)
+    ){
+      emojiCount++;
+    }
+  }
+  if(codePoints.length >= 10 && emojiCount / codePoints.length > 0.4) return true;
+  if(/([!?w笑草ｗ])\1{4,}/i.test(text)) return true;
+  return false;
+}
+function looksLikePersonalName(text){
+  const t = text.replace(/\s+/g,"");
+  if(/[一-龥]{1,4}(さん|くん|ちゃん)/.test(t)) return true;
+  if(/[ぁ-ゖァ-ヺ]{2,6}(さん|くん|ちゃん)/.test(t)) return true;
+  if(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/.test(text)) return true;
+  return false;
+}
+function isToxicTone(text){
+  if(containsNGWordsEnhanced(text)) return true;
+  if(containsUrl(text)) return true;
+  if(looksLikeEmojiSpam(text)) return true;
+  // if(looksLikePersonalName(text)) return true;
+  return false;
+}
+
+/* ========================
+   都道府県
+======================== */
+const prefs=[ "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都",
+"神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府",
+"兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県",
+"長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県" ];
+
 const prefSelect=document.getElementById("prefSelect");
-prefs.forEach(p=>{const o=document.createElement("option");o.value=p;o.textContent=p;prefSelect.appendChild(o);});
+prefs.forEach(p=>{
+  const o=document.createElement("option");
+  o.value=p; o.textContent=p;
+  prefSelect.appendChild(o);
+});
 const citySelect=document.getElementById("citySelect");
 
-let currentPage=1,pageSize=20;
-const voteOptions=["なし","2〜3分","5〜10分","10分以上"];
-const now=new Date(),currentMonth=`${now.getFullYear()}年${now.getMonth()+1}月`;
-const todayKey=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
-const pastMonths=[...Array(2)].map((_,i)=>{const d=new Date(now.getFullYear(),now.getMonth()-i-1,1);return `${d.getFullYear()}年${d.getMonth()+1}月`;});
-let browserId=localStorage.getItem("browserId");if(!browserId){browserId="id-"+Math.random().toString(36).slice(2);localStorage.setItem("browserId",browserId);}
-
-prefSelect.onchange=async()=>{
-  const pref=prefSelect.value;
-  if(!pref){citySelect.style.display="none";return;}
-  const res=await pb.collection("stores").getList(1,500,{filter:`prefecture="${pref}"`});
+prefSelect.onchange = async ()=>{
+  const pref = prefSelect.value;
+  if(!pref){ citySelect.style.display="none"; return; }
+  const res = await pb.collection("stores").getList(1,500,{filter:`prefecture="${pref}"`});
   const cities=[...new Set(res.items.map(i=>i.city).filter(Boolean))].sort();
   citySelect.innerHTML='<option value="">市区町村を選択</option>';
-  cities.forEach(c=>{const o=document.createElement("option");o.value=c;o.textContent=c;citySelect.appendChild(o);});
+  cities.forEach(c=>{
+    const o=document.createElement("option");
+    o.value=c; o.textContent=c;
+    citySelect.appendChild(o);
+  });
   citySelect.style.display="block";
 };
 
+/* ========================
+   検索 & お気に入り絞り込み & ページング
+======================== */
 document.getElementById("searchBtn").onclick=()=>loadPage(1);
+
+let pageSize=20;
+let favoriteOnly=false;
+let favoriteMap=new Map(); // storeId -> favorite record id
+let currentPage=1;
+let totalPages=1;
+
+const favOnlyCheckbox=document.getElementById("favOnlyCheckbox");
+favOnlyCheckbox.onchange = ()=>{
+  if(favOnlyCheckbox.checked && !pb.authStore.isValid){
+    alert("お気に入り絞り込みはログインが必要です");
+    favOnlyCheckbox.checked=false;
+    redirectToLogin();
+    return;
+  }
+  favoriteOnly = favOnlyCheckbox.checked;
+  loadPage(1);
+};
 
 async function loadPage(page=1){
   const container=document.getElementById("storeContainer");
-  container.innerHTML="<p>読み込み中...</p>";
+  container.innerHTML="読み込み中…";
+
   const name=document.getElementById("nameInput").value.trim();
-  const pref=prefSelect.value,city=citySelect.value;
+  const pref=prefSelect.value;
+  const city=citySelect.value;
+
   let filter="";
   if(name)filter+=`name~"${name}"`;
   if(pref)filter+=(filter?" && ":"")+`prefecture="${pref}"`;
   if(city)filter+=(filter?" && ":"")+`city="${city}"`;
+
   try{
     const list=await pb.collection("stores").getList(page,pageSize,{filter,sort:"name"});
-    renderStores(list.items);
-  }catch(e){console.error(e);container.textContent="読み込みエラー";}
+    let stores=list.items;
+
+    currentPage = list.page;
+    totalPages = list.totalPages || 1;
+
+    favoriteMap = new Map();
+    if(pb.authStore.isValid){
+      const userId = pb.authStore.model.id;
+      const favList = await pb.collection("favorites").getList(1,500,{
+        filter:`userId="${userId}"`,
+        sort:"-created"
+      });
+      favList.items.forEach(f=>{
+        const sid = f.storeId;
+        if(sid) favoriteMap.set(sid, f.id);
+      });
+    }
+
+    if(favoriteOnly){
+      stores = stores.filter(s => favoriteMap.has(s.id));
+    }
+
+    renderStores(stores);
+    renderPagination();
+
+  }catch(e){
+    console.error(e);
+    container.textContent="読み込みエラー";
+    document.getElementById("pagination").innerHTML="";
+  }
 }
+
+/* ページネーションの描画（数字ボタン方式） */
+function renderPagination(){
+  const pEl = document.getElementById("pagination");
+  if(!pEl) return;
+
+  if(totalPages <= 1){
+    pEl.innerHTML = "";
+    return;
+  }
+
+  let html = "";
+
+  // 前へ
+  if(currentPage > 1){
+    html += `<button class="pageBtn" data-page="${currentPage-1}">前へ</button>`;
+  }
+
+  // 数字ボタン（最大5つ）
+  const windowSize = 5;
+  let start = currentPage - 2;
+  let end   = currentPage + 2;
+
+  if(start < 1){
+    end += (1 - start);
+    start = 1;
+  }
+  if(end > totalPages){
+    start -= (end - totalPages);
+    end = totalPages;
+  }
+  if(start < 1) start = 1;
+
+  for(let p = start; p <= end; p++){
+    const cls = p === currentPage
+      ? "pageBtn pageNumBtn current"
+      : "pageBtn pageNumBtn";
+    html += `<button class="${cls}" data-page="${p}">${p}</button>`;
+  }
+
+  // 次へ
+  if(currentPage < totalPages){
+    html += `<button class="pageBtn" data-page="${currentPage+1}">次へ</button>`;
+  }
+
+  pEl.innerHTML = html;
+
+  pEl.querySelectorAll(".pageBtn").forEach(btn=>{
+    btn.onclick = ()=>{
+      const page = Number(btn.dataset.page) || 1;
+      if(page === currentPage) return;
+      loadPage(page);
+      window.scrollTo({top:0, behavior:"smooth"});
+    };
+  });
+}
+
+/* ========================
+   店舗カード
+======================== */
+const voteOptions=["なし","2〜3分","5〜10分","10分以上"];
+
+const now=new Date();
+const currentMonth=`${now.getFullYear()}年${now.getMonth()+1}月`;
+const todayKey=`${now.getFullYear()}-${now.getMonth()+1}-${now.getDate()}`;
+const pastMonths=[...Array(2)].map((_,i)=>{
+  const d=new Date(now.getFullYear(),now.getMonth()-i-1,1);
+  return `${d.getFullYear()}年${d.getMonth()+1}月`;
+});
+
+let browserId=localStorage.getItem("browserId");
+if(!browserId){
+  browserId="id-"+Math.random().toString(36).slice(2);
+  localStorage.setItem("browserId",browserId);
+}
+
+/* 店舗報告用の状態 */
+let reportTargetStoreId = null;
+let selectedStoreReportReason = null;
 
 function renderStores(stores){
   const container=document.getElementById("storeContainer");
   container.innerHTML="";
-  if(!stores.length){container.textContent="該当店舗なし";return;}
+
+  if(!stores.length){
+    container.textContent = favoriteOnly
+      ? "お気に入り店舗がありません"
+      : "該当店舗なし";
+    return;
+  }
+
   stores.forEach(s=>{
-    const card=document.createElement("div");card.className="storeCard";
-    const left=document.createElement("div");left.className="leftColumn";
-    left.innerHTML=`<div class="storeName">${s.name}</div><div class="address">${s.prefecture||""} ${s.city||""} ${s.address||""}</div>`;
-    const voteBox=document.createElement("div");voteBox.className="voteContainer";
+    const card=document.createElement("div");
+    card.className="storeCard";
+
+    const isFav = favoriteMap.has(s.id);
+
+    card.innerHTML=
+      `<button class="favoriteBtn ${isFav?"active":""}" title="お気に入り">
+         ${isFav?"♥":"♡"}
+       </button>
+       <div class="storeName">${s.name}</div>
+       <div class="avgRating" id="avgRating-${s.id}">平均評価：口コミなし</div>
+       <div class="address">${s.prefecture||""} ${s.city||""} ${s.address||""}</div>
+       <button class="storeReportBtn" data-store-id="${s.id}">店舗情報の報告</button>`;
+
+    const favBtn = card.querySelector(".favoriteBtn");
+    favBtn.onclick = ()=>handleFavoriteClick(s.id, favBtn);
+
+    const storeReportBtn = card.querySelector(".storeReportBtn");
+    storeReportBtn.onclick = ()=>handleStoreReport(s.id);
+
+    /* 投票 */
+    const vBox=document.createElement("div");
+    vBox.className="voteContainer";
     const votedKey=`${s.id}-${todayKey}-${browserId}`;
     if(localStorage.getItem(votedKey)){
-      const tag=document.createElement("span");tag.textContent="今日は投票済";tag.style.background="#ffa500";tag.style.color="#000";tag.style.padding="2px 4px";tag.style.borderRadius="4px";voteBox.appendChild(tag);
+      vBox.innerHTML=`<span style="background:#ffa500; color:#000; padding:2px 4px; border-radius:4px;">今日は投票済</span>`;
     }else{
-      const sel=document.createElement("select");voteOptions.forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;sel.appendChild(o);});
-      const btn=document.createElement("button");btn.textContent="投票";
+      const sel=document.createElement("select");
+      voteOptions.forEach(v=>{
+        const o=document.createElement("option");
+        o.value=v; o.textContent=v;
+        sel.appendChild(o);
+      });
+      const btn=document.createElement("button");
+      btn.textContent="投票";
       btn.onclick=()=>vote(s.id,sel.value);
-      voteBox.appendChild(sel);voteBox.appendChild(btn);
+      vBox.appendChild(sel);
+      vBox.appendChild(btn);
     }
-    left.appendChild(voteBox);
+    card.appendChild(vBox);
 
-    const right=document.createElement("div");right.className="rightColumn";
-    let nowLine="";voteOptions.forEach(v=>{const c=s.votes?.[currentMonth]?.[v]||0;nowLine+=`・${v}: <span class='voteCount'>${c}人</span> `;});
+    /* 集計 */
+    const right=document.createElement("div");
+    right.className="rightColumn";
+
+    let nowLine="";
+    voteOptions.forEach(v=>{
+      const c=s.votes?.[currentMonth]?.[v]||0;
+      nowLine+=`・${v}: <span class="voteCount">${c}票</span> `;
+    });
     right.innerHTML=`<div>${currentMonth} ${nowLine}</div>`;
+
     pastMonths.forEach(m=>{
-      const acc=document.createElement("button");acc.className="accordion";acc.textContent=`${m}の結果`;
-      const panel=document.createElement("div");panel.className="panel";
-      let txt="";voteOptions.forEach(v=>{const c=s.votes?.[m]?.[v]||0;txt+=`・${v}: ${c}人 `;});
-      panel.textContent=txt;acc.onclick=()=>panel.style.display=panel.style.display==="block"?"none":"block";right.appendChild(acc);right.appendChild(panel);
+      const acc=document.createElement("button");
+      acc.className="accordion";
+      acc.textContent=`${m}の結果`;
+
+      const panel=document.createElement("div");
+      panel.className="panel";
+
+      let txt="";
+      voteOptions.forEach(v=>{
+        const c=s.votes?.[m]?.[v]||0;
+        txt+=`・${v}: ${c}票 `;
+      });
+      panel.textContent=txt;
+
+      acc.onclick=()=>panel.style.display=
+        panel.style.display==="block"?"none":"block";
+
+      right.appendChild(acc);
+      right.appendChild(panel);
     });
 
-    card.appendChild(left);card.appendChild(right);container.appendChild(card);
+    card.appendChild(right);
+
+    /* 口コミタブ */
+    const toggleBtn=document.createElement("div");
+    toggleBtn.className="reviewToggleBtn";
+    toggleBtn.textContent="口コミを見る";
+
+    const panel=document.createElement("div");
+    panel.className="reviewPanel";
+    panel.id=`reviewPanel-${s.id}`;
+    panel.innerHTML=`
+      <div style="font-weight:bold; color:#66ff99; margin-bottom:4px;">口コミ</div>
+
+      <div class="starWrap" id="starWrap-${s.id}">
+        <span class="star" data-v="1">★</span>
+        <span class="star" data-v="2">★</span>
+        <span class="star" data-v="3">★</span>
+        <span class="star" data-v="4">★</span>
+        <span class="star" data-v="5">★</span>
+      </div>
+
+      <div id="reviews-${s.id}" style="margin-bottom:6px;">読み込み中…</div>
+
+      <textarea id="reviewInput-${s.id}"
+        placeholder="口コミを書く（最大200文字・任意）"
+        maxlength="200"
+        style="width:100%; height:50px; padding:6px; border-radius:6px; background:#111; color:#fff; border:1px solid #444;"></textarea>
+
+      <button id="reviewBtn-${s.id}"
+        style="margin-top:6px; width:100%; padding:6px; background:#66ff99; color:#000; border-radius:6px; border:none;">
+        投稿する
+      </button>
+    `;
+
+    toggleBtn.onclick=()=>{
+      const opened = panel.style.display==="block";
+      panel.style.display = opened ? "none" : "block";
+      toggleBtn.textContent = opened ? "口コミを見る" : "口コミを閉じる";
+    };
+
+    /* 星クリック */
+    const sWrap=panel.querySelector(`#starWrap-${s.id}`);
+    sWrap.querySelectorAll(".star").forEach(st=>{
+      st.onclick=()=>{
+        const val = Number(st.dataset.v);
+        sWrap.querySelectorAll(".star").forEach(x=>{
+          const v = Number(x.dataset.v);
+          x.classList.toggle("active", v <= val);
+        });
+      };
+    });
+
+    /* 口コミ投稿 */
+    panel.querySelector(`#reviewBtn-${s.id}`).onclick=()=>{
+      const textEl = document.getElementById(`reviewInput-${s.id}`);
+      const text = textEl.value.trim();
+
+      const sWrapEl = document.getElementById(`starWrap-${s.id}`);
+      let starValue = 0;
+      sWrapEl.querySelectorAll(".star").forEach(st=>{
+        if(st.classList.contains("active")){
+          const v = Number(st.dataset.v);
+          if(v > starValue) starValue = v;
+        }
+      });
+
+      if(!starValue) return alert("星評価を選んでください");
+
+      if(text && isToxicTone(text)){
+        alert("誹謗中傷・個人名・URL・絵文字スパムなどが含まれている可能性があります。内容を見直してください。");
+        return;
+      }
+
+      if(!pb.authStore.isValid){
+        redirectToLogin();
+        return;
+      }
+
+      submitReview(s.id, text, starValue);
+    };
+
+    card.appendChild(toggleBtn);
+    card.appendChild(panel);
+
+    container.appendChild(card);
   });
+
+  loadAllReviewsForRenderedStores(stores);
 }
 
-// ✅ 日次制限版 vote()
-async function vote(id, choice) {
-  if (!pb.authStore.isValid) {
-    document.getElementById("loginModal").style.display = "flex";
-    window.pendingVote = { id, choice };
+/* ========================
+   お気に入りトグル
+======================== */
+async function handleFavoriteClick(storeId, btn){
+  if(!pb.authStore.isValid){
+    redirectToLogin();
     return;
   }
-  await executeVote(id, choice);
+  try{
+    if(favoriteMap.has(storeId)){
+      const favId = favoriteMap.get(storeId);
+      await pb.collection("favorites").delete(favId);
+      favoriteMap.delete(storeId);
+      btn.classList.remove("active");
+      btn.textContent="♡";
+      if(favoriteOnly){
+        loadPage(1);
+      }
+    }else{
+      const rec = await pb.collection("favorites").create({
+        userId: pb.authStore.model.id,
+        storeId
+      });
+      favoriteMap.set(storeId, rec.id);
+      btn.classList.add("active");
+      btn.textContent="♥";
+    }
+  }catch(e){
+    console.error(e);
+    alert("お気に入り更新エラー");
+  }
 }
 
-async function executeVote(id, choice) {
-  const key = `${id}-${todayKey}-${browserId}`;
-  if (localStorage.getItem(key)) {
-    alert("今日はすでに投票済です。");
+/* ========================
+   店舗情報の報告（storeReports）
+======================== */
+function handleStoreReport(storeId){
+  if(!pb.authStore.isValid){
+    redirectToLogin();
+    return;
+  }
+  openStoreReportModal(storeId);
+}
+
+function openStoreReportModal(storeId){
+  reportTargetStoreId = storeId;
+  selectedStoreReportReason = null;
+  document.querySelectorAll(".reportReasonOption").forEach(btn=>{
+    btn.classList.remove("selected");
+  });
+  document.getElementById("storeReportModal").style.display="flex";
+}
+function closeStoreReportModal(){
+  reportTargetStoreId = null;
+  selectedStoreReportReason = null;
+  document.getElementById("storeReportModal").style.display="none";
+}
+
+async function submitStoreReport(){
+  if(!reportTargetStoreId){
+    alert("店舗が取得できていません。ページを更新してやり直してください。");
+    return;
+  }
+  if(!selectedStoreReportReason){
+    alert("報告理由を選んでください。");
     return;
   }
 
-  try {
-    const s = await pb.collection("stores").getOne(id);
-    const votes = s.votes || {};
-    votes[currentMonth] = votes[currentMonth] || {};
-    votes[currentMonth][choice] = (votes[currentMonth][choice] || 0) + 1;
+  const map = {
+    1:"店舗情報が間違っている(名前、住所等)",
+    2:"すでに登録してある店舗(二重登録)",
+    3:"存在しない店舗"
+  };
+  const reason = map[selectedStoreReportReason];
+  if(!reason){
+    alert("不正な報告理由です。");
+    return;
+  }
 
-    await pb.collection("stores").update(id, { votes });
-    localStorage.setItem(key, "1");
-    alert("投票が完了しました！");
-    loadPage();
-  } catch (e) {
-    console.error("投票エラー", e);
-    alert("投票に失敗しました。");
+  await reportStoreInternal(reportTargetStoreId, reason);
+  closeStoreReportModal();
+}
+
+async function reportStoreInternal(storeId, reason){
+  if(!pb.authStore.isValid){
+    redirectToLogin();
+    return;
+  }
+  try{
+    const reporterId = pb.authStore.model.id;
+    const start = new Date();
+    start.setHours(0,0,0,0);
+    const iso = start.toISOString();
+
+    const existing = await pb.collection("storeReports").getList(1,1,{
+      filter:`storeId="${storeId}" && reporterId="${reporterId}" && created>="${iso}"`
+    });
+    if(existing.items.length){
+      alert("この店舗は本日すでに報告済みです。");
+      return;
+    }
+
+    await pb.collection("storeReports").create({
+      storeId,
+      reporterId,
+      reason
+    });
+
+    alert("店舗情報の報告を受け付けました。ありがとうございます。");
+
+  }catch(e){
+    console.error(e);
+    let msg = "店舗情報の報告に失敗しました。\n\n";
+    if(e?.data?.message){
+      msg += e.data.message;
+    }else if(e?.data){
+      msg += JSON.stringify(e.data);
+    }else if(e?.message){
+      msg += e.message;
+    }else{
+      msg += JSON.stringify(e);
+    }
+    alert(msg);
   }
 }
 
-// 🟢 モーダルボタン
-document.getElementById("googleLoginBtn").onclick = async () => {
-  try {
-    const authData = await pb.collection("users").authWithOAuth2({ provider: "google" });
-    console.log("✅ Googleログイン成功:", authData);
-    document.getElementById("loginModal").style.display = "none";
-    updateUserStatus();
-    const { id, choice } = window.pendingVote;
-    if (id && choice) await executeVote(id, choice);
-  } catch (err) {
-    console.error("❌ Googleログイン失敗:", err);
-    alert("ログインに失敗しました。");
+/* ========================
+   投票（日次制限）
+======================== */
+async function vote(id, choice){
+  if(!pb.authStore.isValid){
+    redirectToLogin();
+    return;
   }
+  await executeVote(id,choice);
+}
+
+async function executeVote(id, choice){
+  const key=`${id}-${todayKey}-${browserId}`;
+  if(localStorage.getItem(key)){
+    return alert("今日はすでに投票済です。");
+  }
+
+  try{
+    const s=await pb.collection("stores").getOne(id);
+    const votes=s.votes||{};
+    votes[currentMonth]=votes[currentMonth]||{};
+    votes[currentMonth][choice]=(votes[currentMonth][choice]||0)+1;
+
+    await pb.collection("stores").update(id,{votes});
+    localStorage.setItem(key,"1");
+
+    alert("投票しました！");
+    loadPage(currentPage);
+  }catch(e){
+    console.error(e);
+    alert("投票エラー");
+  }
+}
+
+/* ========================
+   口コミ表示 + 平均評価 + 投稿者ID表示
+======================== */
+async function loadAllReviewsForRenderedStores(stores){
+  try{
+    const list = await pb.collection("reviews").getList(1,500,{ sort:"-created" });
+    const reviews = list.items;
+
+    const grouped = {};
+    reviews.forEach(r=>{
+      const sid = r.storeId;
+      if(!sid) return;
+      if(!grouped[sid]) grouped[sid] = [];
+      grouped[sid].push(r);
+    });
+
+    const currentUserId = pb.authStore.isValid ? pb.authStore.model.id : null;
+
+    stores.forEach(s=>{
+      const storeId = s.id;
+      const box = document.getElementById(`reviews-${storeId}`);
+      const avgEl = document.getElementById(`avgRating-${storeId}`);
+
+      const items = grouped[storeId] || [];
+
+      if(!items.length){
+        if(avgEl) avgEl.textContent = "平均評価：口コミなし";
+        if(box) box.innerHTML = `<span style="color:#888;">口コミはまだありません</span>`;
+      }else{
+        let sum = 0;
+        items.forEach(r=>{ sum += r.star || 0; });
+        const avg = sum / items.length;
+        const rounded = Math.round(avg*10)/10;
+
+        const filledCount = Math.round(avg);
+        const emptyCount = 5 - filledCount;
+        const filledStars = "★".repeat(filledCount);
+        const emptyStars  = "★".repeat(emptyCount>0 ? emptyCount : 0);
+
+        if(avgEl){
+          avgEl.innerHTML =
+            `平均評価：<span style="color:#ffcc00;">${filledStars}</span>`+
+            `<span style="color:#555;">${emptyStars}</span> （${rounded.toFixed(1)}）`;
+        }
+
+        let html="";
+        items.slice(0,3).forEach(r=>{
+          const rawUserId = r.userId || "";
+          const userLabel = rawUserId
+            ? `投稿者ID: ${String(rawUserId).slice(0,4)}****`
+            : "投稿者ID: 不明";
+
+          html+=`
+            <div style="border-bottom:1px solid #333; padding:4px 0;">
+              <div style="color:#ffcc00;">
+                ${"★".repeat(r.star)}<span style="color:#555">${"★".repeat(5-r.star)}</span>
+              </div>
+              <div style="color:#ddd;">${escapeHtml(r.text || "")}</div>
+              <div style="color:#888; font-size:0.65em;">${userLabel}</div>
+              <div style="color:#666; font-size:0.6em;">${new Date(r.created).toLocaleString()}</div>
+            </div>
+          `;
+        });
+
+        if(items.length>3){
+          html += `<button style="width:100%; padding:4px; margin-top:4px; background:#333; border-radius:4px;"
+                     onclick="showAllReviews('${storeId}')">もっと見る</button>`;
+        }
+
+        if(box) box.innerHTML = html;
+      }
+
+      // 自分の口コミをフォームに反映
+      if(currentUserId){
+        const myReview = (grouped[storeId] || []).find(r => r.userId === currentUserId);
+        if(myReview){
+          const sWrapEl = document.getElementById(`starWrap-${storeId}`);
+          if(sWrapEl){
+            const val = myReview.star || 0;
+            sWrapEl.querySelectorAll(".star").forEach(st=>{
+              const v = Number(st.dataset.v);
+              st.classList.toggle("active", v <= val);
+            });
+          }
+          const inputEl = document.getElementById(`reviewInput-${storeId}`);
+          if(inputEl){
+            inputEl.value = myReview.text === "（本文なし）" ? "" : (myReview.text || "");
+          }
+        }
+      }
+    });
+
+  }catch(e){
+    console.error(e);
+    stores.forEach(s=>{
+      const box = document.getElementById(`reviews-${s.id}`);
+      const avgEl = document.getElementById(`avgRating-${s.id}`);
+      if(avgEl) avgEl.textContent = "平均評価：取得に失敗しました";
+      if(box) box.innerHTML = "読み込み失敗";
+    });
+  }
+}
+
+function showAllReviews(storeId){
+  pb.collection("reviews").getList(1,500,{ sort:"-created" })
+    .then(list=>{
+      const all = list.items.filter(r => r.storeId === storeId);
+      const box=document.getElementById(`reviews-${storeId}`);
+      let html="";
+      all.forEach(r=>{
+        const rawUserId = r.userId || "";
+        const userLabel = rawUserId
+          ? `投稿者ID: ${String(rawUserId).slice(0,4)}****`
+          : "投稿者ID: 不明";
+
+        html+=`
+          <div style="border-bottom:1px solid #333; padding:4px 0;">
+            <div style="color:#ffcc00;">
+              ${"★".repeat(r.star)}<span style="color:#555">${"★".repeat(5-r.star)}</span>
+            </div>
+            <div style="color:#ddd;">${escapeHtml(r.text || "")}</div>
+            <div style="color:#888; font-size:0.65em;">${userLabel}</div>
+            <div style="color:#666; font-size:0.6em;">${new Date(r.created).toLocaleString()}</div>
+          </div>
+        `;
+      });
+      if(box) box.innerHTML = html;
+    });
+}
+
+/* ========================
+   口コミ投稿（1ユーザー1店舗1件・再編集）
+======================== */
+async function submitReview(storeId,text,star){
+  try{
+    const userId = pb.authStore.model.id;
+
+    const existing = await pb.collection("reviews").getList(1,1,{
+      filter:`storeId="${storeId}" && userId="${userId}"`
+    });
+
+    const payload = {
+      storeId,
+      userId,
+      star,
+      text: (text && text.trim())
+        ? text
+        : "（本文なし）"
+    };
+
+    if(existing.items.length){
+      const reviewId = existing.items[0].id;
+      await pb.collection("reviews").update(reviewId, payload);
+      alert("口コミを更新しました！");
+    }else{
+      await pb.collection("reviews").create(payload);
+      alert("口コミを投稿しました！");
+    }
+
+    document.getElementById(`reviewInput-${storeId}`).value="";
+    loadPage(currentPage);
+
+  }catch(e){
+    console.error(e);
+
+    let msg = "投稿に失敗しました。\n\n";
+
+    if(e?.data?.message){
+      msg += e.data.message;
+    }else if(e?.data){
+      msg += JSON.stringify(e.data);
+    }else if(e?.message){
+      msg += e.message;
+    }else{
+      msg += JSON.stringify(e);
+    }
+
+    alert(msg);
+  }
+}
+
+/* ========================
+   ログインボタン / ログアウト
+======================== */
+document.getElementById("loginOpenBtn").onclick = ()=>{
+  window.location.href = "login.html";
 };
 
-document.getElementById("emailLoginBtn").onclick = () => alert("メールアドレスでのログイン機能は開発中です。");
-document.getElementById("closeModalBtn").onclick = () => (document.getElementById("loginModal").style.display = "none");
-
-// 🟣 ログアウトボタン
-document.getElementById("logoutBtn").onclick = () => {
+document.getElementById("logoutBtn").onclick=()=>{
   pb.authStore.clear();
+  favoriteMap = new Map();
+  favoriteOnly = false;
+  favOnlyCheckbox.checked = false;
   updateUserStatus();
-  alert("ログアウトしました。");
+  loadPage(1);
+  alert("ログアウトしました");
 };
 
+/* 店舗報告モーダルのボタン */
+document.querySelectorAll(".reportReasonOption").forEach(btn=>{
+  btn.onclick = ()=>{
+    const val = Number(btn.dataset.reason);
+    selectedStoreReportReason = val;
+    document.querySelectorAll(".reportReasonOption").forEach(b=>{
+      b.classList.toggle("selected", b === btn);
+    });
+  };
+});
+document.getElementById("submitStoreReportBtn").onclick = ()=>submitStoreReport();
+document.getElementById("closeStoreReportBtn").onclick = ()=>closeStoreReportModal();
+
+/* 初回ロード */
 loadPage();
+
 </script>
+
 </body>
 </html>
