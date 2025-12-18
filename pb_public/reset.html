@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>パスワード再設定 - FoodDeliveryEye</title>
+  <style>
+    :root{
+      --bg:#0d0d0d;
+      --panel:#111;
+      --hair:#222;
+      --text:#fff;
+      --muted:#aaa;
+      --accent:#66ff99;
+      --danger:#ff7777;
+    }
+    *{ box-sizing:border-box; }
+
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Inter","Noto Sans JP",system-ui,sans-serif;
+      margin:0;
+      min-height:100svh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:22px 14px 18px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      text-rendering:optimizeLegibility;
+    }
+
+    .card{
+      background:rgba(17,17,17,0.92);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:18px;
+      padding:34px 26px;
+      box-shadow:0 18px 60px rgba(0,0,0,0.55);
+      width:min(92vw, 380px);
+      text-align:center;
+      backdrop-filter: blur(10px);
+    }
+
+    h1{
+      color:var(--accent);
+      margin:0 0 6px;
+      font-size:1.65em;
+      letter-spacing:1px;
+      font-weight:900;
+    }
+    p.subtitle{
+      color:rgba(245,245,247,0.65);
+      font-size:0.92em;
+      margin:0 0 18px;
+      line-height:1.5;
+    }
+
+    input{
+      width:100%;
+      padding:13px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.05);
+      color:#fff;
+      margin-bottom:12px;
+      font-size:1em;
+      outline:none;
+      transition:border 0.2s, background 0.2s;
+    }
+    input:focus{
+      border-color: rgba(102,255,153,0.75);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .btn{
+      width:100%;
+      padding:13px 12px;
+      border:none;
+      border-radius:10px;
+      font-weight:900;
+      font-size:1em;
+      cursor:pointer;
+      transition:transform 0.15s ease, filter 0.15s ease;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-main{
+      background:var(--accent);
+      color:#07110a;
+      box-shadow:0 0 18px rgba(102,255,153,0.18);
+    }
+    .btn-main:hover{ filter:brightness(1.04); }
+    .btn-main:disabled{ opacity:0.6; cursor:not-allowed; }
+
+    #msg{
+      color:#ccc;
+      margin-top:14px;
+      font-size:0.92em;
+      min-height:1.2em;
+      white-space:pre-wrap;
+      line-height:1.55;
+    }
+
+    .back-link{
+      margin-top:16px;
+      font-size:0.85em;
+      color:#888;
+    }
+    .back-link a{
+      color:var(--accent);
+      text-decoration:none;
+      font-weight:900;
+    }
+    .back-link a:hover{ text-decoration:underline; }
+
+    footer{
+      margin-top:14px;
+      font-size:0.75em;
+      color:#555;
+      letter-spacing:0.3px;
+    }
+
+    @media (max-width: 520px){
+      body{ justify-content:flex-start; }
+      .card{ padding:28px 18px; border-radius:16px; width:min(94vw, 420px); }
+      h1{ font-size:1.55em; }
+      input{ padding:14px 12px; border-radius:12px; }
+      .btn{ padding:14px 12px; border-radius:12px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>FoodDeliveryEye</h1>
+    <p class="subtitle">新しいパスワードを設定してください</p>
+
+    <input id="pw1" type="password" placeholder="新しいパスワード（6文字以上）" autocomplete="new-password">
+    <input id="pw2" type="password" placeholder="確認用パスワード" autocomplete="new-password">
+
+    <button id="submitBtn" class="btn btn-main">パスワードを変更する</button>
+
+    <p id="msg"></p>
+
+    <div class="back-link">
+      <a href="/login.html">ログイン画面へ戻る</a>
+    </div>
+  </div>
+
+  <footer>© 2025 FoodDeliveryEye</footer>
+
+  <script type="module">
+    import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
+
+    const pb        = new PocketBase("https://delivery-eye.onrender.com");
+    const msg       = document.getElementById("msg");
+    const submitBtn = document.getElementById("submitBtn");
+    const pw1Input  = document.getElementById("pw1");
+    const pw2Input  = document.getElementById("pw2");
+
+    const params = new URLSearchParams(window.location.search);
+    const token  = params.get("token"); // ← メールから ?token=XXXX を受け取る
+
+    if (!token) {
+      msg.style.color = "#ff7777";
+      msg.textContent = "無効なリンクです。もう一度パスワード再設定の手続きを行ってください。";
+      submitBtn.disabled = true;
+    }
+
+    submitBtn.onclick = async () => {
+      if (submitBtn.disabled) return;
+
+      const pw1 = pw1Input.value.trim();
+      const pw2 = pw2Input.value.trim();
+
+      if (!pw1 || !pw2) {
+        msg.style.color = "#ff7777";
+        msg.textContent = "新しいパスワードを2回入力してください。";
+        return;
+      }
+      if (pw1.length < 6) {
+        msg.style.color = "#ff7777";
+        msg.textContent = "パスワードは6文字以上で入力してください。";
+        return;
+      }
+      if (pw1 !== pw2) {
+        msg.style.color = "#ff7777";
+        msg.textContent = "パスワードが一致していません。";
+        return;
+      }
+
+      msg.style.color = "#ccc";
+      msg.textContent = "パスワードを更新しています…";
+      submitBtn.disabled = true;
+
+      try {
+        await pb.collection("users").confirmPasswordReset(token, pw1, pw2);
+        msg.style.color = "#66ff99";
+        msg.textContent = "パスワードを更新しました。\nログイン画面から新しいパスワードでログインしてください。";
+
+        setTimeout(() => { window.location.href = "/login.html"; }, 2000);
+      } catch (err) {
+        msg.style.color = "#ff7777";
+        msg.textContent = "エラーが発生しました：\n" + (err?.message || String(err));
+        submitBtn.disabled = false;
+      }
+    };
+  </script>
+
+</body>
+</html>
