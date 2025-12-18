@@ -2,133 +2,208 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ログイン - FoodDeliveryEye</title>
   <style>
-    body {
-      background:#0d0d0d;
-      color:#fff;
-      font-family:"Inter","Noto Sans JP",sans-serif;
+    :root{
+      --bg:#0d0d0d;
+      --panel:#111;
+      --hair:#222;
+      --text:#fff;
+      --muted:#aaa;
+      --accent:#66ff99;
+      --danger:#ff7777;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      background: var(--bg);
+      color: var(--text);
+      font-family:"Inter","Noto Sans JP",system-ui,sans-serif;
+      margin:0;
+
+      /* ✅ スマホで遠く見えない：上寄せ+余白管理 */
+      min-height:100svh;
       display:flex;
       flex-direction:column;
       align-items:center;
       justify-content:center;
-      height:100vh;
-      margin:0;
+      padding:22px 14px 18px;
+
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      text-rendering:optimizeLegibility;
     }
-    .card {
-      background:#111;
-      border:1px solid #222;
-      border-radius:16px;
-      padding:40px 30px;
-      box-shadow:0 0 15px rgba(0,0,0,0.4);
-      width:90%;
-      max-width:360px;
+
+    .card{
+      background:rgba(17,17,17,0.92);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:18px;
+      padding:34px 26px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.55);
+      width:min(92vw, 380px);
       text-align:center;
+      backdrop-filter: blur(10px);
     }
-    h1 {
-      color:#66ff99;
-      margin-bottom:4px;
-      font-size:1.6em;
+
+    h1{
+      color: var(--accent);
+      margin:0 0 6px;
+      font-size:1.65em;
       letter-spacing:1px;
+      font-weight:900;
     }
-    p.subtitle {
-      color:#aaa;
-      font-size:0.9em;
-      margin-bottom:20px;
+
+    p.subtitle{
+      color: rgba(245,245,247,0.65);
+      font-size:0.92em;
+      margin:0 0 18px;
+      line-height:1.5;
     }
-    input {
+
+    input{
       width:100%;
-      padding:12px;
-      border-radius:8px;
-      border:1px solid #333;
-      background:#1a1a1a;
+      padding:13px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.05);
       color:#fff;
       margin-bottom:12px;
-      font-size:0.95em;
+      font-size:1em;
       outline:none;
-      transition:border 0.2s;
+      transition:border 0.2s, background 0.2s;
     }
-    input:focus { border-color:#66ff99; }
-    .btn {
-      width:100%;
-      padding:12px;
+    input:focus{
+      border-color: rgba(102,255,153,0.75);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .forgot-link{
+      margin-top:4px;
+      font-size:0.8em;
+      text-align:right;
+    }
+    .forgot-link button{
+      background:none;
       border:none;
-      border-radius:8px;
-      font-weight:bold;
+      color: var(--accent);
+      cursor:pointer;
+      padding:0;
+      font-size:0.86em;
+      text-decoration:underline;
+    }
+
+    .btn{
+      width:100%;
+      padding:13px 12px;
+      border:none;
+      border-radius:10px;
+      font-weight:900;
       font-size:1em;
       cursor:pointer;
-      transition:all 0.2s ease;
+      transition:transform 0.15s ease, filter 0.15s ease;
     }
-    .btn-login {
-      background:#66ff99;
-      color:#000;
-    }
-    .btn-login:hover { background:#80ffb2; }
+    .btn:active{ transform: translateY(1px); }
 
-    /* 本物Googleボタン */
-    .google-btn {
+    .btn-login{
+      background: var(--accent);
+      color:#07110a;
+      box-shadow: 0 0 18px rgba(102,255,153,0.18);
+    }
+    .btn-login:hover{ filter:brightness(1.04); }
+
+    .google-btn{
       display:flex;
       align-items:center;
       justify-content:center;
       gap:10px;
+
       background:#fff;
       color:#3c4043;
-      font-weight:500;
-      border-radius:8px;
+      font-weight:700;
+      border-radius:10px;
       border:1px solid #dadce0;
-      box-shadow:0 1px 3px rgba(0,0,0,0.1);
-      transition:all 0.2s ease;
-      margin-top:10px;
+      box-shadow:0 1px 3px rgba(0,0,0,0.12);
+      transition:transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+      margin-top:12px;
       width:100%;
-      height:44px;
+      height:46px;
+      cursor:pointer;
     }
-    .google-btn:hover {
-      background:#f8f9fa;
-      transform:scale(1.02);
-      box-shadow:0 2px 6px rgba(0,0,0,0.2);
+    .google-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 3px 10px rgba(0,0,0,0.18);
+      filter:brightness(1.02);
     }
-    .google-icon {
-      width:20px;
-      height:20px;
-    }
+    .google-icon{ width:20px; height:20px; }
 
-    .btn-logout {
+    .btn-logout{
       background:#ff4444;
       color:#fff;
-      margin-top:20px;
+      margin-top:18px;
       display:none;
     }
-    #msg {
+
+    #msg{
       color:#ccc;
-      margin-top:15px;
-      font-size:0.9em;
+      margin-top:14px;
+      font-size:0.92em;
       min-height:1.2em;
+      white-space:pre-wrap;
+      line-height:1.55;
     }
 
-    .signup-link {
-      margin-top:18px;
-      font-size:0.8em;
+    .signup-link{
+      margin-top:16px;
+      font-size:0.85em;
       color:#888;
     }
-    .signup-link a {
-      color:#66ff99;
+    .signup-link a{
+      color: var(--accent);
       text-decoration:none;
-      font-weight:600;
-      transition:color 0.2s;
+      font-weight:900;
+      transition:filter 0.2s, text-decoration 0.2s;
     }
-    .signup-link a:hover {
-      color:#80ffb2;
+    .signup-link a:hover{
+      filter:brightness(1.12);
       text-decoration:underline;
     }
 
-    footer {
-      margin-top:40px;
+    footer{
+      margin-top:14px;
       font-size:0.75em;
       color:#555;
       letter-spacing:0.3px;
     }
+
+    /* ✅ スマホで「近く」：上寄せ + さらに詰める */
+    @media (max-width: 520px){
+      body{
+        justify-content:flex-start; /* 近く見える */
+        padding:18px 12px 14px;
+      }
+      .card{
+        width: min(94vw, 420px);
+        padding:28px 18px;
+        border-radius:16px;
+      }
+      h1{ font-size:1.55em; }
+      p.subtitle{ margin-bottom:14px; }
+      input{ padding:14px 12px; border-radius:12px; }
+      .btn{ padding:14px 12px; border-radius:12px; }
+      .google-btn{ height:48px; border-radius:12px; }
+      footer{ margin-top:12px; }
+    }
+
+    /* ✅ さらに小さい端末 */
+    @media (max-width: 380px){
+      .card{ padding:24px 16px; }
+      p.subtitle{ font-size:0.88em; }
+    }
   </style>
 </head>
+
 <body>
 
   <div class="card">
@@ -137,14 +212,19 @@
 
     <!-- メールログイン -->
     <form id="loginForm">
-      <input type="email" id="email" placeholder="メールアドレス" required>
-      <input type="password" id="password" placeholder="パスワード" required>
+      <input type="email" id="email" name="email" placeholder="メールアドレス" required>
+      <input type="password" id="password" name="password" placeholder="パスワード" required>
+
+      <div class="forgot-link">
+        <button type="button" id="forgotBtn">パスワードをお忘れの方はこちら</button>
+      </div>
+
       <button class="btn btn-login" type="submit">メールでログイン</button>
     </form>
 
     <!-- Googleログイン -->
-    <button id="googleBtn" class="google-btn">
-      <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+    <button id="googleBtn" class="google-btn" type="button">
+      <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true">
         <path fill="#EA4335" d="M24 9.5c3.94 0 6.64 1.71 8.17 3.14l6-5.82C34.29 3.43 29.57 1 24 1 14.83 1 7.03 6.64 3.44 14.41l7.41 5.76C12.29 14.33 17.62 9.5 24 9.5z"/>
         <path fill="#4285F4" d="M46.11 24.49c0-1.6-.14-3.12-.41-4.59H24v8.7h12.48c-.55 2.95-2.23 5.46-4.76 7.15l7.37 5.73c4.3-3.97 6.77-9.83 6.77-17z"/>
         <path fill="#FBBC05" d="M10.85 28.17c-.65-1.94-1.02-4.02-1.02-6.17s.37-4.23 1.02-6.17L3.44 10.07A22.931 22.931 0 0 0 1 22c0 3.64.87 7.08 2.44 10.13l7.41-5.76z"/>
@@ -154,7 +234,7 @@
     </button>
 
     <!-- ログアウト -->
-    <button class="btn btn-logout" id="logoutBtn">ログアウト</button>
+    <button class="btn btn-logout" id="logoutBtn" type="button">ログアウト</button>
 
     <p id="msg"></p>
 
@@ -169,47 +249,91 @@
 
   <script type="module">
     import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
-    const pb = new PocketBase("https://delivery-eye.onrender.com");
-    const msg = document.getElementById("msg");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const pb         = new PocketBase("https://delivery-eye.onrender.com");
+    const msg        = document.getElementById("msg");
+    const logoutBtn  = document.getElementById("logoutBtn");
+    const emailInput = document.getElementById("email");
+    const forgotBtn  = document.getElementById("forgotBtn");
 
-    // 🟢 ログイン保持
+    // 前回使ったメールアドレスを自動セット
+    const lastEmail = localStorage.getItem("fde_last_email");
+    if (lastEmail) emailInput.value = lastEmail;
+
+    // すでにログイン済みなら vote.html へ
     if (pb.authStore.isValid) {
-      msg.textContent = "ログイン中：" + (pb.authStore.model?.email || "Googleユーザー");
+      msg.style.color = "#66ff99";
+      msg.textContent = "前回のログイン状態を復元しました。";
       logoutBtn.style.display = "block";
+      setTimeout(() => { window.location.href = "vote.html"; }, 700);
     }
 
-    // 📧 メールログイン
+    // メールログイン
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
-      const email = e.target.email.value;
+      const email    = e.target.email.value.trim();
       const password = e.target.password.value;
+
+      msg.style.color = "#ccc";
+      msg.textContent = "ログイン処理中です…";
+
       try {
         await pb.collection("users").authWithPassword(email, password);
+        msg.style.color = "#66ff99";
         msg.textContent = "✅ ログイン成功！";
-        localStorage.setItem("pb_auth", pb.authStore.exportToString());
-        setTimeout(()=>window.location.href="vote.html", 1000);
+
+        localStorage.setItem("fde_last_email", email);
+        setTimeout(() => window.location.href = "vote.html", 800);
       } catch (err) {
+        msg.style.color = "#ff7777";
         msg.textContent = "⚠️ ログイン失敗：" + err.message;
       }
     });
 
-    // 🔵 Googleログイン
+    // Googleログイン
     document.getElementById("googleBtn").onclick = async () => {
+      msg.style.color = "#ccc";
+      msg.textContent = "Googleログイン処理中です…";
       try {
         const authData = await pb.collection("users").authWithOAuth2({ provider: "google" });
+        msg.style.color = "#66ff99";
         msg.textContent = "✅ Googleログイン成功！";
-        localStorage.setItem("pb_auth", pb.authStore.exportToString());
-        setTimeout(()=>window.location.href="vote.html", 1000);
+
+        const userEmail = authData?.meta?.email || pb.authStore.model?.email;
+        if (userEmail) localStorage.setItem("fde_last_email", userEmail);
+
+        setTimeout(() => window.location.href = "vote.html", 800);
       } catch (err) {
+        msg.style.color = "#ff7777";
         msg.textContent = "⚠️ Googleログイン失敗：" + err.message;
       }
     };
 
-    // 🔴 ログアウト
+    // パスワード再設定メール送信
+    forgotBtn.onclick = async () => {
+      const email = emailInput.value.trim();
+      if (!email) {
+        msg.style.color = "#ff7777";
+        msg.textContent = "パスワード再設定用のメールアドレスを入力してください。";
+        return;
+      }
+
+      msg.style.color = "#ccc";
+      msg.textContent = "パスワード再設定メールを送信しています…";
+
+      try {
+        await pb.collection("users").requestPasswordReset(email);
+        msg.style.color = "#66ff99";
+        msg.textContent = "📩 パスワード再設定用のメールを送信しました。\nメール内のリンクから新しいパスワードを設定してください。";
+      } catch (err) {
+        msg.style.color = "#ff7777";
+        msg.textContent = "⚠️ パスワードリセットメールの送信に失敗しました：" + err.message;
+      }
+    };
+
+    // ログアウト
     logoutBtn.onclick = () => {
       pb.authStore.clear();
-      localStorage.removeItem("pb_auth");
+      msg.style.color = "#ccc";
       msg.textContent = "ログアウトしました";
       logoutBtn.style.display = "none";
     };
