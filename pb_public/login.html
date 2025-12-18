@@ -189,7 +189,6 @@
       <input type="password" id="password" name="password" placeholder="パスワード" required>
 
       <div class="forgot-link">
-        <!-- ✅ 別ページへ -->
         <a id="forgotLink" href="reset-request.html">パスワードをお忘れの方はこちら</a>
       </div>
 
@@ -263,11 +262,24 @@
       }
     });
 
+    // ✅ スマホ(iOS Safari等)でポップアップブロックされるのを回避する版
     document.getElementById("googleBtn").onclick = async () => {
       msg.style.color = "#ccc";
       msg.textContent = "Googleログイン処理中です…";
+
+      // ユーザー操作の“同期中”に空ポップアップを先に開く（ここが重要）
+      const popup = window.open("about:blank", "_blank");
+
       try {
-        const authData = await pb.collection("users").authWithOAuth2({ provider: "google" });
+        const authData = await pb.collection("users").authWithOAuth2({
+          provider: "google",
+          // OAuth URLが生成されたタイミングで、先に開いたpopupへ遷移させる
+          urlCallback: (url) => {
+            if (popup) popup.location.href = url;
+            else window.location.href = url;
+          },
+        });
+
         msg.style.color = "#66ff99";
         msg.textContent = "✅ Googleログイン成功！";
 
@@ -276,6 +288,7 @@
 
         setTimeout(() => window.location.href = "vote.html", 800);
       } catch (err) {
+        try { if (popup) popup.close(); } catch {}
         msg.style.color = "#ff7777";
         msg.textContent = "⚠️ Googleログイン失敗：" + err.message;
       }
