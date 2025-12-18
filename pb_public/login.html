@@ -220,6 +220,8 @@
   <script type="module">
     import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
     const pb         = new PocketBase("https://delivery-eye.onrender.com");
+    if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
+
     const msg        = document.getElementById("msg");
     const logoutBtn  = document.getElementById("logoutBtn");
     const emailInput = document.getElementById("email");
@@ -228,15 +230,22 @@
     // ===== ✅ 戻り先（next）を共通化 =====
     const params = new URLSearchParams(location.search);
     const nextRaw = params.get("next"); // 例: "/vote.html" or "vote.html"
+
     const safeNext = (() => {
       if (!nextRaw) return null;
-      // open redirect対策：同一オリジンの相対パスだけ許可
-      if (nextRaw.startsWith("http://") || nextRaw.startsWith("https://")) return null;
-      if (nextRaw.startsWith("//")) return null;
-      return nextRaw;
-    })();
-    const getNextOrDefault = () => safeNext || "vote.html";
+      const v = String(nextRaw).trim();
+      if (!v) return null;
 
+      // open redirect対策：同一オリジン相対パスだけ許可
+      if (v.startsWith("http://") || v.startsWith("https://")) return null;
+      if (v.startsWith("//")) return null;
+      if (v.startsWith("javascript:")) return null;
+
+      // 相対パスに正規化（"vote.html" → "vote.html" / "/vote.html" → "/vote.html"）
+      return v;
+    })();
+
+    const getNextOrDefault = () => safeNext || "vote.html";
     const goNext = () => { window.location.href = getNextOrDefault(); };
 
     // ===== メール欄復元 =====
@@ -283,24 +292,26 @@
 
       } catch (err) {
         msg.style.color = "#ff7777";
-        msg.textContent = "⚠️ ログイン失敗：" + err.message;
+        msg.textContent = "⚠️ ログイン失敗：" + (err?.message || err);
       }
     });
 
     // ===== ✅ Googleログイン（スマホ対策 + next対応） =====
-    document.getElementById("googleBtn").onclick = async () => {
+    document.getElementById("googleBtn").addEventListener("click", async () => {
       msg.style.color = "#ccc";
       msg.textContent = "Googleログイン処理中です…";
 
-      // iOS対策：ユーザー操作の同期中に空ポップアップを先に開く
-      const popup = window.open("about:blank", "_blank");
+      // iOS/Safari 対策：ユーザー操作の同期中に空ポップアップを先に開く
+      let popup = null;
+      try { popup = window.open("about:blank", "_blank"); } catch {}
 
       try {
         const authData = await pb.collection("users").authWithOAuth2({
           provider: "google",
           urlCallback: (url) => {
-            if (popup) popup.location.href = url;
-            else window.location.href = url; // スマホ等：同一タブ遷移
+            // ポップアップが使えるならそこへ遷移、ダメなら同一タブ
+            if (popup && !popup.closed) popup.location.href = url;
+            else window.location.href = url;
           },
         });
 
@@ -314,28 +325,27 @@
         // ✅ nextがあるなら戻す / 無いならこの画面に留まる
         if (safeNext) {
           setTimeout(() => {
-            try { if (popup) popup.close(); } catch {}
+            try { if (popup && !popup.closed) popup.close(); } catch {}
             goNext();
           }, 650);
         } else {
-          // next無し（index直アクセスなど）の時は勝手に飛ばさない
-          try { if (popup) popup.close(); } catch {}
+          try { if (popup && !popup.closed) popup.close(); } catch {}
         }
 
       } catch (err) {
-        try { if (popup) popup.close(); } catch {}
+        try { if (popup && !popup.closed) popup.close(); } catch {}
         msg.style.color = "#ff7777";
-        msg.textContent = "⚠️ Googleログイン失敗：" + err.message;
+        msg.textContent = "⚠️ Googleログイン失敗：" + (err?.message || err);
       }
-    };
+    });
 
     // ===== ログアウト =====
-    logoutBtn.onclick = () => {
+    logoutBtn.addEventListener("click", () => {
       pb.authStore.clear();
       msg.style.color = "#ccc";
       msg.textContent = "ログアウトしました";
       logoutBtn.style.display = "none";
-    };
+    });
   </script>
 
 </body>
