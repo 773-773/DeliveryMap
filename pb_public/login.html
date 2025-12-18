@@ -23,7 +23,6 @@
       font-family:"Inter","Noto Sans JP",system-ui,sans-serif;
       margin:0;
 
-      /* ✅ スマホで遠く見えない：上寄せ+余白管理 */
       min-height:100svh;
       display:flex;
       flex-direction:column;
@@ -177,10 +176,9 @@
       letter-spacing:0.3px;
     }
 
-    /* ✅ スマホで「近く」：上寄せ + さらに詰める */
     @media (max-width: 520px){
       body{
-        justify-content:flex-start; /* 近く見える */
+        justify-content:flex-start;
         padding:18px 12px 14px;
       }
       .card{
@@ -196,7 +194,6 @@
       footer{ margin-top:12px; }
     }
 
-    /* ✅ さらに小さい端末 */
     @media (max-width: 380px){
       .card{ padding:24px 16px; }
       p.subtitle{ font-size:0.88em; }
@@ -210,7 +207,6 @@
     <h1>FoodDeliveryEye</h1>
     <p class="subtitle">ログインして投票や店舗申請を行えます</p>
 
-    <!-- メールログイン -->
     <form id="loginForm">
       <input type="email" id="email" name="email" placeholder="メールアドレス" required>
       <input type="password" id="password" name="password" placeholder="パスワード" required>
@@ -222,7 +218,6 @@
       <button class="btn btn-login" type="submit">メールでログイン</button>
     </form>
 
-    <!-- Googleログイン -->
     <button id="googleBtn" class="google-btn" type="button">
       <svg class="google-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" aria-hidden="true">
         <path fill="#EA4335" d="M24 9.5c3.94 0 6.64 1.71 8.17 3.14l6-5.82C34.29 3.43 29.57 1 24 1 14.83 1 7.03 6.64 3.44 14.41l7.41 5.76C12.29 14.33 17.62 9.5 24 9.5z"/>
@@ -233,12 +228,10 @@
       <span>Googleでログイン</span>
     </button>
 
-    <!-- ログアウト -->
     <button class="btn btn-logout" id="logoutBtn" type="button">ログアウト</button>
 
     <p id="msg"></p>
 
-    <!-- 新規登録案内 -->
     <div class="signup-link">
       アカウントをお持ちでない方は
       <a href="/signup.html">こちら</a>
@@ -255,11 +248,9 @@
     const emailInput = document.getElementById("email");
     const forgotBtn  = document.getElementById("forgotBtn");
 
-    // 前回使ったメールアドレスを自動セット
     const lastEmail = localStorage.getItem("fde_last_email");
     if (lastEmail) emailInput.value = lastEmail;
 
-    // すでにログイン済みなら vote.html へ
     if (pb.authStore.isValid) {
       msg.style.color = "#66ff99";
       msg.textContent = "前回のログイン状態を復元しました。";
@@ -267,7 +258,6 @@
       setTimeout(() => { window.location.href = "vote.html"; }, 700);
     }
 
-    // メールログイン
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email    = e.target.email.value.trim();
@@ -289,7 +279,6 @@
       }
     });
 
-    // Googleログイン
     document.getElementById("googleBtn").onclick = async () => {
       msg.style.color = "#ccc";
       msg.textContent = "Googleログイン処理中です…";
@@ -308,7 +297,7 @@
       }
     };
 
-    // パスワード再設定メール送信
+    // ✅ 文面を指定どおりに修正
     forgotBtn.onclick = async () => {
       const email = emailInput.value.trim();
       if (!email) {
@@ -323,14 +312,13 @@
       try {
         await pb.collection("users").requestPasswordReset(email);
         msg.style.color = "#66ff99";
-        msg.textContent = "📩 パスワード再設定用のメールを送信しました。\nメール内のリンクから新しいパスワードを設定してください。";
+        msg.textContent = "📩パスワード再設定用のメールを送信しました。\n※メールが届かない場合迷惑フォルダの確認も合わせてお願いします";
       } catch (err) {
         msg.style.color = "#ff7777";
         msg.textContent = "⚠️ パスワードリセットメールの送信に失敗しました：" + err.message;
       }
     };
 
-    // ログアウト
     logoutBtn.onclick = () => {
       pb.authStore.clear();
       msg.style.color = "#ccc";
