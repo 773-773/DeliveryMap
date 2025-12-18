@@ -23,10 +23,14 @@
 }
 
 * { box-sizing:border-box; }
+html, body { height:100%; }
 body {
   margin:0;
   min-height:100vh;
   font-family:-apple-system,BlinkMacSystemFont,"Inter","Noto Sans JP",sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   color:var(--text-main);
   background:
     radial-gradient(circle at 18% 0%, rgba(91,255,156,0.09) 0, transparent 55%),
@@ -56,8 +60,23 @@ header {
 
 /* ロゴ（文字だけ） */
 .logoArea { display:flex; align-items:center; gap:0; min-width:0; }
-.logoTextMain { font-weight:900; font-size:18px; letter-spacing:0.10em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.logoTextSub { font-size:11px; color:rgba(245,245,247,0.55); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:2px; }
+.logoTextMain {
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:0.06em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.logoTextSub {
+  font-size:12px;
+  line-height:1.5;
+  color:rgba(245,245,247,0.55);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:2px;
+}
 
 .headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
 
@@ -71,6 +90,7 @@ nav a {
   border:1px solid rgba(255,255,255,0.06);
   background:rgba(255,255,255,0.02);
   font-size:12px;
+  line-height:1;
   transition:all 0.16s ease;
   white-space:nowrap;
 }
@@ -79,7 +99,7 @@ nav .primary {
   color:#050814;
   background:var(--accent);
   border-color:transparent;
-  font-weight:800;
+  font-weight:900;
   box-shadow:0 0 18px var(--accent-soft);
 }
 nav .primary:hover { background:#7affb2; }
@@ -112,27 +132,46 @@ nav .primary:hover { background:#7affb2; }
   gap:14px;
   align-items:stretch;
 }
-.heroContent { z-index:1; }
+.heroContent { z-index:1; min-width:0; }
 .heroTag {
   display:inline-flex;
   align-items:center;
   gap:8px;
-  font-size:11px;
-  padding:6px 10px;
+  font-size:12px;
+  line-height:1.2; /* ←スマホで切れても整う */
+  padding:7px 10px;
   border-radius:999px;
   border:1px solid rgba(91,255,156,0.22);
   background:rgba(10,10,16,0.85);
-  color:rgba(245,245,247,0.86);
+  color:rgba(245,245,247,0.88);
   margin-bottom:12px;
+  white-space:nowrap;
 }
 .heroTag span.dot {
   width:7px; height:7px; border-radius:50%;
   background:var(--accent);
   box-shadow:0 0 10px var(--accent);
 }
-.heroTitle { font-size:24px; line-height:1.45; margin:0 0 10px; letter-spacing:0.02em; }
+
+/* ✅ ここが今回の主役：スマホで見やすいヒーロー文章 */
+.heroTitle {
+  font-size:clamp(18px, 5.2vw, 28px);
+  line-height:1.65;
+  margin:0 0 10px;
+  letter-spacing:0.01em;
+  word-break:keep-all;
+  line-break:strict;
+}
 .heroTitle strong { color:var(--accent); }
-.heroLead { font-size:13px; line-height:1.75; color:var(--text-muted); margin:0; }
+
+.heroLead {
+  font-size:clamp(13px, 3.8vw, 14px);
+  line-height:1.9;
+  color:var(--text-muted);
+  margin:0;
+  word-break:keep-all;
+  line-break:strict;
+}
 
 /* Poll panel */
 .heroPanel {
@@ -163,7 +202,7 @@ nav .primary:hover { background:#7affb2; }
   border:1px solid rgba(255,255,255,0.10);
   background:rgba(255,255,255,0.03);
   color:#f5f5f7;
-  font-size:12px;
+  font-size:13px;
   font-weight:900;
   cursor:pointer;
   transition:transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
@@ -191,9 +230,14 @@ nav .primary:hover { background:#7affb2; }
   justify-content:space-between;
   gap:10px;
 }
-.pollBtnLabel{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pollBtnLabel{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:72%;
+}
 .pollBtnPct{
-  font-size:11px;
+  font-size:12px;
   color:rgba(245,245,247,0.70);
   font-weight:900;
   flex:0 0 auto;
@@ -222,8 +266,19 @@ nav .primary:hover { background:#7affb2; }
 .pollCtaPrimary:hover{ background:#7affb2; }
 
 /* Section + Cards */
-.sectionTitle { margin:22px 4px 10px; font-size:15px; text-align:left; color:rgba(245,245,247,0.90); }
-.sectionTitle span { font-size:11px; color:var(--text-muted); margin-left:6px; }
+.sectionTitle {
+  margin:22px 4px 10px;
+  font-size:15px;
+  text-align:left;
+  color:rgba(245,245,247,0.92);
+  line-height:1.4;
+}
+.sectionTitle span {
+  display:inline-block;
+  font-size:12px;
+  color:var(--text-muted);
+  margin-left:6px;
+}
 
 .cards { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:8px; }
 .card {
@@ -259,18 +314,33 @@ nav .primary:hover { background:#7affb2; }
   display:inline-flex;
   align-items:center;
   gap:5px;
-  font-size:10px;
-  padding:4px 8px;
+  font-size:11px;
+  line-height:1;
+  padding:5px 9px;
   border-radius:999px;
   background:rgba(255,255,255,0.03);
   border:1px solid rgba(91,255,156,0.18);
-  color:rgba(245,245,247,0.75);
-  margin-bottom:8px;
+  color:rgba(245,245,247,0.78);
+  margin-bottom:10px;
 }
-.cardTitle { font-size:15px; margin:2px 0 6px; }
-.cardDesc { font-size:12px; line-height:1.7; color:var(--text-muted); margin:0 0 10px; }
-.cardLink { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--accent); text-decoration:none; font-weight:800; }
-.cardLink span.arrow { font-size:13px; }
+.cardTitle {
+  font-size:clamp(15px, 4.2vw, 16px);
+  margin:2px 0 8px;
+  line-height:1.55;
+  letter-spacing:0.01em;
+  word-break:keep-all;
+  line-break:strict;
+}
+.cardDesc {
+  font-size:clamp(12.5px, 3.7vw, 13px);
+  line-height:1.85;
+  color:var(--text-muted);
+  margin:0 0 12px;
+  word-break:keep-all;
+  line-break:strict;
+}
+.cardLink { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--accent); text-decoration:none; font-weight:900; }
+.cardLink span.arrow { font-size:14px; }
 
 /* bottom share */
 .shareBottom{
@@ -326,7 +396,8 @@ nav .primary:hover { background:#7affb2; }
 .urlHint{
   width:100%;
   margin-top:8px;
-  font-size:10px;
+  font-size:11px;
+  line-height:1.6;
   color:rgba(245,245,247,0.55);
 }
 .shareBtns{
@@ -377,7 +448,7 @@ nav .primary:hover { background:#7affb2; }
 .copyToastBottom{
   margin-top:10px;
   min-height:14px;
-  font-size:10px;
+  font-size:11px;
   color:rgba(245,245,247,0.62);
 }
 
@@ -395,7 +466,7 @@ nav .primary:hover { background:#7affb2; }
   flex-wrap:wrap;
   gap:12px;
   align-items:center;
-  line-height:1;
+  line-height:1.2;
 }
 .footerLinks a,
 .footerLinks button{
@@ -406,7 +477,7 @@ nav .primary:hover { background:#7affb2; }
   margin:0;
   cursor:pointer;
   color:rgba(245,245,247,0.52);
-  font-size:11px;
+  font-size:12px;
   text-decoration:none;
   transition:color .14s ease, opacity .14s ease;
   font-family:inherit;
@@ -466,7 +537,7 @@ nav .primary:hover { background:#7affb2; }
   padding:14px 16px 18px;
   overflow:auto;
   color:rgba(245,245,247,0.84);
-  line-height:1.85;
+  line-height:1.9;
   font-size:12px;
 }
 .modalBody h2{ margin:10px 0 8px; font-size:13px; color:rgba(245,245,247,0.92); }
@@ -481,9 +552,36 @@ nav .primary:hover { background:#7affb2; }
   .heroGrid { grid-template-columns: 1fr; }
   .cards { grid-template-columns: 1fr; }
 }
+
+/* ✅ スマホ特化で “文字の配置” を整える */
 @media (max-width: 640px){
+  .page { padding:14px 12px 38px; }
+
   header{ flex-direction:column; align-items:stretch; gap:10px; }
   .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
+
+  nav a{ padding:10px 12px; font-size:13px; }
+
+  .hero{ padding:18px 14px; border-radius:20px; }
+  .heroTag{
+    font-size:12px;
+    padding:8px 10px;
+    white-space:normal; /* ←タグが変に切れるのを防ぐ */
+    line-height:1.3;
+  }
+
+  /* タイトル・本文の “詰まり” を解消 */
+  .heroTitle{ line-height:1.72; font-size:clamp(18px, 6.0vw, 24px); }
+  .heroLead{ line-height:1.95; font-size:clamp(13px, 4.2vw, 14px); }
+
+  /* アンケートの文言が窮屈になりやすいので少し余白 */
+  .heroPanel{ padding:14px 14px 16px; }
+  #pollQuestion{ font-size:13px !important; line-height:1.55 !important; }
+  #pollHint{ font-size:11px !important; line-height:1.6 !important; }
+
+  .pollBtn{ padding:12px 12px; }
+  .pollBtnLabel{ max-width:70%; }
+
   .shareBtns .sbtn{
     width:100%;
     min-width:0;
@@ -493,10 +591,11 @@ nav .primary:hover { background:#7affb2; }
   .footerLinks{ gap:10px; }
   .footerSep{ display:none; }
 }
+
 @media (max-width: 420px){
-  .page { padding:14px 12px 38px; }
   header { padding:10px 12px; border-radius:16px; }
-  .hero { padding:18px 14px; border-radius:20px; }
+  .logoTextSub{ font-size:11px; }
+  .sectionTitle{ font-size:15px; }
 }
 </style>
 </head>
@@ -531,24 +630,16 @@ nav .primary:hover { background:#7affb2; }
           配達員コミュニティ × 体験データ共有
         </div>
 
+        <!-- ✅ ここを指定文面に変更（スマホで詰まりにくいサイズ＆行間に調整済み） -->
         <h2 class="heroTitle">
-          配達の現場で役立つ情報を、<strong>みんなで集めて</strong>、みんなで使う。
+          配達の現場で役立つ情報を、<strong>みんなで集めて共有するサイト</strong>
         </h2>
 
+        <!-- ✅ リードも少し短くしてスマホで読みやすく -->
         <p class="heroLead">
-          調理待ちの体感、建物の入館手順、受け取りのコツなどを共有して、
-          配達がスムーズになるヒントを見つけよう。
+          待ち時間・入館方法・配達のコツなど、現場の体験を共有して、
+          日々の配達を少しでもスムーズに。
         </p>
-
-        <!-- ✅ ここを完全削除（ログインボタン / 匿名OK...） -->
-        <!--
-        <div class="heroActions">
-          <a href="login.html" class="btn btnGlow">ログインして参加する</a>
-        </div>
-        <div class="heroMeta">
-          匿名OK / 無料 / スマホ対応
-        </div>
-        -->
       </div>
 
       <!-- poll -->
