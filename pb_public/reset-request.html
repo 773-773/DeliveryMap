@@ -1,1 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>パスワード再設定メール送信 - FoodDeliveryEye</title>
+  <style>
+    :root{
+      --bg:#0d0d0d;
+      --text:#fff;
+      --muted:rgba(245,245,247,0.65);
+      --accent:#66ff99;
+      --danger:#ff7777;
+    }
+    *{ box-sizing:border-box; }
 
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:"Inter","Noto Sans JP",system-ui,sans-serif;
+      margin:0;
+      min-height:100svh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      padding:22px 14px 18px;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      text-rendering:optimizeLegibility;
+    }
+
+    .card{
+      background:rgba(17,17,17,0.92);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius:18px;
+      padding:34px 26px;
+      box-shadow:0 18px 60px rgba(0,0,0,0.55);
+      width:min(92vw, 380px);
+      text-align:center;
+      backdrop-filter: blur(10px);
+    }
+
+    h1{
+      color:var(--accent);
+      margin:0 0 6px;
+      font-size:1.55em;
+      letter-spacing:1px;
+      font-weight:900;
+    }
+
+    p.subtitle{
+      color:var(--muted);
+      font-size:0.92em;
+      margin:0 0 18px;
+      line-height:1.6;
+    }
+
+    input{
+      width:100%;
+      padding:13px 12px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,0.12);
+      background:rgba(255,255,255,0.05);
+      color:#fff;
+      margin-bottom:12px;
+      font-size:1em;
+      outline:none;
+      transition:border 0.2s, background 0.2s;
+    }
+    input:focus{
+      border-color: rgba(102,255,153,0.75);
+      background: rgba(255,255,255,0.07);
+    }
+
+    .btn{
+      width:100%;
+      padding:13px 12px;
+      border:none;
+      border-radius:10px;
+      font-weight:900;
+      font-size:1em;
+      cursor:pointer;
+      transition:transform 0.15s ease, filter 0.15s ease;
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn-main{
+      background:var(--accent);
+      color:#07110a;
+      box-shadow:0 0 18px rgba(102,255,153,0.18);
+    }
+    .btn-main:hover{ filter:brightness(1.04); }
+    .btn-main:disabled{ opacity:0.6; cursor:not-allowed; }
+
+    #msg{
+      color:#ccc;
+      margin-top:14px;
+      font-size:0.92em;
+      min-height:1.2em;
+      white-space:pre-wrap;
+      line-height:1.55;
+    }
+
+    .links{
+      margin-top:14px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      font-size:0.85em;
+    }
+    .links a{
+      color:var(--accent);
+      text-decoration:none;
+      font-weight:900;
+    }
+    .links a:hover{ text-decoration:underline; }
+
+    footer{
+      margin-top:14px;
+      font-size:0.75em;
+      color:#555;
+      letter-spacing:0.3px;
+    }
+
+    @media (max-width: 520px){
+      body{ justify-content:flex-start; padding:18px 12px 14px; }
+      .card{ width:min(94vw, 420px); padding:28px 18px; border-radius:16px; }
+      input{ padding:14px 12px; border-radius:12px; }
+      .btn{ padding:14px 12px; border-radius:12px; }
+      footer{ margin-top:12px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h1>FoodDeliveryEye</h1>
+    <p class="subtitle">登録済みのメールアドレスに<br>パスワード再設定リンクを送ります</p>
+
+    <form id="reqForm">
+      <input type="email" id="email" placeholder="メールアドレス" required autocomplete="email">
+      <button id="sendBtn" class="btn btn-main" type="submit">再設定メールを送信</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <div class="links">
+      <a href="login.html">← ログインに戻る</a>
+      <a href="signup.html">新規登録 →</a>
+    </div>
+  </div>
+
+  <footer>© 2025 FoodDeliveryEye</footer>
+
+  <script type="module">
+    import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
+    const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+    const emailInput = document.getElementById("email");
+    const msg = document.getElementById("msg");
+    const sendBtn = document.getElementById("sendBtn");
+
+    // ✅ ログインから引き継いだメールがあれば入れる
+    const pref = localStorage.getItem("fde_reset_email_prefill");
+    if(pref){
+      emailInput.value = pref;
+      localStorage.removeItem("fde_reset_email_prefill");
+    }
+
+    const setMsg = (text, color) => {
+      msg.style.color = color || "#ccc";
+      msg.textContent = text;
+    };
+
+    // ✅ 登録メールかチェック（PocketBaseに「そのメールのユーザーが存在するか」）
+    async function isRegisteredEmail(email){
+      try{
+        // users に email フィルタで1件でもあればOK
+        await pb.collection("users").getFirstListItem(`email="${email}"`);
+        return true;
+      }catch(e){
+        // 見つからない/権限エラー等
+        return false;
+      }
+    }
+
+    document.getElementById("reqForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+
+      if(!email){
+        setMsg("メールアドレスを入力してください。", "#ff7777");
+        return;
+      }
+
+      sendBtn.disabled = true;
+      setMsg("確認中…", "#ccc");
+
+      const ok = await isRegisteredEmail(email);
+      if(!ok){
+        sendBtn.disabled = false;
+        setMsg("このメールアドレスは登録されていません。", "#ff7777");
+        return;
+      }
+
+      setMsg("パスワード再設定メールを送信しています…", "#ccc");
+
+      try{
+        await pb.collection("users").requestPasswordReset(email);
+        setMsg("📩パスワード再設定用のメールを送信しました。\n※メールが届かない場合迷惑フォルダの確認も合わせてお願いします", "#66ff99");
+      }catch(err){
+        sendBtn.disabled = false;
+        setMsg("⚠️ 送信に失敗しました：" + (err?.message || String(err)), "#ff7777");
+      }
+    });
+  </script>
+
+</body>
+</html>
