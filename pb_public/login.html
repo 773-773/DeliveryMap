@@ -225,22 +225,43 @@
     const emailInput = document.getElementById("email");
     const forgotLink = document.getElementById("forgotLink");
 
+    // ===== ✅ 戻り先（next）を共通化 =====
+    const params = new URLSearchParams(location.search);
+    const nextRaw = params.get("next"); // 例: "/vote.html" or "vote.html"
+    const safeNext = (() => {
+      if (!nextRaw) return null;
+      // open redirect対策：同一オリジンの相対パスだけ許可
+      if (nextRaw.startsWith("http://") || nextRaw.startsWith("https://")) return null;
+      if (nextRaw.startsWith("//")) return null;
+      return nextRaw;
+    })();
+    const getNextOrDefault = () => safeNext || "vote.html";
+
+    const goNext = () => { window.location.href = getNextOrDefault(); };
+
+    // ===== メール欄復元 =====
     const lastEmail = localStorage.getItem("fde_last_email");
     if (lastEmail) emailInput.value = lastEmail;
 
     // ✅ リセットページにメールを引き継ぐ（任意）
     forgotLink.addEventListener("click", () => {
       const v = emailInput.value.trim();
-      if(v) localStorage.setItem("fde_reset_email_prefill", v);
+      if (v) localStorage.setItem("fde_reset_email_prefill", v);
     });
 
+    // ===== ✅ 既にログイン済なら「nextがあればそこへ」/ 無ければこの画面に留まる =====
     if (pb.authStore.isValid) {
       msg.style.color = "#66ff99";
       msg.textContent = "前回のログイン状態を復元しました。";
       logoutBtn.style.display = "block";
-      setTimeout(() => { window.location.href = "vote.html"; }, 700);
+
+      // next がある時だけ自動で戻す（index直アクセス時は飛ばさない）
+      if (safeNext) {
+        setTimeout(() => goNext(), 450);
+      }
     }
 
+    // ===== メールログイン =====
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       const email    = e.target.email.value.trim();
@@ -255,38 +276,52 @@
         msg.textContent = "✅ ログイン成功！";
 
         localStorage.setItem("fde_last_email", email);
-        setTimeout(() => window.location.href = "vote.html", 800);
+        logoutBtn.style.display = "block";
+
+        // ✅ nextがあるなら戻す / 無いならこの画面に留まる
+        if (safeNext) setTimeout(() => goNext(), 650);
+
       } catch (err) {
         msg.style.color = "#ff7777";
         msg.textContent = "⚠️ ログイン失敗：" + err.message;
       }
     });
 
-    // ✅ スマホ(iOS Safari等)でポップアップブロックされるのを回避する版
+    // ===== ✅ Googleログイン（スマホ対策 + next対応） =====
     document.getElementById("googleBtn").onclick = async () => {
       msg.style.color = "#ccc";
       msg.textContent = "Googleログイン処理中です…";
 
-      // ユーザー操作の“同期中”に空ポップアップを先に開く（ここが重要）
+      // iOS対策：ユーザー操作の同期中に空ポップアップを先に開く
       const popup = window.open("about:blank", "_blank");
 
       try {
         const authData = await pb.collection("users").authWithOAuth2({
           provider: "google",
-          // OAuth URLが生成されたタイミングで、先に開いたpopupへ遷移させる
           urlCallback: (url) => {
             if (popup) popup.location.href = url;
-            else window.location.href = url;
+            else window.location.href = url; // スマホ等：同一タブ遷移
           },
         });
 
         msg.style.color = "#66ff99";
         msg.textContent = "✅ Googleログイン成功！";
+        logoutBtn.style.display = "block";
 
         const userEmail = authData?.meta?.email || pb.authStore.model?.email;
         if (userEmail) localStorage.setItem("fde_last_email", userEmail);
 
-        setTimeout(() => window.location.href = "vote.html", 800);
+        // ✅ nextがあるなら戻す / 無いならこの画面に留まる
+        if (safeNext) {
+          setTimeout(() => {
+            try { if (popup) popup.close(); } catch {}
+            goNext();
+          }, 650);
+        } else {
+          // next無し（index直アクセスなど）の時は勝手に飛ばさない
+          try { if (popup) popup.close(); } catch {}
+        }
+
       } catch (err) {
         try { if (popup) popup.close(); } catch {}
         msg.style.color = "#ff7777";
@@ -294,6 +329,7 @@
       }
     };
 
+    // ===== ログアウト =====
     logoutBtn.onclick = () => {
       pb.authStore.clear();
       msg.style.color = "#ccc";
