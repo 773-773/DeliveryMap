@@ -859,7 +859,6 @@ nav button{
       <span class="footerSep">•</span>
       <button type="button" data-open="guideline">コミュニティガイドライン</button>
       <span class="footerSep">•</span>
-      <!-- ✅ 修正：通報・削除ポリシーは削除 -->
       <button type="button" data-open="disclaimer">免責事項</button>
     </div>
     <div class="copyright">© FoodDeliveryEye – 配達員のための情報レーダー</div>
@@ -877,7 +876,6 @@ nav button{
   </div>
 </div>
 
-<!-- ✅ 修正：省略をやめて「ちゃんと表示」する（中身をここに全文で書く） -->
 <template id="tpl-terms">
   <h2>利用規約</h2>
   <p class="small">最終更新日：2025年12月20日</p>
@@ -1344,6 +1342,10 @@ nav button{
   setNavLoggedIn(pb.authStore.isValid);
   if(navLogout){
     navLogout.addEventListener("click", async () => {
+      /* ✅ 修正：ログアウト前にワンクッション（確認） */
+      const ok = window.confirm("ログアウトしますか？");
+      if(!ok) return;
+
       pb.authStore.clear();
       setNavLoggedIn(false);
       msgBox.textContent = "";
