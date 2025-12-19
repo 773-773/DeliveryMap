@@ -459,9 +459,11 @@ nav button{ appearance:none; -webkit-appearance:none; }
 
   <div class="headerRight">
     <nav>
-      <!-- ✅ ここを押したら about.html へ -->
       <a id="navAbout" href="about.html">このサイトについて</a>
+
+      <!-- ✅ next対応：この掲示板URLを保存して login.html に飛ばす -->
       <a id="navLogin" href="login.html">ログイン</a>
+
       <a id="navSignup" href="signup.html" class="primary">新規登録</a>
 
       <a id="navLoggedIn" href="mypage.html" style="display:none;">
@@ -512,6 +514,25 @@ nav button{ appearance:none; -webkit-appearance:none; }
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
+/* =========================
+   ✅ next（戻り先）保存：掲示板→ログイン→掲示板に戻す
+   - login.html 側は localStorage(fdel_next_url_v1) を見て戻る実装
+========================= */
+const KEY_NEXT_STORE = "fdel_next_url_v1";
+const navLogin = document.getElementById("navLogin");
+navLogin?.addEventListener("click", (e)=>{
+  try{
+    const current = location.pathname + location.search + location.hash;
+    localStorage.setItem(KEY_NEXT_STORE, current);
+  }catch{}
+  // ✅ ついでにクエリnextも付ける（login.htmlがクエリnext対応済みなら確実）
+  // UIは変えず内部だけ
+  try{
+    const current = location.pathname + location.search + location.hash;
+    navLogin.href = "login.html?next=" + encodeURIComponent(current);
+  }catch{}
+});
+
 /* ✅ 保険：クリック時に確実に about.html へ */
 document.getElementById("navAbout")?.addEventListener("click",(e)=>{
   // 通常は href で遷移するが、環境によってJSの影響が出た時の保険
@@ -519,7 +540,6 @@ document.getElementById("navAbout")?.addEventListener("click",(e)=>{
 });
 
 const navAbout    = document.getElementById("navAbout");
-const navLogin    = document.getElementById("navLogin");
 const navSignup   = document.getElementById("navSignup");
 const navLoggedIn = document.getElementById("navLoggedIn");
 const navLogout   = document.getElementById("navLogout");
