@@ -622,7 +622,7 @@ nav button{
   header{ flex-direction:column; align-items:stretch; gap:10px; }
   .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
 
-  nav a, nav button{ padding:12px 14px; font-size:14px; } /* ✅ スマホで押しやすく */
+  nav a, nav button{ padding:12px 14px; font-size:14px; }
 
   .hero{ padding:18px 14px; border-radius:20px; }
   .heroTag{
@@ -643,11 +643,11 @@ nav button{
     font-size:clamp(13px, 4.2vw, 14px);
   }
 
-  .heroPanel{ padding:16px 14px 16px; } /* ✅ 少しゆとり */
+  .heroPanel{ padding:16px 14px 16px; }
   #pollQuestion{ font-size:14px !important; line-height:1.55 !important; }
   #pollHint{ font-size:12px !important; line-height:1.6 !important; }
 
-  .pollBtn{ padding:14px 12px; font-size:14px; } /* ✅ 押しやすく */
+  .pollBtn{ padding:14px 12px; font-size:14px; }
   .pollBtnPct{ font-size:13px; }
   .pollBtnLabel{ max-width:70%; }
 
@@ -689,14 +689,12 @@ nav button{
 
     <div class="headerRight">
       <nav>
-        <!-- ✅ 未ログイン時だけ表示 -->
         <a id="navAbout" href="about.html">このサイトについて</a>
         <a id="navLogin" href="login.html">ログイン</a>
 
-        <!-- ✅ 重要：/signup.html（絶対パス）に統一 -->
-        <a id="navSignup" href="/signup.html" class="primary">新規登録</a>
+        <!-- ✅ 修正：絶対パス → 相対パス -->
+        <a id="navSignup" href="signup.html" class="primary">新規登録</a>
 
-        <!-- ✅ ログイン中は「ログイン中」「ログアウトする」だけ -->
         <a id="navLoggedIn" href="mypage.html" style="display:none;">
           <span class="loggedLamp" aria-hidden="true"></span>
           ログイン中
@@ -727,7 +725,6 @@ nav button{
         </p>
       </div>
 
-      <!-- poll -->
       <aside class="heroPanel" id="pollPanel">
         <div class="heroPanelHeader">
           <div class="heroPanelTitle" id="pollPanelTitle">アンケート実施中</div>
@@ -895,7 +892,6 @@ nav button{
   const pb = new window.PocketBase(PB_URL);
   if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
-  // ===== ヘッダーナビ（要件：ログイン中は「ログイン中」「ログアウトする」だけ / aboutは消す） =====
   const navAbout = document.getElementById("navAbout");
   const navLogin = document.getElementById("navLogin");
   const navSignup = document.getElementById("navSignup");
@@ -942,7 +938,6 @@ nav button{
     }
   }
 
-  // ===== poll =====
   const elQ = document.getElementById("pollQuestion");
   const elChoices = document.getElementById("pollChoices");
   const elMetaLine = document.getElementById("pollMetaLine");
@@ -1016,7 +1011,8 @@ nav button{
             </div>
             <div style="display:flex; gap:8px; margin-top:10px;">
               <a href="login.html?next=${encodeURIComponent(location.pathname)}" class="pollCta">ログイン</a>
-              <a href="/signup.html" class="pollCta pollCtaPrimary">新規登録</a>
+              <!-- ✅ 修正：絶対パス → 相対パス -->
+              <a href="signup.html" class="pollCta pollCtaPrimary">新規登録</a>
             </div>
           `;
           return;
@@ -1160,7 +1156,6 @@ nav button{
     }
   }
 
-  // ===== ログアウト =====
   setNavLoggedIn(pb.authStore.isValid);
   if(navLogout){
     navLogout.addEventListener("click", async () => {
@@ -1171,7 +1166,6 @@ nav button{
     });
   }
 
-  // share bottom
   const pageUrl = window.location.href;
   const shareText = "FoodDeliveryEye：配達員の体験を、みんなの安心と効率へ";
 
@@ -1209,7 +1203,6 @@ nav button{
     }
   });
 
-  // modal
   const overlay = document.getElementById("modalOverlay");
   const modalTitle = document.getElementById("modalTitle");
   const modalBody = document.getElementById("modalBody");
@@ -1248,7 +1241,6 @@ nav button{
   overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeModal(); });
   window.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && overlay.classList.contains("show")) closeModal(); });
 
-  // 起動
   (async () => {
     await ensureAuthModel();
     await bootPollPanel();
