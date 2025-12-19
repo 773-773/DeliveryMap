@@ -6,45 +6,159 @@
 <title>黒モダンA 月表示付き（投票＋口コミ＋お気に入り）</title>
 
 <style>
-body {
-  font-family: sans-serif;
+:root{
+  --bg-main:#07070b;
+  --bg-elevated:#0c0c12;
+  --accent:#5bff9c;
+  --accent-soft:rgba(91,255,156,0.28);
+  --accent2:#23ffd1;
+  --text-main:#f5f5f7;
+  --text-muted:rgba(245,245,247,0.62);
+  --border-soft:rgba(255,255,255,0.08);
+  --border-hair:rgba(255,255,255,0.06);
+  --shadow-deep:0 26px 90px rgba(0,0,0,0.78);
+}
+
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
   margin:0;
-  padding:6px;
-  background:#0d0d0d;
-  color:#fff;
+  padding:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Inter","Noto Sans JP",sans-serif;
+  color:var(--text-main);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(91,255,156,0.09) 0, transparent 55%),
+    radial-gradient(circle at 90% 90%, rgba(255,255,255,0.03) 0, transparent 55%),
+    linear-gradient(180deg, #050507 0%, #07070b 60%, #050507 100%);
+}
+.page{
+  max-width:1040px;
+  margin:0 auto;
+  padding:18px 14px 42px;
 }
 
-header {
+/* =========================
+   ✅ 画像と同じヘッダー（共通）
+========================= */
+header.siteHeader{
   display:flex;
-  justify-content:space-between;
   align-items:center;
-  padding:6px;
-  background:#111;
-  border-bottom:1px solid #222;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(5,5,8,0.72);
+  border:1px solid var(--border-hair);
+  backdrop-filter:blur(22px);
+  box-shadow:0 18px 60px rgba(0,0,0,0.62);
+  margin-bottom:18px;
+
+  position:relative;
+  z-index:50;
 }
 
-header .status {
-  font-size:0.8em;
-  color:#ccc;
+.logoArea{ display:flex; align-items:center; min-width:0; }
+.logoLink{ display:inline-block; min-width:0; color:inherit; text-decoration:none; }
+.logoTextMain{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:0.06em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.logoTextSub{
+  font-size:12px;
+  line-height:1.5;
+  color:rgba(245,245,247,0.55);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:2px;
 }
 
-#loginOpenBtn,
-#logoutBtn {
-  background:#333;
-  color:#fff;
-  border:none;
-  padding:4px 8px;
-  border-radius:6px;
+.headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
+nav{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+nav a, nav button{
+  color:var(--text-muted);
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  font-size:12px;
+  line-height:1;
+  transition:all .16s ease;
+  white-space:nowrap;
   cursor:pointer;
-  font-size:0.8em;
+  font-family:inherit;
 }
-#loginOpenBtn:hover,
-#logoutBtn:hover { background:#555; }
+nav a:hover, nav button:hover{ color:var(--text-main); background:rgba(255,255,255,0.05); }
+nav .primary{
+  color:#050814;
+  background:var(--accent);
+  border-color:transparent;
+  font-weight:900;
+  box-shadow:0 0 18px var(--accent-soft);
+}
+nav .primary:hover{ background:#7affb2; }
+nav button{ appearance:none; -webkit-appearance:none; }
+
+/* ログイン中ピル（緑に発光） */
+.loggedPill{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  color:#07110a !important;
+  background:linear-gradient(180deg, rgba(91,255,156,0.95), rgba(91,255,156,0.78)) !important;
+  border-color:rgba(91,255,156,0.18) !important;
+  box-shadow:0 0 18px rgba(91,255,156,0.22), 0 12px 28px rgba(0,0,0,0.45);
+  font-weight:900;
+}
+.loggedLamp{
+  width:10px; height:10px; border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 10px rgba(91,255,156,0.9), 0 0 24px rgba(91,255,156,0.38);
+  position:relative;
+}
+.loggedLamp::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:999px;
+  border:1px solid rgba(91,255,156,0.25);
+  animation:pulse 1.6s ease-in-out infinite;
+  opacity:.65;
+}
+@keyframes pulse{
+  0%{ transform:scale(0.72); opacity:0.25; }
+  55%{ transform:scale(1.08); opacity:0.75; }
+  100%{ transform:scale(1.35); opacity:0; }
+}
+.logoutPill{
+  color:rgba(245,245,247,0.88) !important;
+  border-color:rgba(255,255,255,0.10) !important;
+  background:rgba(255,255,255,0.03) !important;
+}
+.logoutPill:hover{ border-color:rgba(91,255,156,0.18) !important; }
+
+@media (max-width:640px){
+  header.siteHeader{ flex-direction:column; align-items:stretch; gap:10px; }
+  .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
+  nav a, nav button{ padding:12px 14px; font-size:14px; }
+}
+
+/* =========================
+   ▼ ここから下：元ページの見た目（そのまま）
+========================= */
+
+h2 { margin:12px 0 6px; }
+h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 
 #requestBtn {
   display:inline-block;
   margin:6px 0 10px;
-  font-size:0.7em;
+  font-size:0.85em;
   color:#66ff99;
   background:none;
   border:none;
@@ -52,156 +166,153 @@ header .status {
   cursor:pointer;
 }
 
-h2 { margin-bottom:6px; }
-h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
-
 /* 検索 */
 .searchContainer {
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:10px;
   margin-bottom:10px;
 }
-.searchContainer div { display:flex; gap:6px; }
+.searchContainer div { display:flex; gap:8px; flex-wrap:wrap; }
 .searchContainer input,
-.searchContainer select {
-  padding:6px;
-  border-radius:6px;
+.searchContainer select{
+  padding:10px;
+  border-radius:10px;
   border:1px solid #333;
-  background:#111;
+  background:#0f0f12;
   color:#fff;
-  font-size:0.9em;
+  font-size:0.95em;
 }
-.searchContainer button {
-  padding:6px;
-  border-radius:6px;
+.searchContainer button{
+  padding:10px 14px;
+  border-radius:10px;
   border:1px solid #333;
   background:#ffa500;
   color:#000;
   cursor:pointer;
-  font-size:0.9em;
+  font-size:0.95em;
+  font-weight:800;
 }
-.favFilter {
-  font-size:0.8em;
+.favFilter{
+  font-size:0.9em;
   color:#ccc;
   display:flex;
   align-items:center;
-  gap:4px;
+  gap:8px;
 }
 
 /* 店舗カード */
-.storeCard {
+.storeCard{
   position:relative;
-  background:#111;
+  background:#0f1014;
   border:1px solid #222;
-  border-radius:10px;
-  padding:10px;
+  border-radius:14px;
+  padding:12px;
   margin-bottom:12px;
-  box-shadow:0 2px 4px rgba(0,0,0,0.3);
+  box-shadow:0 10px 24px rgba(0,0,0,0.35);
   display:flex;
   flex-direction:column;
-  gap:6px;
+  gap:8px;
 }
-.storeName {
-  font-weight:bold;
-  font-size:1em;
-  color:#66ff99;
-}
-.address {
-  font-size:0.75em;
-  color:#bbb;
-}
+.storeName{ font-weight:900; font-size:1.05em; color:#66ff99; }
+.address{ font-size:0.85em; color:#bbb; }
+.avgRating{ font-size:0.9em; color:#ccc; margin-top:2px; }
 
-/* 平均評価表示 */
-.avgRating {
-  font-size:0.8em;
-  color:#ccc;
-  margin-top:2px;
+.voteContainer{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.voteContainer select{
+  padding:8px 10px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#111;
+  color:#fff;
 }
-
-.voteContainer {
-  display:flex;
-  gap:6px;
-  flex-wrap:wrap;
+.voteContainer button{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid #333;
+  background:#eee;
+  color:#000;
+  cursor:pointer;
+  font-weight:900;
 }
-.voteCount { color:#ff6600; font-weight:bold; }
+.voteCount{ color:#ff6600; font-weight:900; }
 
-.rightColumn {
+.rightColumn{
   margin-top:4px;
-  background:#1a1a1a;
-  padding:8px;
-  border-radius:6px;
-  font-size:0.75em;
+  background:#15161b;
+  border:1px solid rgba(255,255,255,.06);
+  padding:10px;
+  border-radius:12px;
+  font-size:0.85em;
 }
 
-.accordion {
+.accordion{
   width:100%;
   text-align:left;
-  margin-top:6px;
-  padding:4px;
-  background:#333;
+  margin-top:8px;
+  padding:10px 10px;
+  background:#2a2a2f;
   color:#fff;
   border:none;
-  border-radius:4px;
+  border-radius:10px;
   cursor:pointer;
+  font-weight:800;
 }
-.panel {
+.panel{
   display:none;
-  background:#222;
-  border-radius:4px;
-  padding:6px;
-  margin-top:4px;
+  background:#1a1a1f;
+  border-radius:10px;
+  padding:10px;
+  margin-top:6px;
   color:#ccc;
-  font-size:0.7em;
+  font-size:0.85em;
 }
 
 /* 口コミタブ */
-.reviewToggleBtn {
-  margin-top:6px;
-  background:#222;
+.reviewToggleBtn{
+  margin-top:8px;
+  background:#1a1a1f;
   border:1px solid #333;
   color:#66ff99;
-  padding:6px;
-  border-radius:6px;
+  padding:12px;
+  border-radius:12px;
   cursor:pointer;
-  font-size:0.8em;
+  font-size:0.95em;
   text-align:center;
+  font-weight:900;
 }
-
-.reviewPanel {
+.reviewPanel{
   display:none;
-  background:#1a1a1a;
+  background:#111;
   border:1px solid #333;
-  padding:8px;
-  border-radius:6px;
-  margin-top:6px;
-  font-size:0.75em;
+  padding:10px;
+  border-radius:12px;
+  margin-top:8px;
+  font-size:0.9em;
 }
 
 /* 星評価（投稿用） */
-.starWrap { display:flex; gap:4px; cursor:pointer; margin-bottom:4px; }
-.star { font-size:22px; color:#444; }
-.star.active { color:#ffcc00; }
+.starWrap{ display:flex; gap:6px; cursor:pointer; margin-bottom:8px; }
+.star{ font-size:22px; color:#444; }
+.star.active{ color:#ffcc00; }
 
 /* お気に入りボタン */
-.favoriteBtn {
+.favoriteBtn{
   position:absolute;
-  top:6px;
-  right:6px;
+  top:10px;
+  right:10px;
   border:none;
   background:transparent;
-  font-size:20px;
+  font-size:22px;
   cursor:pointer;
   color:#666;
 }
-.favoriteBtn.active {
-  color:#ff6699;
-}
+.favoriteBtn.active{ color:#ff6699; }
 
 /* 店舗報告ボタン（目立たないリンク風） */
-.storeReportBtn {
+.storeReportBtn{
   align-self:flex-end;
-  font-size:0.65em;
+  font-size:0.8em;
   color:#777;
   background:none;
   border:none;
@@ -212,7 +323,7 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 }
 
 /* 店舗報告モーダル */
-#storeReportModal {
+#storeReportModal{
   display:none;
   position:fixed;
   inset:0;
@@ -220,116 +331,119 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   justify-content:center;
   align-items:center;
   z-index:9999;
+  padding:14px;
 }
-.modal-box {
+.modal-box{
   background:#111;
-  padding:20px;
-  border-radius:10px;
-  width:280px;
+  padding:18px;
+  border-radius:14px;
+  width:min(360px, 100%);
   text-align:center;
+  border:1px solid rgba(255,255,255,.10);
 }
-.modal-box h3 {
-  margin:0 0 8px;
-}
-.modal-box p {
-  color:#ccc;
-  font-size:0.9em;
-  margin:0 0 10px;
-}
-#storeReportModal button {
+.modal-box h3{ margin:0 0 8px; }
+.modal-box p{ color:#ccc; font-size:0.95em; margin:0 0 10px; }
+#storeReportModal button{
   width:100%;
-  padding:8px;
+  padding:10px;
   margin-top:8px;
   border:none;
-  border-radius:6px;
+  border-radius:10px;
   cursor:pointer;
+  font-weight:900;
 }
-.reportReasonOption {
-  background:#222;
-  color:#fff;
-  font-size:0.8em;
-}
-.reportReasonOption.selected {
-  background:#555;
-}
-#submitStoreReportBtn {
-  background:#66ff99;
-  color:#000;
-  font-size:0.85em;
-}
-#closeStoreReportBtn {
-  background:#333;
-  color:#fff;
-  font-size:0.8em;
-}
+.reportReasonOption{ background:#222; color:#fff; font-size:0.9em; }
+.reportReasonOption.selected{ background:#555; }
+#submitStoreReportBtn{ background:#66ff99; color:#000; }
+#closeStoreReportBtn{ background:#333; color:#fff; }
 
 /* ページネーション */
-#pagination {
+#pagination{
   margin:12px 0 4px;
   text-align:center;
-  font-size:0.8em;
+  font-size:0.9em;
 }
-#pagination button {
-  padding:4px 10px;
-  margin:0 3px;
-  border-radius:6px;
+#pagination button{
+  padding:8px 12px;
+  margin:0 4px;
+  border-radius:10px;
   border:1px solid #333;
-  background:#222;
+  background:#1a1a1f;
   color:#fff;
   cursor:pointer;
+  font-weight:900;
 }
-#pagination .pageNumBtn.current {
+#pagination .pageNumBtn.current{
   background:#ffa500;
   color:#000;
   cursor:default;
 }
 </style>
 </head>
+
 <body>
+<div class="page">
 
-<header>
-  <div class="status" id="userStatus">未ログイン</div>
-  <div>
-    <button id="loginOpenBtn">ログイン</button>
-    <button id="logoutBtn" style="display:none;">ログアウト</button>
-  </div>
-</header>
+  <!-- ✅ ここが「画像と同じ」ヘッダー -->
+  <header class="siteHeader">
+    <div class="logoArea">
+      <a class="logoLink" href="index.html" aria-label="トップページへ戻る">
+        <div style="min-width:0;">
+          <div class="logoTextMain">FoodDeliveryEye</div>
+          <div class="logoTextSub">配達員の体験を、みんなの安心と効率へ</div>
+        </div>
+      </a>
+    </div>
 
-<h2>調理待ち時間予測<small>※お店到着後に商品受取までにかかった時間</small></h2>
-<button id="requestBtn" onclick="location.href='request.html'">掲載店舗を申請する</button>
+    <div class="headerRight">
+      <nav>
+        <!-- 未ログイン時だけ表示 -->
+        <a id="navAbout" href="about.html">このサイトについて</a>
+        <a id="navLogin" href="login.html">ログイン</a>
+        <a id="navSignup" href="signup.html" class="primary">新規登録</a>
 
-<div class="searchContainer">
-  <input id="nameInput" placeholder="店舗名で検索">
-  <div>
-    <select id="prefSelect"><option value="">都道府県を選択</option></select>
-    <select id="citySelect" style="display:none;"><option value="">市区町村を選択</option></select>
+        <!-- ログイン中は「ログイン中」「ログアウトする」だけ表示（画像通り） -->
+        <a id="navLoggedIn" href="mypage.html" style="display:none;">
+          <span class="loggedLamp" aria-hidden="true"></span>
+          ログイン中
+        </a>
+        <button id="navLogout" type="button" class="logoutPill" style="display:none;">ログアウトする</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ▼ 元の本文 -->
+  <h2>調理待ち時間予測<small>※お店到着後に商品受取までにかかった時間</small></h2>
+  <button id="requestBtn" onclick="location.href='request.html'">掲載店舗を申請する</button>
+
+  <div class="searchContainer">
+    <input id="nameInput" placeholder="店舗名で検索">
+    <div>
+      <select id="prefSelect"><option value="">都道府県を選択</option></select>
+      <select id="citySelect" style="display:none;"><option value="">市区町村を選択</option></select>
+    </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+      <button id="searchBtn">検索</button>
+      <label class="favFilter">
+        <input type="checkbox" id="favOnlyCheckbox">
+        お気に入りのみ
+      </label>
+    </div>
   </div>
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-    <button id="searchBtn">検索</button>
-    <label class="favFilter">
-      <input type="checkbox" id="favOnlyCheckbox">
-      お気に入りのみ
-    </label>
-  </div>
+
+  <div id="storeContainer"></div>
+  <div id="pagination"></div>
+
 </div>
-
-<div id="storeContainer"></div>
-<div id="pagination"></div>
 
 <!-- 店舗情報報告モーダル -->
 <div id="storeReportModal">
   <div class="modal-box">
     <h3>店舗情報の報告</h3>
     <p>報告理由を選んでください。</p>
-    <button data-reason="1" class="reportReasonOption">
-      1. 店舗情報が間違っている（名前、住所等）
-    </button>
-    <button data-reason="2" class="reportReasonOption">
-      2. すでに登録してある店舗（二重登録）
-    </button>
-    <button data-reason="3" class="reportReasonOption">
-      3. 存在しない店舗
-    </button>
+    <button data-reason="1" class="reportReasonOption">1. 店舗情報が間違っている（名前、住所等）</button>
+    <button data-reason="2" class="reportReasonOption">2. すでに登録してある店舗（二重登録）</button>
+    <button data-reason="3" class="reportReasonOption">3. 存在しない店舗</button>
     <button id="submitStoreReportBtn">送信</button>
     <button id="closeStoreReportBtn">キャンセル</button>
   </div>
@@ -340,37 +454,84 @@ import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pock
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
 /* ========================
-   共通・ユーティリティ
+   ✅ ヘッダー（ログイン状態で出し分け）
 ======================== */
-function updateUserStatus(){
-  const u  = document.getElementById("userStatus");
-  const lo = document.getElementById("logoutBtn");
-  const li = document.getElementById("loginOpenBtn");
-  if(pb.authStore.isValid){
-    u.textContent = "ログイン中: " + (pb.authStore.model.email || "");
-    lo.style.display = "inline-block";
-    li.style.display = "none";
-  } else {
-    u.textContent = "未ログイン";
-    lo.style.display = "none";
-    li.style.display = "inline-block";
+const navAbout   = document.getElementById("navAbout");
+const navLogin   = document.getElementById("navLogin");
+const navSignup  = document.getElementById("navSignup");
+const navLoggedIn= document.getElementById("navLoggedIn");
+const navLogout  = document.getElementById("navLogout");
+
+function setNavLoggedIn(isLoggedIn){
+  if(isLoggedIn){
+    if(navAbout)  navAbout.style.display = "none";
+    if(navLogin)  navLogin.style.display = "none";
+    if(navSignup) navSignup.style.display = "none";
+
+    if(navLoggedIn){
+      navLoggedIn.style.display = "";
+      navLoggedIn.classList.add("loggedPill");
+    }
+    if(navLogout) navLogout.style.display = "";
+  }else{
+    if(navAbout)  navAbout.style.display = "";
+    if(navLogin)  navLogin.style.display = "";
+    if(navSignup) navSignup.style.display = "";
+
+    if(navLoggedIn){
+      navLoggedIn.style.display = "none";
+      navLoggedIn.classList.remove("loggedPill");
+    }
+    if(navLogout) navLogout.style.display = "none";
   }
 }
-updateUserStatus();
 
+async function ensureAuthModel(){
+  if(!pb.authStore.isValid){
+    setNavLoggedIn(false);
+    return;
+  }
+  try{
+    if (pb.collection && pb.collection("users")?.authRefresh) {
+      await pb.collection("users").authRefresh();
+    }
+    setNavLoggedIn(true);
+  }catch{
+    pb.authStore.clear();
+    setNavLoggedIn(false);
+  }
+}
+
+setNavLoggedIn(pb.authStore.isValid);
+
+if(navLogout){
+  navLogout.addEventListener("click", async ()=>{
+    pb.authStore.clear();
+    setNavLoggedIn(false);
+
+    // ログアウト後のこのページの状態もリセット
+    favoriteMap = new Map();
+    favoriteOnly = false;
+    favOnlyCheckbox.checked = false;
+    loadPage(1);
+    alert("ログアウトしました");
+  });
+}
+
+/* ========================
+   共通・ユーティリティ（元コード）
+======================== */
 function redirectToLogin(){
   alert("ログインが必要です。ログイン画面に移動します。");
   window.location.href = "login.html";
 }
-
 function escapeHtml(s){
-  return s.replace(/[&<>"']/g, c=>({
+  return String(s ?? "").replace(/[&<>"']/g, c=>({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
   }[c]));
 }
-
 function normalizeForFilter(text){
-  return text.normalize("NFKC").toLowerCase().replace(/\s+/g,"");
+  return String(text ?? "").normalize("NFKC").toLowerCase().replace(/\s+/g,"");
 }
 function containsNGWordsEnhanced(text){
   const t = normalizeForFilter(text);
@@ -384,37 +545,22 @@ function containsNGWordsEnhanced(text){
   ];
   return ngWords.some(w => t.includes(w));
 }
-function containsUrl(text){
-  return /https?:\/\/|www\./i.test(text);
-}
+function containsUrl(text){ return /https?:\/\/|www\./i.test(text); }
 function looksLikeEmojiSpam(text){
-  const codePoints = Array.from(text);
+  const codePoints = Array.from(String(text ?? ""));
   let emojiCount = 0;
   for(const ch of codePoints){
     const cp = ch.codePointAt(0);
-    if(
-      (cp >= 0x1F300 && cp <= 0x1FAFF) ||
-      (cp >= 0x2600 && cp <= 0x27BF)
-    ){
-      emojiCount++;
-    }
+    if((cp >= 0x1F300 && cp <= 0x1FAFF) || (cp >= 0x2600 && cp <= 0x27BF)) emojiCount++;
   }
   if(codePoints.length >= 10 && emojiCount / codePoints.length > 0.4) return true;
   if(/([!?w笑草ｗ])\1{4,}/i.test(text)) return true;
-  return false;
-}
-function looksLikePersonalName(text){
-  const t = text.replace(/\s+/g,"");
-  if(/[一-龥]{1,4}(さん|くん|ちゃん)/.test(t)) return true;
-  if(/[ぁ-ゖァ-ヺ]{2,6}(さん|くん|ちゃん)/.test(t)) return true;
-  if(/\b[A-Z][a-z]+ [A-Z][a-z]+\b/.test(text)) return true;
   return false;
 }
 function isToxicTone(text){
   if(containsNGWordsEnhanced(text)) return true;
   if(containsUrl(text)) return true;
   if(looksLikeEmojiSpam(text)) return true;
-  // if(looksLikePersonalName(text)) return true;
   return false;
 }
 
@@ -529,41 +675,23 @@ function renderPagination(){
   }
 
   let html = "";
+  if(currentPage > 1) html += `<button class="pageBtn" data-page="${currentPage-1}">前へ</button>`;
 
-  // 前へ
-  if(currentPage > 1){
-    html += `<button class="pageBtn" data-page="${currentPage-1}">前へ</button>`;
-  }
-
-  // 数字ボタン（最大5つ）
   const windowSize = 5;
   let start = currentPage - 2;
   let end   = currentPage + 2;
-
-  if(start < 1){
-    end += (1 - start);
-    start = 1;
-  }
-  if(end > totalPages){
-    start -= (end - totalPages);
-    end = totalPages;
-  }
+  if(start < 1){ end += (1 - start); start = 1; }
+  if(end > totalPages){ start -= (end - totalPages); end = totalPages; }
   if(start < 1) start = 1;
 
   for(let p = start; p <= end; p++){
-    const cls = p === currentPage
-      ? "pageBtn pageNumBtn current"
-      : "pageBtn pageNumBtn";
+    const cls = p === currentPage ? "pageBtn pageNumBtn current" : "pageBtn pageNumBtn";
     html += `<button class="${cls}" data-page="${p}">${p}</button>`;
   }
 
-  // 次へ
-  if(currentPage < totalPages){
-    html += `<button class="pageBtn" data-page="${currentPage+1}">次へ</button>`;
-  }
+  if(currentPage < totalPages) html += `<button class="pageBtn" data-page="${currentPage+1}">次へ</button>`;
 
   pEl.innerHTML = html;
-
   pEl.querySelectorAll(".pageBtn").forEach(btn=>{
     btn.onclick = ()=>{
       const page = Number(btn.dataset.page) || 1;
@@ -602,9 +730,7 @@ function renderStores(stores){
   container.innerHTML="";
 
   if(!stores.length){
-    container.textContent = favoriteOnly
-      ? "お気に入り店舗がありません"
-      : "該当店舗なし";
+    container.textContent = favoriteOnly ? "お気に入り店舗がありません" : "該当店舗なし";
     return;
   }
 
@@ -615,12 +741,10 @@ function renderStores(stores){
     const isFav = favoriteMap.has(s.id);
 
     card.innerHTML=
-      `<button class="favoriteBtn ${isFav?"active":""}" title="お気に入り">
-         ${isFav?"♥":"♡"}
-       </button>
-       <div class="storeName">${s.name}</div>
+      `<button class="favoriteBtn ${isFav?"active":""}" title="お気に入り">${isFav?"♥":"♡"}</button>
+       <div class="storeName">${escapeHtml(s.name || "")}</div>
        <div class="avgRating" id="avgRating-${s.id}">平均評価：口コミなし</div>
-       <div class="address">${s.prefecture||""} ${s.city||""} ${s.address||""}</div>
+       <div class="address">${escapeHtml((s.prefecture||"")+" "+(s.city||"")+" "+(s.address||""))}</div>
        <button class="storeReportBtn" data-store-id="${s.id}">店舗情報の報告</button>`;
 
     const favBtn = card.querySelector(".favoriteBtn");
@@ -634,7 +758,7 @@ function renderStores(stores){
     vBox.className="voteContainer";
     const votedKey=`${s.id}-${todayKey}-${browserId}`;
     if(localStorage.getItem(votedKey)){
-      vBox.innerHTML=`<span style="background:#ffa500; color:#000; padding:2px 4px; border-radius:4px;">今日は投票済</span>`;
+      vBox.innerHTML=`<span style="background:#ffa500; color:#000; padding:4px 8px; border-radius:10px; font-weight:900;">今日は投票済</span>`;
     }else{
       const sel=document.createElement("select");
       voteOptions.forEach(v=>{
@@ -659,7 +783,7 @@ function renderStores(stores){
       const c=s.votes?.[currentMonth]?.[v]||0;
       nowLine+=`・${v}: <span class="voteCount">${c}票</span> `;
     });
-    right.innerHTML=`<div>${currentMonth} ${nowLine}</div>`;
+    right.innerHTML=`<div style="font-weight:800;">${currentMonth} ${nowLine}</div>`;
 
     pastMonths.forEach(m=>{
       const acc=document.createElement("button");
@@ -676,8 +800,7 @@ function renderStores(stores){
       });
       panel.textContent=txt;
 
-      acc.onclick=()=>panel.style.display=
-        panel.style.display==="block"?"none":"block";
+      acc.onclick=()=>panel.style.display = (panel.style.display==="block" ? "none" : "block");
 
       right.appendChild(acc);
       right.appendChild(panel);
@@ -694,7 +817,7 @@ function renderStores(stores){
     panel.className="reviewPanel";
     panel.id=`reviewPanel-${s.id}`;
     panel.innerHTML=`
-      <div style="font-weight:bold; color:#66ff99; margin-bottom:4px;">口コミ</div>
+      <div style="font-weight:900; color:#66ff99; margin-bottom:8px;">口コミ</div>
 
       <div class="starWrap" id="starWrap-${s.id}">
         <span class="star" data-v="1">★</span>
@@ -704,15 +827,15 @@ function renderStores(stores){
         <span class="star" data-v="5">★</span>
       </div>
 
-      <div id="reviews-${s.id}" style="margin-bottom:6px;">読み込み中…</div>
+      <div id="reviews-${s.id}" style="margin-bottom:8px;">読み込み中…</div>
 
       <textarea id="reviewInput-${s.id}"
         placeholder="口コミを書く（最大200文字・任意）"
         maxlength="200"
-        style="width:100%; height:50px; padding:6px; border-radius:6px; background:#111; color:#fff; border:1px solid #444;"></textarea>
+        style="width:100%; height:70px; padding:10px; border-radius:10px; background:#0f0f12; color:#fff; border:1px solid #444;"></textarea>
 
       <button id="reviewBtn-${s.id}"
-        style="margin-top:6px; width:100%; padding:6px; background:#66ff99; color:#000; border-radius:6px; border:none;">
+        style="margin-top:8px; width:100%; padding:10px; background:#66ff99; color:#000; border-radius:10px; border:none; font-weight:900;">
         投稿する
       </button>
     `;
@@ -752,7 +875,7 @@ function renderStores(stores){
       if(!starValue) return alert("星評価を選んでください");
 
       if(text && isToxicTone(text)){
-        alert("誹謗中傷・個人名・URL・絵文字スパムなどが含まれている可能性があります。内容を見直してください。");
+        alert("誹謗中傷・URL・絵文字スパムなどが含まれている可能性があります。内容を見直してください。");
         return;
       }
 
@@ -788,9 +911,7 @@ async function handleFavoriteClick(storeId, btn){
       favoriteMap.delete(storeId);
       btn.classList.remove("active");
       btn.textContent="♡";
-      if(favoriteOnly){
-        loadPage(1);
-      }
+      if(favoriteOnly) loadPage(1);
     }else{
       const rec = await pb.collection("favorites").create({
         userId: pb.authStore.model.id,
@@ -820,9 +941,7 @@ function handleStoreReport(storeId){
 function openStoreReportModal(storeId){
   reportTargetStoreId = storeId;
   selectedStoreReportReason = null;
-  document.querySelectorAll(".reportReasonOption").forEach(btn=>{
-    btn.classList.remove("selected");
-  });
+  document.querySelectorAll(".reportReasonOption").forEach(btn=>btn.classList.remove("selected"));
   document.getElementById("storeReportModal").style.display="flex";
 }
 function closeStoreReportModal(){
@@ -832,14 +951,8 @@ function closeStoreReportModal(){
 }
 
 async function submitStoreReport(){
-  if(!reportTargetStoreId){
-    alert("店舗が取得できていません。ページを更新してやり直してください。");
-    return;
-  }
-  if(!selectedStoreReportReason){
-    alert("報告理由を選んでください。");
-    return;
-  }
+  if(!reportTargetStoreId) return alert("店舗が取得できていません。ページ更新してください。");
+  if(!selectedStoreReportReason) return alert("報告理由を選んでください。");
 
   const map = {
     1:"店舗情報が間違っている(名前、住所等)",
@@ -847,24 +960,18 @@ async function submitStoreReport(){
     3:"存在しない店舗"
   };
   const reason = map[selectedStoreReportReason];
-  if(!reason){
-    alert("不正な報告理由です。");
-    return;
-  }
+  if(!reason) return alert("不正な報告理由です。");
 
   await reportStoreInternal(reportTargetStoreId, reason);
   closeStoreReportModal();
 }
 
 async function reportStoreInternal(storeId, reason){
-  if(!pb.authStore.isValid){
-    redirectToLogin();
-    return;
-  }
+  if(!pb.authStore.isValid){ redirectToLogin(); return; }
+
   try{
     const reporterId = pb.authStore.model.id;
-    const start = new Date();
-    start.setHours(0,0,0,0);
+    const start = new Date(); start.setHours(0,0,0,0);
     const iso = start.toISOString();
 
     const existing = await pb.collection("storeReports").getList(1,1,{
@@ -875,27 +982,11 @@ async function reportStoreInternal(storeId, reason){
       return;
     }
 
-    await pb.collection("storeReports").create({
-      storeId,
-      reporterId,
-      reason
-    });
-
+    await pb.collection("storeReports").create({ storeId, reporterId, reason });
     alert("店舗情報の報告を受け付けました。ありがとうございます。");
-
   }catch(e){
     console.error(e);
-    let msg = "店舗情報の報告に失敗しました。\n\n";
-    if(e?.data?.message){
-      msg += e.data.message;
-    }else if(e?.data){
-      msg += JSON.stringify(e.data);
-    }else if(e?.message){
-      msg += e.message;
-    }else{
-      msg += JSON.stringify(e);
-    }
-    alert(msg);
+    alert("店舗情報の報告に失敗しました。");
   }
 }
 
@@ -912,9 +1003,7 @@ async function vote(id, choice){
 
 async function executeVote(id, choice){
   const key=`${id}-${todayKey}-${browserId}`;
-  if(localStorage.getItem(key)){
-    return alert("今日はすでに投票済です。");
-  }
+  if(localStorage.getItem(key)) return alert("今日はすでに投票済です。");
 
   try{
     const s=await pb.collection("stores").getOne(id);
@@ -981,24 +1070,22 @@ async function loadAllReviewsForRenderedStores(stores){
         let html="";
         items.slice(0,3).forEach(r=>{
           const rawUserId = r.userId || "";
-          const userLabel = rawUserId
-            ? `投稿者ID: ${String(rawUserId).slice(0,4)}****`
-            : "投稿者ID: 不明";
+          const userLabel = rawUserId ? `投稿者ID: ${String(rawUserId).slice(0,4)}****` : "投稿者ID: 不明";
 
           html+=`
-            <div style="border-bottom:1px solid #333; padding:4px 0;">
-              <div style="color:#ffcc00;">
+            <div style="border-bottom:1px solid #333; padding:6px 0;">
+              <div style="color:#ffcc00; font-weight:900;">
                 ${"★".repeat(r.star)}<span style="color:#555">${"★".repeat(5-r.star)}</span>
               </div>
               <div style="color:#ddd;">${escapeHtml(r.text || "")}</div>
-              <div style="color:#888; font-size:0.65em;">${userLabel}</div>
-              <div style="color:#666; font-size:0.6em;">${new Date(r.created).toLocaleString()}</div>
+              <div style="color:#888; font-size:0.8em;">${userLabel}</div>
+              <div style="color:#666; font-size:0.75em;">${new Date(r.created).toLocaleString()}</div>
             </div>
           `;
         });
 
         if(items.length>3){
-          html += `<button style="width:100%; padding:4px; margin-top:4px; background:#333; border-radius:4px;"
+          html += `<button style="width:100%; padding:10px; margin-top:8px; background:#2a2a2f; border:none; border-radius:10px; color:#fff; font-weight:900; cursor:pointer;"
                      onclick="showAllReviews('${storeId}')">もっと見る</button>`;
         }
 
@@ -1036,7 +1123,7 @@ async function loadAllReviewsForRenderedStores(stores){
   }
 }
 
-function showAllReviews(storeId){
+window.showAllReviews = function(storeId){
   pb.collection("reviews").getList(1,500,{ sort:"-created" })
     .then(list=>{
       const all = list.items.filter(r => r.storeId === storeId);
@@ -1044,18 +1131,16 @@ function showAllReviews(storeId){
       let html="";
       all.forEach(r=>{
         const rawUserId = r.userId || "";
-        const userLabel = rawUserId
-          ? `投稿者ID: ${String(rawUserId).slice(0,4)}****`
-          : "投稿者ID: 不明";
+        const userLabel = rawUserId ? `投稿者ID: ${String(rawUserId).slice(0,4)}****` : "投稿者ID: 不明";
 
         html+=`
-          <div style="border-bottom:1px solid #333; padding:4px 0;">
-            <div style="color:#ffcc00;">
+          <div style="border-bottom:1px solid #333; padding:6px 0;">
+            <div style="color:#ffcc00; font-weight:900;">
               ${"★".repeat(r.star)}<span style="color:#555">${"★".repeat(5-r.star)}</span>
             </div>
             <div style="color:#ddd;">${escapeHtml(r.text || "")}</div>
-            <div style="color:#888; font-size:0.65em;">${userLabel}</div>
-            <div style="color:#666; font-size:0.6em;">${new Date(r.created).toLocaleString()}</div>
+            <div style="color:#888; font-size:0.8em;">${userLabel}</div>
+            <div style="color:#666; font-size:0.75em;">${new Date(r.created).toLocaleString()}</div>
           </div>
         `;
       });
@@ -1078,9 +1163,7 @@ async function submitReview(storeId,text,star){
       storeId,
       userId,
       star,
-      text: (text && text.trim())
-        ? text
-        : "（本文なし）"
+      text: (text && text.trim()) ? text : "（本文なし）"
     };
 
     if(existing.items.length){
@@ -1097,39 +1180,9 @@ async function submitReview(storeId,text,star){
 
   }catch(e){
     console.error(e);
-
-    let msg = "投稿に失敗しました。\n\n";
-
-    if(e?.data?.message){
-      msg += e.data.message;
-    }else if(e?.data){
-      msg += JSON.stringify(e.data);
-    }else if(e?.message){
-      msg += e.message;
-    }else{
-      msg += JSON.stringify(e);
-    }
-
-    alert(msg);
+    alert("投稿に失敗しました。");
   }
 }
-
-/* ========================
-   ログインボタン / ログアウト
-======================== */
-document.getElementById("loginOpenBtn").onclick = ()=>{
-  window.location.href = "login.html";
-};
-
-document.getElementById("logoutBtn").onclick=()=>{
-  pb.authStore.clear();
-  favoriteMap = new Map();
-  favoriteOnly = false;
-  favOnlyCheckbox.checked = false;
-  updateUserStatus();
-  loadPage(1);
-  alert("ログアウトしました");
-};
 
 /* 店舗報告モーダルのボタン */
 document.querySelectorAll(".reportReasonOption").forEach(btn=>{
@@ -1145,8 +1198,10 @@ document.getElementById("submitStoreReportBtn").onclick = ()=>submitStoreReport(
 document.getElementById("closeStoreReportBtn").onclick = ()=>closeStoreReportModal();
 
 /* 初回ロード */
-loadPage();
-
+(async ()=>{
+  await ensureAuthModel();
+  loadPage(1);
+})();
 </script>
 
 </body>
