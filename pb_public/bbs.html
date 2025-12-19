@@ -280,22 +280,217 @@ input:focus,textarea:focus{
   header{ flex-direction:column; align-items:flex-start; gap:4px; }
   .reply-banner .preview{ max-width:220px; }
 }
+
+/* =========================
+   ✅ 画像と同じヘッダー（共通）
+========================= */
+header.siteHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(5,5,8,0.72);
+  border:1px solid rgba(255,255,255,0.06);
+  backdrop-filter:blur(22px);
+  box-shadow:0 18px 60px rgba(0,0,0,0.62);
+  margin:12px 12px 18px;
+  position:relative;
+  z-index:50;
+  border-bottom:none;
+}
+.logoArea{ display:flex; align-items:center; min-width:0; }
+.logoLink{ display:inline-block; min-width:0; color:inherit; text-decoration:none; }
+.logoTextMain{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:0.06em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.logoTextSub{
+  font-size:12px;
+  line-height:1.5;
+  color:rgba(245,245,247,0.55);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:2px;
+}
+.headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
+nav{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+nav a, nav button{
+  color:rgba(245,245,247,0.62);
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  font-size:12px;
+  line-height:1;
+  transition:all .16s ease;
+  white-space:nowrap;
+  cursor:pointer;
+  font-family:inherit;
+}
+nav a:hover, nav button:hover{ color:#f5f5f7; background:rgba(255,255,255,0.05); }
+nav .primary{
+  color:#050814;
+  background:#5bff9c;
+  border-color:transparent;
+  font-weight:900;
+  box-shadow:0 0 18px rgba(91,255,156,0.28);
+}
+nav .primary:hover{ background:#7affb2; }
+nav button{ appearance:none; -webkit-appearance:none; }
+.loggedPill{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  color:#07110a !important;
+  background:linear-gradient(180deg, rgba(91,255,156,0.95), rgba(91,255,156,0.78)) !important;
+  border-color:rgba(91,255,156,0.18) !important;
+  box-shadow:0 0 18px rgba(91,255,156,0.22), 0 12px 28px rgba(0,0,0,0.45);
+  font-weight:900;
+}
+.loggedLamp{
+  width:10px; height:10px; border-radius:50%;
+  background:#5bff9c;
+  box-shadow:0 0 10px rgba(91,255,156,0.9), 0 0 24px rgba(91,255,156,0.38);
+  position:relative;
+}
+.loggedLamp::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:999px;
+  border:1px solid rgba(91,255,156,0.25);
+  animation:pulse 1.6s ease-in-out infinite;
+  opacity:.65;
+}
+@keyframes pulse{
+  0%{ transform:scale(0.72); opacity:0.25; }
+  55%{ transform:scale(1.08); opacity:0.75; }
+  100%{ transform:scale(1.35); opacity:0; }
+}
+.logoutPill{
+  color:rgba(245,245,247,0.88) !important;
+  border-color:rgba(255,255,255,0.10) !important;
+  background:rgba(255,255,255,0.03) !important;
+}
+.logoutPill:hover{ border-color:rgba(91,255,156,0.18) !important; }
+
+@media (max-width:640px){
+  header.siteHeader{ flex-direction:column; align-items:stretch; gap:10px; }
+  .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
+  nav a, nav button{ padding:12px 14px; font-size:14px; }
+}
+
+/* ログアウト確認 */
+.confirmModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.72);
+  justify-content:center;
+  align-items:center;
+  z-index:10000;
+  padding:14px;
+}
+.confirmBox{
+  width:min(420px, 100%);
+  background:rgba(15,16,20,0.92);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:16px;
+  padding:16px;
+  box-shadow:0 22px 80px rgba(0,0,0,0.72);
+  backdrop-filter:blur(18px);
+}
+.confirmTitle{
+  margin:0 0 8px;
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:.02em;
+}
+.confirmText{
+  margin:0 0 12px;
+  color:rgba(245,245,247,0.68);
+  line-height:1.5;
+  font-size:13px;
+}
+.confirmActions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+}
+.confirmBtn{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.04);
+  color:rgba(245,245,247,0.9);
+  font-weight:900;
+  cursor:pointer;
+  font-family:inherit;
+}
+.confirmBtn:hover{ background:rgba(255,255,255,0.07); }
+.confirmBtnDanger{
+  border-color:rgba(255,150,150,0.25);
+  background:rgba(255,150,150,0.10);
+  color:#ffdede;
+}
+.confirmBtnDanger:hover{ background:rgba(255,150,150,0.16); }
 </style>
 </head>
 <body>
-<header>
-  <h1>掲示板</h1>
+
+<header class="siteHeader">
+  <div class="logoArea">
+    <a class="logoLink" href="index.html" aria-label="トップページへ戻る">
+      <div style="min-width:0;">
+        <div class="logoTextMain">FoodDeliveryEye</div>
+        <div class="logoTextSub">配達員の体験を、みんなの安心と効率へ</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="headerRight">
+    <nav>
+      <!-- ✅ ここを押したら about.html へ -->
+      <a id="navAbout" href="about.html">このサイトについて</a>
+      <a id="navLogin" href="login.html">ログイン</a>
+      <a id="navSignup" href="signup.html" class="primary">新規登録</a>
+
+      <a id="navLoggedIn" href="mypage.html" style="display:none;">
+        <span class="loggedLamp" aria-hidden="true"></span>
+        ログイン中
+      </a>
+      <button id="navLogout" type="button" class="logoutPill" style="display:none;">ログアウトする</button>
+    </nav>
+  </div>
 </header>
 
 <div class="notice-box">
   <strong>【注意事項】</strong><br>
   ・誹謗中傷・攻撃的・不適切な投稿は禁止です<br>
- 
 </div>
 
 <div class="container" id="app"></div>
 
-<!-- 通報モーダル（投稿/スレッド共通） -->
+<div id="logoutConfirmModal" class="confirmModal" aria-hidden="true">
+  <div class="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <h3 class="confirmTitle" id="confirmTitle">本当にログアウトしますか？</h3>
+    <p class="confirmText">ログアウトすると、お気に入り絞り込みや投稿ができなくなります。</p>
+    <div class="confirmActions">
+      <button id="cancelLogoutBtn" class="confirmBtn" type="button">キャンセル</button>
+      <button id="confirmLogoutBtn" class="confirmBtn confirmBtnDanger" type="button">ログアウト</button>
+    </div>
+  </div>
+</div>
+
 <div id="reportOverlay" class="report-overlay">
   <div class="report-box">
     <h3 id="reportTitle">通報しますか？</h3>
@@ -313,28 +508,110 @@ input:focus,textarea:focus{
   </div>
 </div>
 
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+/* ✅ 保険：クリック時に確実に about.html へ */
+document.getElementById("navAbout")?.addEventListener("click",(e)=>{
+  // 通常は href で遷移するが、環境によってJSの影響が出た時の保険
+  // e.preventDefault(); location.href = "about.html";
+});
+
+const navAbout    = document.getElementById("navAbout");
+const navLogin    = document.getElementById("navLogin");
+const navSignup   = document.getElementById("navSignup");
+const navLoggedIn = document.getElementById("navLoggedIn");
+const navLogout   = document.getElementById("navLogout");
+
+function setNavLoggedIn(isLoggedIn){
+  if(isLoggedIn){
+    navAbout.style.display = "none";
+    navLogin.style.display = "none";
+    navSignup.style.display = "none";
+    navLoggedIn.style.display = "";
+    navLoggedIn.classList.add("loggedPill");
+    navLogout.style.display = "";
+  }else{
+    navAbout.style.display = "";
+    navLogin.style.display = "";
+    navSignup.style.display = "";
+    navLoggedIn.style.display = "none";
+    navLoggedIn.classList.remove("loggedPill");
+    navLogout.style.display = "none";
+  }
+}
+
+async function ensureAuthModel(){
+  if(!pb.authStore.isValid){
+    setNavLoggedIn(false);
+    return;
+  }
+  try{
+    await pb.collection("users").authRefresh();
+    setNavLoggedIn(true);
+  }catch{
+    pb.authStore.clear();
+    setNavLoggedIn(false);
+  }
+}
+
+/* ログアウト確認 */
+const logoutConfirmModal = document.getElementById("logoutConfirmModal");
+const cancelLogoutBtn = document.getElementById("cancelLogoutBtn");
+const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
+
+let logoutBusy = false;
+
+function openLogoutConfirm(){
+  logoutConfirmModal.style.display = "flex";
+  logoutConfirmModal.setAttribute("aria-hidden","false");
+}
+function closeLogoutConfirm(){
+  logoutConfirmModal.style.display = "none";
+  logoutConfirmModal.setAttribute("aria-hidden","true");
+}
+
+async function doLogout(){
+  if(logoutBusy) return;
+  logoutBusy = true;
+  try{
+    pb.authStore.clear();
+    setNavLoggedIn(false);
+    closeLogoutConfirm();
+    alert("ログアウトしました");
+  }finally{
+    logoutBusy = false;
+  }
+}
+
+navLogout?.addEventListener("click", ()=>openLogoutConfirm());
+cancelLogoutBtn.addEventListener("click", ()=>closeLogoutConfirm());
+confirmLogoutBtn.addEventListener("click", ()=>doLogout());
+logoutConfirmModal.addEventListener("click", (e)=>{ if(e.target === logoutConfirmModal) closeLogoutConfirm(); });
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && logoutConfirmModal.style.display === "flex") closeLogoutConfirm(); });
+
+setNavLoggedIn(pb.authStore.isValid);
+await ensureAuthModel();
+</script>
+
 <script>
-/* ======================================
-   設定 / キー
-====================================== */
+/* ===== 掲示板本体（あなたのコードそのまま） ===== */
 const DATA_KEY = "bbs_data_v3";
 const BANNED_NAMES_KEY = "bbs_banned_names_v1";
 const HIDDEN_POST_IDS_KEY = "bbs_hidden_post_ids_v1";
 const VIEWER_ID_KEY = "bbs_viewer_id_v1";
 
-const USER_REPORT_COUNTS_KEY = "bbs_user_report_counts_v1"; // {viewerId: count}
-const BANNED_VIEWERS_KEY = "bbs_banned_viewers_v1";         // [viewerId]
+const USER_REPORT_COUNTS_KEY = "bbs_user_report_counts_v1";
+const BANNED_VIEWERS_KEY = "bbs_banned_viewers_v1";
 
-const REPORT_THRESHOLD = 2;               // 投稿：2件で非表示＋名前禁止
-const THREAD_REPORT_THRESHOLD = 5;        // スレッド：5件で自動削除
-const USER_TOTAL_REPORT_THRESHOLD = 10;   // ユーザー：累計10通報で投稿不可
+const REPORT_THRESHOLD = 2;
+const THREAD_REPORT_THRESHOLD = 5;
+const USER_TOTAL_REPORT_THRESHOLD = 10;
 
 const THREADS_PER_PAGE = 20;
 const POSTS_PER_PAGE = 20;
 
-/* ======================================
-   ローカルストレージ util
-====================================== */
 function loadJson(key, fallback){
   try{
     const raw = localStorage.getItem(key);
@@ -345,22 +622,14 @@ function loadJson(key, fallback){
     return fallback;
   }
 }
-function saveJson(key, value){
-  localStorage.setItem(key, JSON.stringify(value));
-}
+function saveJson(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
 
-/* 掲示板データ */
 let data = loadJson(DATA_KEY, { threads: [] });
-
-/* 禁止ユーザー名・非表示投稿ID（表示はしないが制御に使う） */
 let bannedNames = loadJson(BANNED_NAMES_KEY, []);
 let hiddenPostIds = loadJson(HIDDEN_POST_IDS_KEY, []);
-
-/* ユーザー通報累計 / 投稿禁止ユーザー */
 let userReportCounts = loadJson(USER_REPORT_COUNTS_KEY, {});
 let bannedViewers = loadJson(BANNED_VIEWERS_KEY, []);
 
-/* ビューアID（この端末のこのブラウザの識別子） */
 function getViewerId(){
   let id = localStorage.getItem(VIEWER_ID_KEY);
   if(!id){
@@ -371,70 +640,37 @@ function getViewerId(){
 }
 const viewerId = getViewerId();
 
-/* 画面状態 */
-let state = {
-  page: "list",          // "list" | "thread"
-  currentThreadId: null,
-  threadPage: 1,
-  postPage: 1
-};
+let state = { page:"list", currentThreadId:null, threadPage:1, postPage:1 };
 
-/* 通報モーダル用（投稿/スレッド共通） */
-let reportContext = {
-  type: null,            // "post" | "thread"
-  threadId: null,
-  postIndexFromTop: null
-};
+let reportContext = { type:null, threadId:null, postIndexFromTop:null };
+let replyContext = null;
 
-/* 返信モード用 */
-let replyContext = null; // { postId, name, createdAt, snippet }
-
-/* ======================================
-   NGワード・危険表現チェック
-====================================== */
 const NG_WORDS = [
-  "死ね","しね","殺す","ころす",
-  "バカ","ばか","馬鹿","アホ","あほ",
-  "カス","かす","ゴミ","ごみ","クズ","くず",
-  "ブス","ぶす","キモい","きもい","キショ","きしょ","きしょい",
-  "消えろ","うざい","ウザい","ドブ","障害","池沼",
-  "差別","人種差別","障害者",
-  "セックス","sex","エロ","えろ","エッチ","hな","hな","性欲",
-  "アダルト","av","裏垢","えち","オナ","オ◯","オ○",
-  "ちんこ","ちんちん","まんこ","ぱいおつ","おっぱい","巨乳",
-  "自殺","自○","自害","リスカ","殺人","テロ",
+  "死ね","しね","殺す","ころす","バカ","ばか","馬鹿","アホ","あほ","カス","かす","ゴミ","ごみ","クズ","くず",
+  "ブス","ぶす","キモい","きもい","キショ","きしょ","きしょい","消えろ","うざい","ウザい","ドブ","障害","池沼",
+  "差別","人種差別","障害者","セックス","sex","エロ","えろ","エッチ","hな","性欲","アダルト","av","裏垢","えち",
+  "オナ","オ◯","オ○","ちんこ","ちんちん","まんこ","ぱいおつ","おっぱい","巨乳","自殺","自○","自害","リスカ",
+  "殺人","テロ",
 ];
 
 function isDisallowedContent(text){
   if(!text) return false;
   const t = text.toLowerCase();
-
   if(/https?:\/\//.test(t)) return true;
   if(/www\./.test(t)) return true;
   if(/\.(com|net|jp|org|io|gg|xyz|club|info|biz|co)\b/.test(t)) return true;
-
   if(/@/.test(t)) return true;
   if(/id[:：]/.test(t)) return true;
-
   if(/(死|殺|セックス|sex|エロ|ちん|まん|おっ?ぱい)[〇◯○＊\*]/.test(text)) return true;
-
   if(/[!?！？]{3,}/.test(text)) return true;
   if(/ｗ{3,}/.test(text)) return true;
   if(/草{3,}/.test(text)) return true;
-
-  for(const w of NG_WORDS){
-    if(t.includes(w.toLowerCase())) return true;
-  }
-
+  for(const w of NG_WORDS){ if(t.includes(w.toLowerCase())) return true; }
   const noSpaces = t.replace(/\s/g,"");
   if(noSpaces.length <= 1) return true;
-
   return false;
 }
 
-/* ======================================
-   共通 util
-====================================== */
 function saveAll(){
   saveJson(DATA_KEY, data);
   saveJson(BANNED_NAMES_KEY, bannedNames);
@@ -452,43 +688,26 @@ function formatDate(ts){
   const min = String(d.getMinutes()).padStart(2,"0");
   return `${y}/${m}/${day} ${h}:${min}`;
 }
-
-function generatePostId(){
-  return "p_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
-}
-
-function getThreadById(id){
-  return data.threads.find(t => t.id === id) || null;
-}
-
-/* スレッドの最終更新（最後の投稿日時が優先。なければ作成日） */
+function generatePostId(){ return "p_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8); }
+function getThreadById(id){ return data.threads.find(t => t.id === id) || null; }
 function getThreadLastAt(thread){
   const posts = thread.posts || [];
-  if(posts.length > 0){
-    return posts[posts.length - 1].createdAt || 0;
-  }
+  if(posts.length > 0) return posts[posts.length - 1].createdAt || 0;
   return thread.createdAt || 0;
 }
-
-/* 最終投稿情報（日時＋本文プレビュー） */
 function getLastPostInfo(thread){
   const posts = thread.posts || [];
-  if(posts.length === 0){
-    return { lastAt: null, preview: "まだ投稿がありません。" };
-  }
+  if(posts.length === 0) return { lastAt:null, preview:"まだ投稿がありません。" };
   const last = posts[posts.length - 1];
   const raw = (last.body || "").replace(/\s+/g, " ").trim();
   const preview = raw.length > 60 ? raw.slice(0, 60) + "…" : (raw || "（本文なし）");
-  return { lastAt: last.createdAt || null, preview };
+  return { lastAt:last.createdAt || null, preview };
 }
-
 function toSnippet(text, max=70){
   const raw = (text || "").replace(/\s+/g, " ").trim();
   if(!raw) return "（本文なし）";
   return raw.length > max ? raw.slice(0, max) + "…" : raw;
 }
-
-/* 投稿可能か（viewerId でブロック） */
 function ensureCanPost(){
   if(bannedViewers.includes(viewerId)){
     alert("通報が累計10回に達したため、この端末からの投稿はできません。");
@@ -496,37 +715,20 @@ function ensureCanPost(){
   }
   return true;
 }
-
-/* 対象ユーザーの通報累計を加算し、10で投稿禁止 */
 function addUserReport(targetViewerId){
   if(!targetViewerId) return;
-
   const cur = Number(userReportCounts[targetViewerId] || 0);
   const next = cur + 1;
   userReportCounts[targetViewerId] = next;
-
   if(next >= USER_TOTAL_REPORT_THRESHOLD && !bannedViewers.includes(targetViewerId)){
     bannedViewers.push(targetViewerId);
     alert("通報が累計10回に達したため、該当ユーザーは投稿できない状態になりました。");
   }
 }
 
-/* ======================================
-   メイン描画
-====================================== */
 const app = document.getElementById("app");
+function render(){ state.page === "thread" ? renderThreadPage() : renderThreadList(); }
 
-function render(){
-  if(state.page === "thread"){
-    renderThreadPage();
-  }else{
-    renderThreadList();
-  }
-}
-
-/* ======================================
-   ページング util
-====================================== */
 function clampPage(page, totalPages){
   const p = Number(page || 1);
   if(totalPages <= 0) return 1;
@@ -535,10 +737,8 @@ function clampPage(page, totalPages){
 function renderPager({page, total, perPage, onPrev, onNext, onJump}){
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const cur = clampPage(page, totalPages);
-
   const start = (cur - 1) * perPage + 1;
   const end = Math.min(cur * perPage, total);
-
   return `
     <div class="pager">
       <button class="btn-action" onclick="${onPrev}" ${cur<=1?'disabled':''}>前へ</button>
@@ -550,10 +750,6 @@ function renderPager({page, total, perPage, onPrev, onNext, onJump}){
   `;
 }
 
-/* ======================================
-   スレッド一覧（最終更新が新しい順 / 20件ページング）
-   ※通報ボタンは一覧に出さない
-====================================== */
 function renderThreadList(){
   app.innerHTML = `
     <h2>スレッド一覧</h2>
@@ -605,28 +801,19 @@ function renderThreadList(){
     div.appendChild(title);
     div.appendChild(info);
     div.appendChild(prev);
-
     div.onclick = ()=>enterThread(thread.id);
     list.appendChild(div);
   });
 
   pager.innerHTML = renderPager({
-    page: state.threadPage,
-    total,
-    perPage: THREADS_PER_PAGE,
-    onPrev: "prevThreadPage()",
-    onNext: "nextThreadPage()",
-    onJump: "jumpThreadPage"
+    page: state.threadPage, total, perPage: THREADS_PER_PAGE,
+    onPrev: "prevThreadPage()", onNext: "nextThreadPage()", onJump: "jumpThreadPage"
   });
 }
-
 function prevThreadPage(){ state.threadPage = Math.max(1, state.threadPage - 1); renderThreadList(); }
 function nextThreadPage(){ state.threadPage = state.threadPage + 1; renderThreadList(); }
 function jumpThreadPage(p){ state.threadPage = p; renderThreadList(); }
 
-/* ======================================
-   新規スレッド作成
-====================================== */
 function goCreateThread(){
   app.innerHTML = `
     <h2>新規スレッド作成</h2>
@@ -641,66 +828,40 @@ function goCreateThread(){
 
 function createThread(){
   if(!ensureCanPost()) return;
-
   const title = document.getElementById("threadTitle").value.trim();
   const desc = document.getElementById("threadDesc").value.trim();
-
-  if(!title){
-    alert("タイトルを入力してください。");
-    return;
-  }
+  if(!title){ alert("タイトルを入力してください。"); return; }
   if(isDisallowedContent(title) || isDisallowedContent(desc)){
     alert("不適切な表現またはURLなどが含まれているため、このタイトル/説明は使用できません。");
     return;
   }
-
   const id = "t_" + Date.now();
-  if(!data.threads) data.threads = [];
-  data.threads.push({
-    id,
-    title,
-    desc,
-    createdAt: Date.now(),
-    ownerViewerId: viewerId,
-    posts: [],
-    reports: []
-  });
-
+  data.threads.push({ id, title, desc, createdAt:Date.now(), ownerViewerId:viewerId, posts:[], reports:[] });
   saveAll();
   enterThread(id);
 }
 
-/* ======================================
-   スレッドページ
-====================================== */
 function enterThread(id){
   state.page = "thread";
   state.currentThreadId = id;
-  state.postPage = 1;     // ★スレッドを開いたら投稿ページは1に戻す
+  state.postPage = 1;
   replyContext = null;
   renderThreadPage();
 }
 
 function renderThreadPage(){
   const thread = getThreadById(state.currentThreadId);
-  if(!thread){
-    state.page = "list";
-    render();
-    return;
-  }
+  if(!thread){ state.page="list"; render(); return; }
 
   const threadReports = (thread.reports || []).length;
   const reportLabel = threadReports > 0 ? `（${threadReports}件）` : "";
 
   app.innerHTML = `
     <div class="back-link" onclick="backToList()">← スレッド一覧へ</div>
-
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
       <h2 style="margin:0;">${thread.title}</h2>
-      <!-- ★通報ボタンは「スレッドを開いた時だけ」表示 -->
       <button class="btn-thread-report" onclick="openThreadReportDialog('${thread.id}')">通報${reportLabel}</button>
     </div>
-
     <div style="color:#999;margin-bottom:10px;">${thread.desc || ""}</div>
 
     <div class="form-card">
@@ -713,7 +874,6 @@ function renderThreadPage(){
           <button class="btn-action" onclick="cancelReply()">解除</button>
         </div>
       </div>
-
       <input id="nameInput" placeholder="名前（任意。未入力なら『名無し』）" />
       <textarea id="bodyInput" placeholder="本文（必須）"></textarea>
       <button class="btn" onclick="postToThread()">投稿</button>
@@ -724,19 +884,14 @@ function renderThreadPage(){
     <div id="postPager"></div>
   `;
 
-  if(replyContext){
-    showReplyBanner();
-  }
-
+  if(replyContext) showReplyBanner();
   renderPosts();
 }
 
-/* 返信バナー */
 function showReplyBanner(){
   const banner = document.getElementById("replyBanner");
   const preview = document.getElementById("replyPreview");
   if(!banner || !preview) return;
-
   const name = replyContext.name || "名無し";
   const when = replyContext.createdAt ? formatDate(replyContext.createdAt) : "";
   preview.textContent = `${name} / ${when} / ${replyContext.snippet}`;
@@ -748,7 +903,6 @@ function cancelReply(){
   if(banner) banner.style.display = "none";
 }
 
-/* 投稿一覧描画（表示対象だけでページング：20件） */
 function renderPosts(){
   const thread = getThreadById(state.currentThreadId);
   const list = document.getElementById("postList");
@@ -761,7 +915,6 @@ function renderPosts(){
     return;
   }
 
-  // 表示対象だけ抽出（reverse表示のidxFromTopを保持して、操作対象がズレないようにする）
   const visible = [];
   const reversed = thread.posts.slice().reverse();
   reversed.forEach((p, idxFromTop)=>{
@@ -769,7 +922,7 @@ function renderPosts(){
     if(bannedNames.includes(name)) return;
     if(hiddenPostIds.includes(p.id)) return;
     if(isDisallowedContent(name) || isDisallowedContent(p.body)) return;
-    visible.push({ p, idxFromTop }); // idxFromTopは「元のreverse内の位置」＝既存ロジックと一致
+    visible.push({ p, idxFromTop });
   });
 
   const total = visible.length;
@@ -797,7 +950,6 @@ function renderPosts(){
         <div class="post-date">${formatDate(p.createdAt)}${reportText}</div>
         <div class="post-body"></div>
         <div class="post-footer">
-          <!-- 返信を左下（最初） -->
           <button class="btn-action" onclick="startReply(${idxFromTop})">返信</button>
           <button class="btn-action" onclick="openPostReportDialog(${idxFromTop})">通報</button>
           ${canDeletePost ? `<button class="btn-action" onclick="deletePost(${idxFromTop})">削除</button>` : ``}
@@ -813,10 +965,7 @@ function renderPosts(){
         const rn = p.replyTo.name || "名無し";
         const rs = p.replyTo.snippet || "";
         chip.innerHTML = `返信先：<b>${rn}</b> ${rs ? `- ${rs}` : ""}`;
-        chip.onclick = (e)=>{
-          e.stopPropagation();
-          scrollToPost(p.replyTo.postId);
-        };
+        chip.onclick = (e)=>{ e.stopPropagation(); scrollToPost(p.replyTo.postId); };
         card.insertBefore(chip, card.querySelector(".post-body"));
       }
 
@@ -825,12 +974,8 @@ function renderPosts(){
   }
 
   pager.innerHTML = renderPager({
-    page: state.postPage,
-    total,
-    perPage: POSTS_PER_PAGE,
-    onPrev: "prevPostPage()",
-    onNext: "nextPostPage()",
-    onJump: "jumpPostPage"
+    page: state.postPage, total, perPage: POSTS_PER_PAGE,
+    onPrev: "prevPostPage()", onNext: "nextPostPage()", onJump: "jumpPostPage"
   });
 }
 
@@ -840,44 +985,27 @@ function jumpPostPage(p){ state.postPage = p; renderPosts(); }
 
 function scrollToPost(postId){
   const el = document.querySelector(`[data-post-id="${postId}"]`);
-  if(!el){
-    alert("返信先の投稿が見つかりません（非表示/削除の可能性）");
-    return;
-  }
+  if(!el){ alert("返信先の投稿が見つかりません（非表示/削除の可能性）"); return; }
   el.scrollIntoView({ behavior:"smooth", block:"center" });
   const old = el.style.boxShadow;
   el.style.boxShadow = "0 0 0 2px rgba(102,255,153,.35), 0 12px 40px rgba(0,0,0,.45)";
   setTimeout(()=>{ el.style.boxShadow = old; }, 900);
 }
 
-/* 返信開始 */
 function startReply(idxFromTop){
   const thread = getThreadById(state.currentThreadId);
   if(!thread) return;
-
   const realIndex = thread.posts.length - 1 - idxFromTop;
   const post = thread.posts[realIndex];
   if(!post) return;
-
   const name = (post.name && post.name.trim()) ? post.name.trim() : "名無し";
-  replyContext = {
-    postId: post.id,
-    name,
-    createdAt: post.createdAt,
-    snippet: toSnippet(post.body, 48)
-  };
-
+  replyContext = { postId: post.id, name, createdAt: post.createdAt, snippet: toSnippet(post.body, 48) };
   showReplyBanner();
-  const body = document.getElementById("bodyInput");
-  if(body) body.focus();
+  document.getElementById("bodyInput")?.focus();
 }
 
-/* ======================================
-   投稿処理
-====================================== */
 function postToThread(){
   if(!ensureCanPost()) return;
-
   const thread = getThreadById(state.currentThreadId);
   if(!thread) return;
 
@@ -885,14 +1013,8 @@ function postToThread(){
   const body = document.getElementById("bodyInput").value.trim();
   const name = nameRaw || "名無し";
 
-  if(!body){
-    alert("本文を入力してください。");
-    return;
-  }
-  if(bannedNames.includes(name)){
-    alert("この名前は制限されています。別の名前を使用してください。");
-    return;
-  }
+  if(!body){ alert("本文を入力してください。"); return; }
+  if(bannedNames.includes(name)){ alert("この名前は制限されています。別の名前を使用してください。"); return; }
   if(isDisallowedContent(name) || isDisallowedContent(body)){
     alert("不適切な表現やURL・メールアドレス等が含まれているため投稿できません。表現を変えてください。");
     return;
@@ -900,17 +1022,11 @@ function postToThread(){
 
   const post = {
     id: generatePostId(),
-    name,
-    body,
+    name, body,
     createdAt: Date.now(),
     authorViewerId: viewerId,
     reports: [],
-    replyTo: replyContext ? {
-      postId: replyContext.postId,
-      name: replyContext.name,
-      createdAt: replyContext.createdAt,
-      snippet: replyContext.snippet
-    } : null
+    replyTo: replyContext ? { ...replyContext } : null
   };
 
   thread.posts.push(post);
@@ -919,14 +1035,10 @@ function postToThread(){
   document.getElementById("bodyInput").value = "";
   replyContext = null;
 
-  // 新規投稿後は「最新ページ（1ページ目）」に戻す
   state.postPage = 1;
   renderThreadPage();
 }
 
-/* ======================================
-   削除（投稿のみ）
-====================================== */
 function deletePost(idxFromTop){
   const thread = getThreadById(state.currentThreadId);
   if(!thread) return;
@@ -935,24 +1047,17 @@ function deletePost(idxFromTop){
   if(realIndex < 0 || realIndex >= thread.posts.length) return;
 
   const post = thread.posts[realIndex];
-
   if(!post.authorViewerId || post.authorViewerId !== viewerId){
     alert("この投稿は作成者のみ削除できます。");
     return;
   }
-
   if(!confirm("この投稿を削除しますか？（この端末内だけで削除されます）")) return;
 
   thread.posts.splice(realIndex,1);
   saveAll();
-
-  // ページが範囲外になったら調整
   renderThreadPage();
 }
 
-/* ======================================
-   通報（投稿/スレッド共通）
-====================================== */
 const reportOverlay = document.getElementById("reportOverlay");
 const reportTitle = document.getElementById("reportTitle");
 
@@ -963,7 +1068,6 @@ function openPostReportDialog(idxFromTop){
   reportTitle.textContent = "この投稿を通報しますか？";
   reportOverlay.style.display = "flex";
 }
-
 function openThreadReportDialog(threadId){
   reportContext.type = "thread";
   reportContext.threadId = threadId;
@@ -971,38 +1075,27 @@ function openThreadReportDialog(threadId){
   reportTitle.textContent = "このスレッドを通報しますか？";
   reportOverlay.style.display = "flex";
 }
-
 function closeReportDialog(){
   reportContext.type = null;
   reportContext.threadId = null;
   reportContext.postIndexFromTop = null;
   reportOverlay.style.display = "none";
 }
-
 function submitReport(reason){
-  if(reportContext.type === "post"){
-    submitPostReport(reason);
-  }else if(reportContext.type === "thread"){
-    submitThreadReport(reason);
-  }
+  if(reportContext.type === "post") submitPostReport(reason);
+  else if(reportContext.type === "thread") submitThreadReport(reason);
 }
 
 function submitPostReport(reason){
   const thread = getThreadById(reportContext.threadId);
-  if(!thread){
-    closeReportDialog();
-    return;
-  }
+  if(!thread){ closeReportDialog(); return; }
+
   const idxFromTop = reportContext.postIndexFromTop;
   const realIndex = thread.posts.length - 1 - idxFromTop;
   const post = thread.posts[realIndex];
-  if(!post){
-    closeReportDialog();
-    return;
-  }
+  if(!post){ closeReportDialog(); return; }
 
   if(!post.reports) post.reports = [];
-
   if(post.reports.some(r=>r.userId === viewerId)){
     alert("この投稿は既に通報済みです。");
     closeReportDialog();
@@ -1010,18 +1103,12 @@ function submitPostReport(reason){
   }
 
   post.reports.push({ userId: viewerId, reason, at: Date.now() });
-
   addUserReport(post.authorViewerId);
 
   if(post.reports.length >= REPORT_THRESHOLD){
     const authorName = (post.name && post.name.trim()) ? post.name.trim() : "名無し";
-
-    if(!hiddenPostIds.includes(post.id)){
-      hiddenPostIds.push(post.id);
-    }
-    if(!bannedNames.includes(authorName)){
-      bannedNames.push(authorName);
-    }
+    if(!hiddenPostIds.includes(post.id)) hiddenPostIds.push(post.id);
+    if(!bannedNames.includes(authorName)) bannedNames.push(authorName);
     alert("通報が一定数に達したため、この投稿は自動的に非表示となり、同じ名前の投稿は制限されます。");
   }else{
     alert("通報を受け付けました。");
@@ -1034,12 +1121,8 @@ function submitPostReport(reason){
 
 function submitThreadReport(reason){
   const thread = getThreadById(reportContext.threadId);
-  if(!thread){
-    closeReportDialog();
-    return;
-  }
+  if(!thread){ closeReportDialog(); return; }
   if(!thread.reports) thread.reports = [];
-
   if(thread.reports.some(r=>r.userId === viewerId)){
     alert("このスレッドは既に通報済みです。");
     closeReportDialog();
@@ -1047,7 +1130,6 @@ function submitThreadReport(reason){
   }
 
   thread.reports.push({ userId: viewerId, reason, at: Date.now() });
-
   addUserReport(thread.ownerViewerId);
 
   if(thread.reports.length >= THREAD_REPORT_THRESHOLD){
@@ -1055,30 +1137,18 @@ function submitThreadReport(reason){
     alert("通報が一定数に達したため、このスレッドは自動的に削除されました。");
     saveAll();
     closeReportDialog();
-
-    if(state.page === "thread" && state.currentThreadId === thread.id){
-      backToList();
-    }else{
-      renderThreadList();
-    }
+    if(state.page === "thread" && state.currentThreadId === thread.id) backToList();
+    else renderThreadList();
     return;
   }
 
   alert("通報を受け付けました。");
   saveAll();
   closeReportDialog();
-
-  // スレッドを開いている時はヘッダーの件数も更新
-  if(state.page === "thread" && state.currentThreadId === thread.id){
-    renderThreadPage();
-  }else{
-    renderThreadList();
-  }
+  if(state.page === "thread" && state.currentThreadId === thread.id) renderThreadPage();
+  else renderThreadList();
 }
 
-/* ======================================
-   戻る
-====================================== */
 function backToList(){
   state.page = "list";
   state.currentThreadId = null;
@@ -1086,7 +1156,6 @@ function backToList(){
   render();
 }
 
-/* 初期表示 */
 if(!data.threads) data.threads = [];
 render();
 </script>
