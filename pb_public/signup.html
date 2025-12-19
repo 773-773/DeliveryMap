@@ -2,42 +2,194 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>新規登録</title>
+  <title>新規登録 - FoodDeliveryEye</title>
   <style>
-    body { background:#111; color:#fff; font-family:sans-serif; padding:20px; }
-    input, button { display:block; margin:8px 0; padding:8px; width:100%; max-width:300px; }
-    button { background:#66ff99; border:none; cursor:pointer; border-radius:6px; }
+    body {
+      background:#0d0d0d;
+      color:#fff;
+      font-family:"Inter","Noto Sans JP",sans-serif;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      height:100vh;
+      margin:0;
+    }
+    .card {
+      background:#111;
+      border:1px solid #222;
+      border-radius:16px;
+      padding:40px 30px;
+      box-shadow:0 0 15px rgba(0,0,0,0.4);
+      width:90%;
+      max-width:360px;
+      text-align:center;
+    }
+    h1 {
+      color:#66ff99;
+      margin-bottom:4px;
+      font-size:1.6em;
+      letter-spacing:1px;
+    }
+    p.subtitle {
+      color:#aaa;
+      font-size:0.9em;
+      margin-bottom:20px;
+    }
+    input {
+      width:100%;
+      padding:12px;
+      border-radius:8px;
+      border:1px solid #333;
+      background:#1a1a1a;
+      color:#fff;
+      margin-bottom:12px;
+      font-size:0.95em;
+      outline:none;
+      transition:border 0.2s;
+    }
+    input:focus { border-color:#66ff99; }
+    .btn {
+      width:100%;
+      padding:12px;
+      border:none;
+      border-radius:8px;
+      font-weight:bold;
+      font-size:1em;
+      cursor:pointer;
+      transition:all 0.2s ease;
+    }
+    .btn-signup {
+      background:#66ff99;
+      color:#000;
+    }
+    .btn-signup:hover {
+      background:#80ffb2;
+    }
+    #msg {
+      color:#ccc;
+      margin-top:15px;
+      font-size:0.9em;
+      white-space:pre-wrap;
+      min-height:1.2em;
+    }
+    .login-link {
+      margin-top:18px;
+      font-size:0.8em;
+      color:#888;
+    }
+    .login-link a {
+      color:#66ff99;
+      text-decoration:none;
+      font-weight:600;
+      transition:color 0.2s;
+    }
+    .login-link a:hover {
+      color:#80ffb2;
+      text-decoration:underline;
+    }
+    footer {
+      margin-top:40px;
+      font-size:0.75em;
+      color:#555;
+      letter-spacing:0.3px;
+    }
   </style>
 </head>
 <body>
-  <h2>新規登録</h2>
-  <form id="signupForm">
-    <input type="email" id="email" placeholder="メールアドレス" required>
-    <input type="password" id="password" placeholder="パスワード" required>
-    <button type="submit">登録する</button>
-  </form>
-  <p id="msg"></p>
+
+  <div class="card">
+    <h1>FoodDeliveryEye</h1>
+    <p class="subtitle">メールアドレスで新規登録</p>
+
+    <form id="signupForm">
+      <input type="email" id="email" placeholder="メールアドレス" required>
+
+      <input type="password" id="password" placeholder="パスワード（6文字以上）" required minlength="6">
+
+      <!-- 🔥 パスワード確認用フィールドを追加 -->
+      <input type="password" id="passwordConfirm" placeholder="パスワード（確認）" required minlength="6">
+
+      <button class="btn btn-signup" type="submit" id="submitBtn">登録する</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <div class="login-link">
+      すでにアカウントをお持ちの方は
+      <a href="/login.html">こちら</a>
+    </div>
+  </div>
+
+  <footer>© 2025 FoodDeliveryEye</footer>
 
   <script type="module">
-  import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
-  const pb = new PocketBase("https://delivery-eye.onrender.com");
+    import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 
-  const form = document.getElementById("signupForm");
-  const msg = document.getElementById("msg");
+    const pb        = new PocketBase("https://delivery-eye.onrender.com");
+    const form      = document.getElementById("signupForm");
+    const msg       = document.getElementById("msg");
+    const submitBtn = document.getElementById("submitBtn");
 
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    try {
-      await pb.collection("users").create({
-        email: form.email.value,
-        password: form.password.value,
-        passwordConfirm: form.password.value
-      });
-      msg.textContent = "登録完了！ログインページへ移動してください。";
-    } catch (err) {
-      msg.textContent = "登録失敗：" + err.message;
-    }
-  });
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email           = e.target.email.value.trim();
+      const password        = e.target.password.value.trim();
+      const passwordConfirm = e.target.passwordConfirm.value.trim();
+
+      // 🔴 パスワード一致チェック
+      if (password !== passwordConfirm) {
+        msg.style.color = "#ff7777";
+        msg.textContent = "パスワードが一致しません。もう一度確認してください。";
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "処理中…";
+      msg.style.color = "#ccc";
+      msg.textContent = "登録処理中です…";
+
+      try {
+        // username 自動生成
+        const localPart = email.split("@")[0].slice(0,20);
+        const randomStr = Math.random().toString(36).slice(2,6);
+        const username  = `${localPart}_${randomStr}`;
+
+        // ① ユーザー作成
+        await pb.collection("users").create({
+          email,
+          password,
+          passwordConfirm,
+          username,
+        });
+
+        // ② 確認メール送信
+        await pb.collection("users").requestVerification(email);
+
+        msg.style.color = "#66ff99";
+        msg.textContent = "📩 確認メールを送信しました。\nメール内のボタンを押して認証を完了してください。";
+
+      } catch (err) {
+        console.error(err);
+
+        const emailErr =
+          err?.data?.data?.email?.code ||
+          err?.data?.email?.code;
+
+        if (emailErr === "validation_not_unique") {
+          msg.textContent = "このメールアドレスはすでに登録されています。\nログイン画面からログインしてください。";
+          msg.style.color = "#ff7777";
+        } else {
+          msg.textContent = "⚠️ 登録に失敗しました。時間をおいて再度お試しください。";
+          msg.style.color = "#ff7777";
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "登録する";
+      }
+    });
   </script>
+
 </body>
 </html>
