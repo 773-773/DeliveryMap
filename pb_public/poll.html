@@ -1,3 +1,9 @@
+<!-- =========================
+     poll.html（アンケートページ）
+     ✅ 未ログインで回答しようとしたら login.html に飛ばし、
+        ログイン後に poll.html に戻る
+     ※ 他は極力そのまま。変更点は「未ログイン時のクリック挙動」だけ
+========================= -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -349,7 +355,6 @@ footer{
 <body>
 <div class="page">
 
-<!-- ✅ ヘッダー：掲示板と同一のHTML構造 -->
 <header class="siteHeader">
   <div class="logoArea">
     <a class="logoLink" href="index.html" aria-label="トップページへ戻る">
@@ -375,7 +380,6 @@ footer{
   </div>
 </header>
 
-<!-- ここから下：元のまま -->
 <div class="topTools">
   <div class="pillWrap">
     <div class="pillLeftFill">
@@ -408,7 +412,29 @@ footer{
   const pb = new window.PocketBase(PB_URL);
 
   /* =========================
-     ✅ ヘッダー：掲示板と同じログイン状態切替（見た目はCSSに完全準拠）
+     ✅ 共通：戻り先（next）管理
+     - 未ログイン時に回答クリック → 現在URLを保存して login.html?next=... へ
+     - login.html でログイン成功 → next に戻る
+  ========================= */
+  const KEY_NEXT_STORE = "fdel_next_url_v1";
+
+  function currentRelativeUrl(){
+    // 相対パスのみにする（open redirect対策）
+    return location.pathname.split("/").pop() + location.search + location.hash;
+  }
+
+  function goLoginWithNext(){
+    try{
+      const next = currentRelativeUrl();
+      localStorage.setItem(KEY_NEXT_STORE, next);
+      location.href = "login.html?next=" + encodeURIComponent(next);
+    }catch{
+      location.href = "login.html?next=" + encodeURIComponent(currentRelativeUrl());
+    }
+  }
+
+  /* =========================
+     ✅ ヘッダー：ログイン状態切替（元のまま）
   ========================= */
   const navAbout    = document.getElementById("navAbout");
   const navLogin    = document.getElementById("navLogin");
@@ -416,12 +442,11 @@ footer{
   const navLoggedIn = document.getElementById("navLoggedIn");
   const navLogout   = document.getElementById("navLogout");
 
-  const KEY_NEXT_STORE = "fdel_next_url_v1";
-  navLogin?.addEventListener("click", ()=>{
+  navLogin?.addEventListener("click", (e)=>{
     try{
-      const current = location.pathname + location.search + location.hash;
-      localStorage.setItem(KEY_NEXT_STORE, current);
-      navLogin.href = "login.html?next=" + encodeURIComponent(current);
+      const next = currentRelativeUrl();
+      localStorage.setItem(KEY_NEXT_STORE, next);
+      navLogin.href = "login.html?next=" + encodeURIComponent(next);
     }catch{}
   });
 
@@ -468,7 +493,8 @@ footer{
   ensureAuthModel();
 
   /* =========================
-     以下：アンケート本体（元のまま）
+     以下：アンケート本体（ほぼ元のまま）
+     ✅ 変更点：未ログイン時は「メッセージ表示」ではなく login.html に飛ばす
   ========================= */
   const pollListEl = document.getElementById("pollList");
   const systemMsgEl = document.getElementById("systemMsg");
@@ -619,8 +645,9 @@ footer{
       btn.addEventListener("click", async ()=>{
         msg.textContent = "";
 
+        // ✅ ここだけ変更：未ログインならログインへ飛ぶ（戻ってこれる）
         if(!pb.authStore.isValid){
-          msg.textContent = "ログインが必要です。";
+          goLoginWithNext();
           return;
         }
 
