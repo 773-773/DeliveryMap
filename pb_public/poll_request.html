@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>アンケート募集 | FoodDeliveryEye</title>
+
+<style>
+:root{
+  --accent:#5bff9c;
+  --accent2:#23ffd1;
+  --text:#f5f5f7;
+  --muted:rgba(245,245,247,.62);
+  --border:rgba(255,255,255,.10);
+  --hair:rgba(255,255,255,.06);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:-apple-system,BlinkMacSystemFont,"Inter","Noto Sans JP",sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 18% 0%, rgba(91,255,156,0.09) 0, transparent 55%),
+    radial-gradient(circle at 90% 90%, rgba(255,255,255,0.03) 0, transparent 55%),
+    linear-gradient(180deg, #050507 0%, #07070b 60%, #050507 100%);
+}
+
+/* ✅ 重要：アンケートページと同じ「pageのpaddingなし」 */
+.page{
+  max-width:1040px;
+  margin:0 auto;
+  padding:0;
+}
+
+/* =========================
+   ✅ アンケートページと「同一」ヘッダー（CSSも同じ）
+========================= */
+header.siteHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 14px;
+  border-radius:18px;
+  background:rgba(5,5,8,0.72);
+  border:1px solid rgba(255,255,255,0.06);
+  backdrop-filter:blur(22px);
+  box-shadow:0 18px 60px rgba(0,0,0,0.62);
+  margin:12px 12px 18px;
+  position:relative;
+  z-index:50;
+  border-bottom:none;
+}
+.logoArea{ display:flex; align-items:center; min-width:0; }
+.logoLink{ display:inline-block; min-width:0; color:inherit; text-decoration:none; }
+.logoTextMain{
+  font-weight:900;
+  font-size:18px;
+  letter-spacing:0.06em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.logoTextSub{
+  font-size:12px;
+  line-height:1.5;
+  color:rgba(245,245,247,0.55);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-top:2px;
+}
+.headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
+nav{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+nav a, nav button{
+  color:rgba(245,245,247,0.62);
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.06);
+  background:rgba(255,255,255,0.02);
+  font-size:12px;
+  line-height:1;
+  transition:all .16s ease;
+  white-space:nowrap;
+  cursor:pointer;
+  font-family:inherit;
+}
+nav a:hover, nav button:hover{ color:#f5f5f7; background:rgba(255,255,255,0.05); }
+nav .primary{
+  color:#050814;
+  background:#5bff9c;
+  border-color:transparent;
+  font-weight:900;
+  box-shadow:0 0 18px rgba(91,255,156,0.28);
+}
+nav .primary:hover{ background:#7affb2; }
+nav button{ appearance:none; -webkit-appearance:none; }
+.loggedPill{
+  display:inline-flex !important;
+  align-items:center;
+  gap:8px;
+  color:#07110a !important;
+  background:linear-gradient(180deg, rgba(91,255,156,0.95), rgba(91,255,156,0.78)) !important;
+  border-color:rgba(91,255,156,0.18) !important;
+  box-shadow:0 0 18px rgba(91,255,156,0.22), 0 12px 28px rgba(0,0,0,0.45);
+  font-weight:900;
+}
+.loggedLamp{
+  width:10px; height:10px; border-radius:50%;
+  background:#5bff9c;
+  box-shadow:0 0 10px rgba(91,255,156,0.9), 0 0 24px rgba(91,255,156,0.38);
+  position:relative;
+}
+.loggedLamp::after{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:999px;
+  border:1px solid rgba(91,255,156,0.25);
+  animation:pulse 1.6s ease-in-out infinite;
+  opacity:.65;
+}
+@keyframes pulse{
+  0%{ transform:scale(0.72); opacity:0.25; }
+  55%{ transform:scale(1.08); opacity:0.75; }
+  100%{ transform:scale(1.35); opacity:0; }
+}
+.logoutPill{
+  color:rgba(245,245,247,0.88) !important;
+  border-color:rgba(255,255,255,0.10) !important;
+  background:rgba(255,255,255,0.03) !important;
+}
+.logoutPill:hover{ border-color:rgba(91,255,156,0.18) !important; }
+
+@media (max-width:640px){
+  header.siteHeader{ flex-direction:column; align-items:stretch; gap:10px; }
+  .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
+  nav a, nav button{ padding:12px 14px; font-size:14px; }
+}
+
+/* =========================
+   ここから下：アンケート募集本体（元のまま）
+   ※pageのpaddingを0にしたので、card側で余白を持たせる
+========================= */
+.wrapPad{
+  padding:0 12px 42px;
+}
+
+.card{
+  border-radius:22px;
+  background:rgba(10,10,16,0.88);
+  border:1px solid var(--hair);
+  box-shadow:0 18px 50px rgba(0,0,0,0.65);
+  padding:20px 18px;
+}
+h1{margin:0 0 14px;font-size:22px}
+.small{font-size:11px;color:rgba(245,245,247,.45);line-height:1.7;margin:0 0 16px}
+
+.form{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.row{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+label{
+  font-size:12px;
+  color:rgba(245,245,247,.78);
+  font-weight:900;
+}
+input, textarea{
+  width:100%;
+  color:var(--text);
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.10);
+  border-radius:14px;
+  padding:12px 12px;
+  outline:none;
+  font-size:14px;
+}
+textarea{min-height:90px;resize:vertical}
+input:focus, textarea:focus{
+  border-color:rgba(91,255,156,0.30);
+  box-shadow:0 0 0 2px rgba(91,255,156,0.12);
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:6px;
+}
+.btn{
+  flex:1;
+  border:none;
+  border-radius:999px;
+  padding:12px 12px;
+  font-weight:900;
+  cursor:pointer;
+  font-size:13px;
+}
+.btnPrimary{
+  background:rgba(91,255,156,0.92);
+  color:#050814;
+}
+.btnGhost{
+  background:rgba(255,255,255,0.03);
+  color:var(--text);
+  border:1px solid rgba(255,255,255,0.10);
+}
+.msg{
+  margin-top:12px;
+  font-size:12px;
+  color:#a7aed0;
+  min-height:18px;
+}
+</style>
+</head>
+
+<body>
+<div class="page">
+
+  <!-- ✅ ヘッダー：指定ページと「全く同じ」HTML構造 -->
+  <header class="siteHeader">
+    <div class="logoArea">
+      <a class="logoLink" href="index.html" aria-label="トップページへ戻る">
+        <div style="min-width:0;">
+          <div class="logoTextMain">FoodDeliveryEye</div>
+          <div class="logoTextSub">配達員の体験を、みんなの安心と効率へ</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="headerRight">
+      <nav>
+        <a id="navAbout" href="about.html">このサイトについて</a>
+        <a id="navLogin" href="login.html">ログイン</a>
+        <a id="navSignup" href="signup.html" class="primary">新規登録</a>
+
+        <a id="navLoggedIn" href="mypage.html" style="display:none;">
+          <span class="loggedLamp" aria-hidden="true"></span>
+          ログイン中
+        </a>
+        <button id="navLogout" type="button" class="logoutPill" style="display:none;">ログアウト</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="wrapPad">
+    <section class="card">
+      <h1>アンケート案を募集</h1>
+      <p class="small">
+        聞いてみたいアンケートを送ってください（採用された場合反映します）。<br>
+        ※ログインが必要です。個人情報は書かないでください。
+      </p>
+
+      <form id="reqForm" class="form">
+        <div class="row">
+          <label for="q">質問（必須）</label>
+          <input id="q" name="q" placeholder="例：１番稼げる曜日は？" required />
+        </div>
+
+        <div class="row">
+          <label>選択肢（最低2つ・最大4つ）</label>
+          <input id="c1" name="c1" placeholder="選択肢1（必須）" required />
+          <input id="c2" name="c2" placeholder="選択肢2（必須）" required />
+          <input id="c3" name="c3" placeholder="選択肢3（任意）" />
+          <input id="c4" name="c4" placeholder="選択肢4（任意）" />
+        </div>
+
+        <div class="row">
+          <label for="note">補足（任意）</label>
+          <textarea id="note" name="note" placeholder=""></textarea>
+        </div>
+
+        <div class="actions">
+          <button type="button" class="btn btnGhost" id="clearBtn">クリア</button>
+          <button type="submit" class="btn btnPrimary" id="sendBtn">送信</button>
+        </div>
+
+        <div class="msg" id="msg"></div>
+      </form>
+    </section>
+  </div>
+
+</div>
+
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
+const pb = new PocketBase("https://delivery-eye.onrender.com");
+
+/* =========================
+   ✅ ヘッダー：アンケートページと同じログイン状態切替
+========================= */
+const navAbout    = document.getElementById("navAbout");
+const navLogin    = document.getElementById("navLogin");
+const navSignup   = document.getElementById("navSignup");
+const navLoggedIn = document.getElementById("navLoggedIn");
+const navLogout   = document.getElementById("navLogout");
+
+const KEY_NEXT_STORE = "fdel_next_url_v1";
+navLogin?.addEventListener("click", ()=>{
+  try{
+    const current = location.pathname + location.search + location.hash;
+    localStorage.setItem(KEY_NEXT_STORE, current);
+    navLogin.href = "login.html?next=" + encodeURIComponent(current);
+  }catch{}
+});
+
+function setNavLoggedIn(isLoggedIn){
+  if(isLoggedIn){
+    navAbout.style.display = "none";
+    navLogin.style.display = "none";
+    navSignup.style.display = "none";
+    navLoggedIn.style.display = "";
+    navLoggedIn.classList.add("loggedPill");
+    navLogout.style.display = "";
+  }else{
+    navAbout.style.display = "";
+    navLogin.style.display = "";
+    navSignup.style.display = "";
+    navLoggedIn.style.display = "none";
+    navLoggedIn.classList.remove("loggedPill");
+    navLogout.style.display = "none";
+  }
+}
+
+async function ensureAuthModel(){
+  if(!pb.authStore.isValid){
+    setNavLoggedIn(false);
+    return;
+  }
+  try{
+    await pb.collection("users").authRefresh();
+    setNavLoggedIn(true);
+  }catch{
+    pb.authStore.clear();
+    setNavLoggedIn(false);
+  }
+}
+
+navLogout?.addEventListener("click", ()=>{
+  if(!confirm("ログアウトしますか？")) return;
+  pb.authStore.clear();
+  setNavLoggedIn(false);
+  location.reload();
+});
+
+setNavLoggedIn(pb.authStore.isValid);
+ensureAuthModel();
+
+/* =========================
+   ここから下：元のアンケート募集処理（そのまま）
+========================= */
+const form = document.getElementById("reqForm");
+const msg = document.getElementById("msg");
+const clearBtn = document.getElementById("clearBtn");
+const sendBtn = document.getElementById("sendBtn");
+
+function setMsg(t){ msg.textContent = t || ""; }
+
+/* ★追加：同一ユーザーの「今日の送信済み」チェック（1日1回制限） */
+function getTodayRangeISO(){
+  const start = new Date();
+  start.setHours(0,0,0,0);           // ローカル日付の00:00:00
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);    // 翌日の00:00:00
+  return { startISO: start.toISOString(), endISO: end.toISOString() };
+}
+
+async function hasSentToday(userId){
+  const { startISO, endISO } = getTodayRangeISO();
+  const filter = `user="${userId}" && created >= "${startISO}" && created < "${endISO}"`;
+  try{
+    await pb.collection("poll_requests").getFirstListItem(filter);
+    return true; // 見つかった＝今日すでに送信
+  }catch(err){
+    // PocketBaseは見つからない時404になるので、それは「未送信」として扱う
+    if(err?.status === 404) return false;
+    throw err; // それ以外は本当のエラー
+  }
+}
+
+clearBtn.addEventListener("click", ()=>{
+  form.reset();
+  setMsg("");
+});
+
+form.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+
+  if(!pb.authStore.isValid){
+    setMsg("ログインが必要です。先にログインしてください。");
+    return;
+  }
+
+  const q = document.getElementById("q").value.trim();
+  const c1 = document.getElementById("c1").value.trim();
+  const c2 = document.getElementById("c2").value.trim();
+  const c3 = document.getElementById("c3").value.trim();
+  const c4 = document.getElementById("c4").value.trim();
+  const note = document.getElementById("note").value.trim();
+
+  if(!q || !c1 || !c2){
+    setMsg("質問と選択肢1・2は必須です。");
+    return;
+  }
+
+  // 重複選択肢を軽く弾く
+  const choices = [c1,c2,c3,c4].filter(Boolean);
+  const uniq = new Set(choices.map(s=>s.toLowerCase()));
+  if(uniq.size !== choices.length){
+    setMsg("同じ選択肢が入っています。修正してください。");
+    return;
+  }
+
+  /* ★追加：1日1回制限チェック */
+  try{
+    const userId = pb.authStore.model.id;
+    const already = await hasSentToday(userId);
+    if(already){
+      setMsg("今日はすでに送信済みです。送信は1日1回までです。");
+      return;
+    }
+  }catch(err){
+    console.error(err);
+    const detail = err?.data?.message || err?.message || "";
+    setMsg("送信可否の確認に失敗しました。" + (detail ? `（${detail}）` : ""));
+    return;
+  }
+
+  sendBtn.disabled = true;
+  setMsg("送信中…");
+
+  try{
+    await pb.collection("poll_requests").create({
+      question: q,
+      choice1: c1,
+      choice2: c2,
+      choice3: c3 || "",
+      choice4: c4 || "",
+      note: note || "",
+      user: pb.authStore.model.id,
+      status: "pending"
+    });
+
+    setMsg("送信しました。承認されるとアンケートに反映されます。");
+    form.reset();
+  }catch(err){
+    console.error(err);
+    const detail = err?.data?.message || err?.message || "";
+    setMsg("送信に失敗しました。" + (detail ? `（${detail}）` : ""));
+  }finally{
+    sendBtn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
