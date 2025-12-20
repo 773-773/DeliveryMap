@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>パスワード再設定 - FoodDeliveryEye</title>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>パスワード再設定メール送信 - FoodDeliveryEye</title>
   <style>
     :root{
       --bg:#0d0d0d;
@@ -13,7 +12,6 @@
       --accent:#66ff99;
       --danger:#ff7777;
     }
-
     *{ box-sizing:border-box; }
 
     body{
@@ -45,17 +43,17 @@
 
     h1{
       color:var(--accent);
-      margin:0 0 6px;
-      font-size:1.65em;
-      font-weight:900;
+      margin:0 0 10px;
+      font-size:1.55em;
       letter-spacing:1px;
+      font-weight:900;
     }
 
     p.subtitle{
       color:var(--muted);
       font-size:0.92em;
       margin:0 0 18px;
-      line-height:1.6;
+      line-height:1.65;
     }
 
     input{
@@ -68,11 +66,11 @@
       margin-bottom:12px;
       font-size:1em;
       outline:none;
+      transition:border 0.2s, background 0.2s;
     }
-
     input:focus{
-      border-color:rgba(102,255,153,0.75);
-      background:rgba(255,255,255,0.07);
+      border-color: rgba(102,255,153,0.75);
+      background: rgba(255,255,255,0.07);
     }
 
     .btn{
@@ -83,66 +81,73 @@
       font-weight:900;
       font-size:1em;
       cursor:pointer;
+      transition:transform 0.15s ease, filter 0.15s ease;
     }
+    .btn:active{ transform: translateY(1px); }
 
     .btn-main{
       background:var(--accent);
       color:#07110a;
       box-shadow:0 0 18px rgba(102,255,153,0.18);
     }
-
-    .btn-main:disabled{
-      opacity:0.6;
-      cursor:not-allowed;
-    }
+    .btn-main:hover{ filter:brightness(1.04); }
+    .btn-main:disabled{ opacity:0.6; cursor:not-allowed; }
 
     #msg{
+      color:#ccc;
       margin-top:14px;
       font-size:0.92em;
+      min-height:1.2em;
       white-space:pre-wrap;
       line-height:1.55;
-      min-height:1.2em;
-      color:#ccc;
     }
 
-    .back-link{
-      margin-top:16px;
+    .links{
+      margin-top:14px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
       font-size:0.85em;
     }
-
-    .back-link a{
+    .links a{
       color:var(--accent);
       text-decoration:none;
       font-weight:900;
     }
-
-    .back-link a:hover{
-      text-decoration:underline;
-    }
+    .links a:hover{ text-decoration:underline; }
 
     footer{
       margin-top:14px;
       font-size:0.75em;
       color:#555;
+      letter-spacing:0.3px;
+    }
+
+    @media (max-width: 520px){
+      body{ justify-content:flex-start; padding:18px 12px 14px; }
+      .card{ width:min(94vw, 420px); padding:28px 18px; border-radius:16px; }
+      input{ padding:14px 12px; border-radius:12px; }
+      .btn{ padding:14px 12px; border-radius:12px; }
+      footer{ margin-top:12px; }
     }
   </style>
 </head>
 
 <body>
-
   <div class="card">
     <h1>FoodDeliveryEye</h1>
-    <p class="subtitle">新しいパスワードを設定してください</p>
+    <p class="subtitle">メールアドレスを入力すると<br>パスワード再設定リンクを送信します</p>
 
-    <input id="pw1" type="password" placeholder="新しいパスワード（6文字以上）" autocomplete="new-password">
-    <input id="pw2" type="password" placeholder="確認用パスワード" autocomplete="new-password">
-
-    <button id="submitBtn" class="btn btn-main">パスワードを変更する</button>
+    <form id="reqForm">
+      <input type="email" id="email" placeholder="メールアドレス" required autocomplete="email" />
+      <button id="sendBtn" class="btn btn-main" type="submit">再設定メールを送信</button>
+    </form>
 
     <p id="msg"></p>
 
-    <div class="back-link">
-      <a href="/login.html">ログイン画面へ戻る</a>
+    <div class="links">
+      <a href="login.html">← ログインに戻る</a>
+      <a href="signup.html">新規登録 →</a>
     </div>
   </div>
 
@@ -150,73 +155,56 @@
 
   <script type="module">
     import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.es.mjs";
-
     const pb = new PocketBase("https://delivery-eye.onrender.com");
 
-    const pw1Input  = document.getElementById("pw1");
-    const pw2Input  = document.getElementById("pw2");
-    const submitBtn = document.getElementById("submitBtn");
-    const msg       = document.getElementById("msg");
+    const emailInput = document.getElementById("email");
+    const msg = document.getElementById("msg");
+    const sendBtn = document.getElementById("sendBtn");
 
-    const params = new URLSearchParams(window.location.search);
-    const token  = params.get("token");
-
-    pw1Input.focus();
-
-    if (!token) {
-      msg.style.color = "#ff7777";
-      msg.textContent = "無効なリンクです。\nもう一度パスワード再設定の手続きを行ってください。";
-      submitBtn.disabled = true;
+    // 引き継ぎ（任意）
+    const pref = localStorage.getItem("fde_reset_email_prefill");
+    if (pref) {
+      emailInput.value = pref;
+      localStorage.removeItem("fde_reset_email_prefill");
+    } else {
+      const last = localStorage.getItem("fde_last_email");
+      if (last) emailInput.value = last;
     }
 
-    submitBtn.onclick = async () => {
-      if (submitBtn.disabled) return;
+    const setMsg = (text, color = "#ccc") => {
+      msg.style.color = color;
+      msg.textContent = text;
+    };
 
-      const pw1 = pw1Input.value.trim();
-      const pw2 = pw2Input.value.trim();
+    document.getElementById("reqForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
 
-      if (!pw1 || !pw2) {
-        msg.style.color = "#ff7777";
-        msg.textContent = "新しいパスワードを2回入力してください。";
+      if (!email) {
+        setMsg("メールアドレスを入力してください。", "#ff7777");
         return;
       }
 
-      if (pw1.length < 6) {
-        msg.style.color = "#ff7777";
-        msg.textContent = "パスワードは6文字以上で入力してください。";
-        return;
-      }
-
-      if (pw1 !== pw2) {
-        msg.style.color = "#ff7777";
-        msg.textContent = "パスワードが一致していません。";
-        return;
-      }
-
-      submitBtn.disabled = true;
-      msg.style.color = "#ccc";
-      msg.textContent = "パスワードを更新しています…";
+      sendBtn.disabled = true;
+      setMsg("パスワード再設定メールを送信しています…", "#ccc");
 
       try {
-        await pb.collection("users").confirmPasswordReset(token, pw1, pw2);
-        msg.style.color = "#66ff99";
-        msg.textContent =
-          "✅ パスワードを更新しました。\n" +
-          "ログイン画面から新しいパスワードでログインしてください。";
+        await pb.collection("users").requestPasswordReset(email);
 
-        setTimeout(() => {
-          window.location.href = "/login.html";
-        }, 2000);
+        setMsg(
+          "📩パスワード再設定用のメールを送信しました。\n※メールが届かない場合、迷惑フォルダの確認も合わせてお願いします",
+          "#66ff99"
+        );
 
+        localStorage.setItem("fde_last_email", email);
+        // 連打防止：成功したらボタンはそのまま無効でOK（戻したいなら下の行を消す）
+        // sendBtn.disabled = false;
       } catch (err) {
-        submitBtn.disabled = false;
-        msg.style.color = "#ff7777";
-        msg.textContent =
-          "⚠️ エラーが発生しました。\n" +
-          "再度パスワード再設定を行ってください。";
+        sendBtn.disabled = false;
+        const m = (err?.message || String(err) || "");
+        setMsg("⚠️ 送信に失敗しました：\n" + m, "#ff7777");
       }
-    };
+    });
   </script>
-
 </body>
 </html>
