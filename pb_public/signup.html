@@ -3,193 +3,167 @@
 <head>
   <meta charset="UTF-8">
   <title>新規登録 - FoodDeliveryEye</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body {
       background:#0d0d0d;
       color:#fff;
       font-family:"Inter","Noto Sans JP",sans-serif;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
       margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start; /* 中央固定をやめる */
+      padding-top:14vh;       /* ← 視覚的に一番ちょうどいい位置 */
     }
+
     .card {
       background:#111;
       border:1px solid #222;
-      border-radius:16px;
-      padding:40px 30px;
-      box-shadow:0 0 15px rgba(0,0,0,0.4);
-      width:90%;
-      max-width:360px;
+      border-radius:20px;
+      padding:34px 26px 30px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.55);
+      width:92%;
+      max-width:380px;
       text-align:center;
     }
+
     h1 {
       color:#66ff99;
-      margin-bottom:4px;
-      font-size:1.6em;
+      margin:0 0 6px;
+      font-size:1.7em;
       letter-spacing:1px;
     }
+
     p.subtitle {
       color:#aaa;
-      font-size:0.9em;
-      margin-bottom:20px;
+      font-size:0.95em;
+      margin-bottom:22px;
     }
+
     input {
       width:100%;
-      padding:12px;
-      border-radius:8px;
+      padding:14px;
+      border-radius:10px;
       border:1px solid #333;
       background:#1a1a1a;
       color:#fff;
-      margin-bottom:12px;
-      font-size:0.95em;
+      margin-bottom:14px;
+      font-size:1em;
       outline:none;
-      transition:border 0.2s;
     }
     input:focus { border-color:#66ff99; }
+
     .btn {
       width:100%;
-      padding:12px;
+      padding:15px;
       border:none;
-      border-radius:8px;
-      font-weight:bold;
-      font-size:1em;
+      border-radius:12px;
+      font-weight:700;
+      font-size:1.05em;
       cursor:pointer;
-      transition:all 0.2s ease;
     }
+
     .btn-signup {
       background:#66ff99;
       color:#000;
     }
-    .btn-signup:hover {
-      background:#80ffb2;
-    }
+
     #msg {
-      color:#ccc;
-      margin-top:15px;
+      margin-top:14px;
       font-size:0.9em;
-      white-space:pre-wrap;
       min-height:1.2em;
+      white-space:pre-wrap;
     }
+
     .login-link {
-      margin-top:18px;
-      font-size:0.8em;
+      margin-top:20px;
+      font-size:0.85em;
       color:#888;
     }
     .login-link a {
       color:#66ff99;
       text-decoration:none;
       font-weight:600;
-      transition:color 0.2s;
-    }
-    .login-link a:hover {
-      color:#80ffb2;
-      text-decoration:underline;
-    }
-    footer {
-      margin-top:40px;
-      font-size:0.75em;
-      color:#555;
-      letter-spacing:0.3px;
     }
 
-    /* ✅ 追加：スマホで「遠い」を解消（他は一切変えず、見やすさだけ調整） */
-    @media (max-width: 480px){
-      body{
-        height:auto;                 /* 100vh固定を外して“遠い”の原因を減らす */
-        min-height:100vh;
-        justify-content:flex-start;  /* 上寄せにしてすぐ目に入る位置へ */
-        padding:18px 14px 22px;      /* 余白確保 */
+    footer {
+      margin-top:26px;
+      font-size:0.75em;
+      color:#555;
+      text-align:center;
+    }
+
+    /* 🔥 スマホ最適化：強制的に“近く”する */
+    @media (max-width: 480px) {
+      body {
+        padding-top:11vh;   /* ← ここが効く */
       }
-      .card{
-        width:100%;
-        max-width:420px;             /* スマホではカードを少し大きめに */
-        padding:28px 20px;           /* 余白を詰めて入力欄を上に寄せる */
-        border-radius:18px;
-      }
-      h1{
-        font-size:1.55em;            /* ほぼ同等（微調整） */
-      }
-      p.subtitle{
-        margin-bottom:16px;
-      }
-      input{
-        padding:13px 12px;           /* タップしやすく */
-        font-size:1em;
-      }
-      .btn{
-        padding:13px 12px;
-        font-size:1em;
-      }
-      footer{
-        margin-top:22px;             /* フッターが下すぎて遠くならないように */
+      .card {
+        padding:30px 22px 26px;
       }
     }
   </style>
 </head>
+
 <body>
 
-  <div class="card">
-    <h1>FoodDeliveryEye</h1>
-    <p class="subtitle">メールアドレスで新規登録</p>
+  <div>
+    <div class="card">
+      <h1>FoodDeliveryEye</h1>
+      <p class="subtitle">メールアドレスで新規登録</p>
 
-    <form id="signupForm">
-      <input type="email" id="email" placeholder="メールアドレス" required>
+      <form id="signupForm">
+        <input type="email" id="email" placeholder="メールアドレス" required>
+        <input type="password" id="password" placeholder="パスワード（6文字以上）" required minlength="6">
+        <input type="password" id="passwordConfirm" placeholder="パスワード（確認）" required minlength="6">
 
-      <input type="password" id="password" placeholder="パスワード（6文字以上）" required minlength="6">
+        <button class="btn btn-signup" type="submit" id="submitBtn">登録する</button>
+      </form>
 
-      <!-- 🔥 パスワード確認用フィールドを追加 -->
-      <input type="password" id="passwordConfirm" placeholder="パスワード（確認）" required minlength="6">
+      <p id="msg"></p>
 
-      <button class="btn btn-signup" type="submit" id="submitBtn">登録する</button>
-    </form>
-
-    <p id="msg"></p>
-
-    <div class="login-link">
-      すでにアカウントをお持ちの方は
-      <a href="/login.html">こちら</a>
+      <div class="login-link">
+        すでにアカウントをお持ちの方は
+        <a href="/login.html">こちら</a>
+      </div>
     </div>
-  </div>
 
-  <footer>© 2025 FoodDeliveryEye</footer>
+    <footer>© 2025 FoodDeliveryEye</footer>
+  </div>
 
   <script type="module">
     import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 
-    const pb        = new PocketBase("https://delivery-eye.onrender.com");
-    const form      = document.getElementById("signupForm");
-    const msg       = document.getElementById("msg");
+    const pb = new PocketBase("https://delivery-eye.onrender.com");
+    const form = document.getElementById("signupForm");
+    const msg = document.getElementById("msg");
     const submitBtn = document.getElementById("submitBtn");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const email           = e.target.email.value.trim();
-      const password        = e.target.password.value.trim();
+      const email = e.target.email.value.trim();
+      const password = e.target.password.value.trim();
       const passwordConfirm = e.target.passwordConfirm.value.trim();
 
-      // 🔴 パスワード一致チェック
       if (password !== passwordConfirm) {
         msg.style.color = "#ff7777";
-        msg.textContent = "パスワードが一致しません。もう一度確認してください。";
+        msg.textContent = "パスワードが一致しません。";
         return;
       }
 
       submitBtn.disabled = true;
       submitBtn.textContent = "処理中…";
-      msg.style.color = "#ccc";
       msg.textContent = "登録処理中です…";
+      msg.style.color = "#ccc";
 
       try {
-        // username 自動生成
         const localPart = email.split("@")[0].slice(0,20);
         const randomStr = Math.random().toString(36).slice(2,6);
-        const username  = `${localPart}_${randomStr}`;
+        const username = `${localPart}_${randomStr}`;
 
-        // ① ユーザー作成
         await pb.collection("users").create({
           email,
           password,
@@ -197,26 +171,13 @@
           username,
         });
 
-        // ② 確認メール送信
         await pb.collection("users").requestVerification(email);
 
         msg.style.color = "#66ff99";
-        msg.textContent = "📩 確認メールを送信しました。\nメール内のボタンを押して認証を完了してください。";
-
+        msg.textContent = "📩 確認メールを送信しました。";
       } catch (err) {
-        console.error(err);
-
-        const emailErr =
-          err?.data?.data?.email?.code ||
-          err?.data?.email?.code;
-
-        if (emailErr === "validation_not_unique") {
-          msg.textContent = "このメールアドレスはすでに登録されています。\nログイン画面からログインしてください。";
-          msg.style.color = "#ff7777";
-        } else {
-          msg.textContent = "⚠️ 登録に失敗しました。時間をおいて再度お試しください。";
-          msg.style.color = "#ff7777";
-        }
+        msg.style.color = "#ff7777";
+        msg.textContent = "登録に失敗しました。";
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "登録する";
