@@ -308,6 +308,16 @@ h2 { margin:12px 0 6px; }
 }
 .towerName{ font-weight:900; font-size:1.05em; color:#66ff99; }
 .addr{ font-size:0.9em; color:#bbb; line-height:1.5; }
+
+/* ✅ 住所リンク（下線＋マップへ） */
+.addrLink{
+  color:#bbb;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  cursor:pointer;
+}
+.addrLink:hover{ color:rgba(245,245,247,0.88); }
+
 .metaRow{
   display:flex;
   gap:10px;
@@ -464,7 +474,6 @@ h2 { margin:12px 0 6px; }
     </div>
   </header>
 
-  <!-- ✅ 文言変更：タイトルのみ（※の説明文は削除） -->
   <h2>配達員マンション入館方法</h2>
 
   <button id="requestBtn" onclick="location.href='tower_request.html'">マンション掲載申請はこちら</button>
@@ -478,14 +487,12 @@ h2 { margin:12px 0 6px; }
     </div>
     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
       <button id="searchBtn" type="button">検索</button>
-      <!-- towerはお気に入り無し。レイアウト一致のためダミー -->
       <span class="searchRightDummy" aria-hidden="true"></span>
     </div>
   </div>
 
   <div id="towerContainer"></div>
 
-  <!-- ✅ ページネーション：一番下に表示 -->
   <div id="pagination" class="paginationBar" aria-label="ページネーション"></div>
 
 </div>
@@ -651,6 +658,21 @@ function escapeFilter(s){
   return String(s ?? "").replaceAll("\\","\\\\").replaceAll('"','\\"').replaceAll("'","\\'");
 }
 
+/* ✅ 住所（都道府県〜番地だけ）を作る */
+function buildAddressOnly(t){
+  const pref = String(t?.prefecture ?? "").trim();
+  const city = String(t?.city ?? "").trim();
+  const addr = String(t?.address ?? "").trim();
+  const parts = [pref, city, addr].filter(Boolean);
+  return parts.join(" ").trim();
+}
+
+/* ✅ Google Maps に飛ばす（住所のみで検索） */
+function mapUrlFromAddress(address){
+  const q = encodeURIComponent(address);
+  return `https://www.google.com/maps/search/?api=1&query=${q}`;
+}
+
 /* ========================
    都道府県
 ======================== */
@@ -722,7 +744,6 @@ let currentPage = 1;
 let totalPages = 1;
 
 function isEntryLocked(t){
-  // entryApproved が true ならロック、または entryType が「未設定」以外ならロック
   if(!!t.entryApproved) return true;
   const et = String(t.entryType ?? "").trim();
   if(et && et !== "未設定") return true;
@@ -805,7 +826,7 @@ async function loadTowers(){
     if(currentPage > totalPages) currentPage = totalPages;
 
     renderTowers(list.items);
-    renderPagination(); // ✅ 一番下に表示するため、描画後に更新
+    renderPagination();
   }catch(e){
     console.error(e);
     towerContainer.textContent = "読み込みエラー";
@@ -829,8 +850,20 @@ function renderTowers(items){
 
     const addr = document.createElement("div");
     addr.className = "addr";
-    const addrText = `${t.prefecture||""} ${t.city||""} ${t.address||""}`.trim();
-    addr.textContent = addrText || "住所不明";
+
+    // ✅ 都道府県〜番地のみを下線リンクにしてマップへ（建物名は含めない）
+    const addressOnly = buildAddressOnly(t);
+    if(addressOnly){
+      const a = document.createElement("a");
+      a.className = "addrLink";
+      a.href = mapUrlFromAddress(addressOnly);
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = addressOnly;
+      addr.appendChild(a);
+    }else{
+      addr.textContent = "住所不明";
+    }
 
     const row1 = document.createElement("div");
     row1.className = "metaRow";
@@ -909,7 +942,6 @@ sendEntryBtn.onclick = async ()=>{
   if(!currentTowerId) return;
   const method = entryTypeSelect.value.trim();
   const comment = entryComment.value.trim();
-
   if(!method) return alert("入館方法を選択してください");
 
   try{
@@ -961,7 +993,11 @@ function openReportModal(t){
     return;
   }
   reportTowerId = t.id;
-  reportInfo.innerHTML = `対象：<b>${escapeHtml(t.name || "（名称未設定）")}</b><br>住所：${escapeHtml(`${t.prefecture||""} ${t.city||""} ${t.address||""}`.trim())}`;
+
+  // ✅ モーダルの表示も「住所のみ」（建物名は対象として表示するが、住所は住所のみ）
+  const addressOnly = buildAddressOnly(t);
+  reportInfo.innerHTML = `対象：<b>${escapeHtml(t.name || "（名称未設定）")}</b><br>住所：${escapeHtml(addressOnly || "住所不明")}`;
+
   reportReason.value = "";
   reportComment.value = "";
   reportModal.style.display = "flex";
