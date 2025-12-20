@@ -94,6 +94,39 @@
       color:#555;
       letter-spacing:0.3px;
     }
+
+    /* ✅ 追加：スマホで「遠い」を解消（他は一切変えず、見やすさだけ調整） */
+    @media (max-width: 480px){
+      body{
+        height:auto;                 /* 100vh固定を外して“遠い”の原因を減らす */
+        min-height:100vh;
+        justify-content:flex-start;  /* 上寄せにしてすぐ目に入る位置へ */
+        padding:18px 14px 22px;      /* 余白確保 */
+      }
+      .card{
+        width:100%;
+        max-width:420px;             /* スマホではカードを少し大きめに */
+        padding:28px 20px;           /* 余白を詰めて入力欄を上に寄せる */
+        border-radius:18px;
+      }
+      h1{
+        font-size:1.55em;            /* ほぼ同等（微調整） */
+      }
+      p.subtitle{
+        margin-bottom:16px;
+      }
+      input{
+        padding:13px 12px;           /* タップしやすく */
+        font-size:1em;
+      }
+      .btn{
+        padding:13px 12px;
+        font-size:1em;
+      }
+      footer{
+        margin-top:22px;             /* フッターが下すぎて遠くならないように */
+      }
+    }
   </style>
 </head>
 <body>
