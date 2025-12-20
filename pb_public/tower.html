@@ -256,6 +256,44 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   min-width:1px;
 }
 
+/* ✅ ページネーション（15件ごと） */
+.paginationBar{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center; /* ✅ 中央揃え */
+  margin:10px 0 14px;
+}
+.pageBtn{
+  width:44px;
+  height:44px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.03);
+  color:rgba(245,245,247,0.92);
+  font-weight:900;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:all .16s ease;
+}
+.pageBtn:hover{ background:rgba(255,255,255,0.06); }
+.pageBtn.active{
+  background:#f3b23a;
+  color:#111;
+  border-color:rgba(255,255,255,0.0);
+  box-shadow:0 0 0 1px rgba(0,0,0,0.25) inset, 0 12px 30px rgba(0,0,0,0.35);
+}
+.pageNext{
+  width:auto;
+  padding:0 18px;
+}
+.pageBtn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
 /* towerカード */
 .towerCard{
   position:relative;
@@ -292,15 +330,30 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 .btn{
   border:none;
   border-radius:10px;
-  padding:9px 12px;
+  padding:8px 10px; /* ✅ ちょい小さく */
   cursor:pointer;
   font-weight:900;
-  font-size:0.9em;
+  font-size:0.86em; /* ✅ ちょい小さく */
   border:1px solid #333;
 }
 .btnEntry{ background:#66ff99; color:#000; }
-.btnReport{ background:#1a1a1f; color:#ddd; }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+/* ✅ 報告：ボタンではなく、右下の小さい下線リンク */
+.reportLink{
+  position:absolute;
+  right:12px;
+  bottom:12px;
+  font-size:0.82em;
+  color:rgba(245,245,247,0.62);
+  text-decoration:underline;
+  text-underline-offset:3px;
+  cursor:pointer;
+  user-select:none;
+}
+.reportLink:hover{
+  color:rgba(245,245,247,0.85);
+}
 
 /* 申請状態ピル */
 .pendingPill{
@@ -430,6 +483,9 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   </div>
 
   <div id="towerContainer"></div>
+
+  <!-- ✅ ページネーション：一番下に表示 -->
+  <div id="pagination" class="paginationBar" aria-label="ページネーション"></div>
 
 </div>
 
@@ -629,8 +685,14 @@ prefSelect.onchange = async ()=>{
 ======================== */
 const towerContainer = document.getElementById("towerContainer");
 const searchBtn = document.getElementById("searchBtn");
+const pagination = document.getElementById("pagination");
 
 let currentTowerId = null;
+
+/* ✅ ページング（15件ごと） */
+const PER_PAGE = 15;
+let currentPage = 1;
+let totalPages = 1;
 
 function isEntryLocked(t){
   // entryApproved が true ならロック、または entryType が「未設定」以外ならロック
@@ -658,7 +720,45 @@ async function hasPendingRequest(towerId){
   }
 }
 
-searchBtn.onclick = ()=>loadTowers();
+searchBtn.onclick = ()=>{
+  currentPage = 1;
+  loadTowers();
+};
+
+function renderPagination(){
+  pagination.innerHTML = "";
+  if(!totalPages || totalPages <= 1) return;
+
+  const groupStart = Math.floor((currentPage - 1) / 5) * 5 + 1;
+  const groupEnd = Math.min(groupStart + 4, totalPages);
+
+  for(let p = groupStart; p <= groupEnd; p++){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pageBtn" + (p === currentPage ? " active" : "");
+    b.textContent = String(p);
+    b.onclick = ()=>{
+      currentPage = p;
+      loadTowers();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+    pagination.appendChild(b);
+  }
+
+  const next = document.createElement("button");
+  next.type = "button";
+  next.className = "pageBtn pageNext";
+  next.textContent = "次へ";
+  const nextPage = groupEnd + 1;
+  next.disabled = nextPage > totalPages;
+  next.onclick = ()=>{
+    if(next.disabled) return;
+    currentPage = nextPage;
+    loadTowers();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  pagination.appendChild(next);
+}
 
 async function loadTowers(){
   towerContainer.innerHTML = "読み込み中…";
@@ -673,8 +773,12 @@ async function loadTowers(){
   if(city) filter += (filter ? " && " : "") + `city="${escapeFilter(city)}"`;
 
   try{
-    const list = await pb.collection("towers").getList(1, 500, { filter, sort:"name" });
+    const list = await pb.collection("towers").getList(currentPage, PER_PAGE, { filter, sort:"name" });
+    totalPages = Math.max(1, Number(list.totalPages || 1));
+    if(currentPage > totalPages) currentPage = totalPages;
+
     renderTowers(list.items);
+    renderPagination(); // ✅ 一番下に表示するため、描画後に更新
   }catch(e){
     console.error(e);
     towerContainer.textContent = "読み込みエラー";
@@ -729,17 +833,17 @@ function renderTowers(items){
       }
     }
 
-    const reportBtn = document.createElement("button");
-    reportBtn.className = "btn btnReport";
-    reportBtn.textContent = "報告";
-    reportBtn.onclick = ()=>openReportModal(t);
-    actions.appendChild(reportBtn);
+    const reportLink = document.createElement("span");
+    reportLink.className = "reportLink";
+    reportLink.textContent = "報告";
+    reportLink.onclick = ()=>openReportModal(t);
 
     card.appendChild(name);
     card.appendChild(addr);
     card.appendChild(row1);
     card.appendChild(row2);
     card.appendChild(actions);
+    card.appendChild(reportLink);
 
     towerContainer.appendChild(card);
   });
