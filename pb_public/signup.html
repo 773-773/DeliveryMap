@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    /* ✅ 追加：はみ出し防止の本命 */
+    * { box-sizing: border-box; }
+
     body {
       background:#0d0d0d;
       color:#fff;
@@ -14,8 +17,8 @@
       min-height:100vh;
       display:flex;
       justify-content:center;
-      align-items:flex-start; /* 中央固定をやめる */
-      padding-top:14vh;       /* ← 視覚的に一番ちょうどいい位置 */
+      align-items:flex-start;
+      padding-top:14vh;
     }
 
     .card {
@@ -27,6 +30,9 @@
       width:92%;
       max-width:380px;
       text-align:center;
+
+      /* ✅ 追加：角丸からのはみ出し/横はみ出し保険 */
+      overflow:hidden;
     }
 
     h1 {
@@ -44,6 +50,7 @@
 
     input {
       width:100%;
+      max-width:100%;
       padding:14px;
       border-radius:10px;
       border:1px solid #333;
@@ -57,6 +64,7 @@
 
     .btn {
       width:100%;
+      max-width:100%;
       padding:15px;
       border:none;
       border-radius:12px;
@@ -95,14 +103,9 @@
       text-align:center;
     }
 
-    /* 🔥 スマホ最適化：強制的に“近く”する */
     @media (max-width: 480px) {
-      body {
-        padding-top:11vh;   /* ← ここが効く */
-      }
-      .card {
-        padding:30px 22px 26px;
-      }
+      body { padding-top:11vh; }
+      .card { padding:30px 22px 26px; }
     }
   </style>
 </head>
@@ -150,14 +153,14 @@
 
       if (password !== passwordConfirm) {
         msg.style.color = "#ff7777";
-        msg.textContent = "パスワードが一致しません。";
+        msg.textContent = "パスワードが一致しません。もう一度確認してください。";
         return;
       }
 
       submitBtn.disabled = true;
       submitBtn.textContent = "処理中…";
-      msg.textContent = "登録処理中です…";
       msg.style.color = "#ccc";
+      msg.textContent = "登録処理中です…";
 
       try {
         const localPart = email.split("@")[0].slice(0,20);
@@ -174,10 +177,22 @@
         await pb.collection("users").requestVerification(email);
 
         msg.style.color = "#66ff99";
-        msg.textContent = "📩 確認メールを送信しました。";
+        msg.textContent = "📩 確認メールを送信しました。\nメール内のボタンを押して認証を完了してください。";
+
       } catch (err) {
-        msg.style.color = "#ff7777";
-        msg.textContent = "登録に失敗しました。";
+        console.error(err);
+
+        const emailErr =
+          err?.data?.data?.email?.code ||
+          err?.data?.email?.code;
+
+        if (emailErr === "validation_not_unique") {
+          msg.textContent = "このメールアドレスはすでに登録されています。\nログイン画面からログインしてください。";
+          msg.style.color = "#ff7777";
+        } else {
+          msg.textContent = "⚠️ 登録に失敗しました。時間をおいて再度お試しください。";
+          msg.style.color = "#ff7777";
+        }
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = "登録する";
