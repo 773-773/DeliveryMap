@@ -191,6 +191,7 @@
       <input type="password" id="password" name="password" placeholder="パスワード" required>
 
       <div class="forgot-link">
+        <!-- ✅ 修正：押したら“下記のページ（パスワード再設定メール送信ページ）”に飛ぶ -->
         <a id="forgotLink" href="reset-request.html">パスワードをお忘れの方はこちら</a>
       </div>
 
@@ -277,9 +278,11 @@
     const lastEmail = localStorage.getItem("fde_last_email");
     if (lastEmail) emailInput.value = lastEmail;
 
-    forgotLink.addEventListener("click", () => {
+    // ✅ 修正：パスワード再設定ページへ遷移するとき、メールを引き継ぐ（下記のページ側がprefillを読む仕様）
+    forgotLink.addEventListener("click", (e) => {
       const v = emailInput.value.trim();
       if (v) localStorage.setItem("fde_reset_email_prefill", v);
+      // href="reset-request.html" へ通常遷移（このままでOK）
     });
 
     (async ()=>{
