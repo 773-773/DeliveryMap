@@ -12,16 +12,6 @@ body{
   color:#fff;
   font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
 }
-header{
-  background:#0f0f0f;
-  padding:10px 16px;
-  border-bottom:1px solid #222;
-}
-header h1{
-  margin:0;
-  font-size:1rem;
-  color:#66ff99;
-}
 .container{
   max-width:900px;
   margin:0 auto;
@@ -42,7 +32,7 @@ header h1{
 }
 .notice-box strong{ color:#ff6b6b; }
 
-/* ===== ボタン ===== */
+/* ===== ボタン（小さめ統一） ===== */
 .btn{
   padding:6px 12px;
   border-radius:6px;
@@ -277,7 +267,6 @@ input:focus,textarea:focus{
 
 /* ===== レスポンシブ ===== */
 @media (max-width:600px){
-  header{ flex-direction:column; align-items:flex-start; gap:4px; }
   .reply-banner .preview{ max-width:220px; }
 }
 
@@ -298,7 +287,6 @@ header.siteHeader{
   margin:12px 12px 18px;
   position:relative;
   z-index:50;
-  border-bottom:none;
 }
 .logoArea{ display:flex; align-items:center; min-width:0; }
 .logoLink{ display:inline-block; min-width:0; color:inherit; text-decoration:none; }
@@ -460,12 +448,8 @@ nav button{ appearance:none; -webkit-appearance:none; }
   <div class="headerRight">
     <nav>
       <a id="navAbout" href="about.html">このサイトについて</a>
-
-      <!-- ✅ next対応：この掲示板URLを保存して login.html に飛ばす -->
       <a id="navLogin" href="login.html">ログイン</a>
-
       <a id="navSignup" href="signup.html" class="primary">新規登録</a>
-
       <a id="navLoggedIn" href="mypage.html" style="display:none;">
         <span class="loggedLamp" aria-hidden="true"></span>
         ログイン中
@@ -514,29 +498,15 @@ nav button{ appearance:none; -webkit-appearance:none; }
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
-/* =========================
-   ✅ next（戻り先）保存：掲示板→ログイン→掲示板に戻す
-   - login.html 側は localStorage(fdel_next_url_v1) を見て戻る実装
-========================= */
+/* ===== next（戻り先）保存：掲示板→ログイン→掲示板に戻す ===== */
 const KEY_NEXT_STORE = "fdel_next_url_v1";
 const navLogin = document.getElementById("navLogin");
-navLogin?.addEventListener("click", (e)=>{
+navLogin?.addEventListener("click", ()=>{
   try{
     const current = location.pathname + location.search + location.hash;
     localStorage.setItem(KEY_NEXT_STORE, current);
-  }catch{}
-  // ✅ ついでにクエリnextも付ける（login.htmlがクエリnext対応済みなら確実）
-  // UIは変えず内部だけ
-  try{
-    const current = location.pathname + location.search + location.hash;
     navLogin.href = "login.html?next=" + encodeURIComponent(current);
   }catch{}
-});
-
-/* ✅ 保険：クリック時に確実に about.html へ */
-document.getElementById("navAbout")?.addEventListener("click",(e)=>{
-  // 通常は href で遷移するが、環境によってJSの影響が出た時の保険
-  // e.preventDefault(); location.href = "about.html";
 });
 
 const navAbout    = document.getElementById("navAbout");
@@ -582,7 +552,6 @@ const cancelLogoutBtn = document.getElementById("cancelLogoutBtn");
 const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
 
 let logoutBusy = false;
-
 function openLogoutConfirm(){
   logoutConfirmModal.style.display = "flex";
   logoutConfirmModal.setAttribute("aria-hidden","false");
@@ -591,7 +560,6 @@ function closeLogoutConfirm(){
   logoutConfirmModal.style.display = "none";
   logoutConfirmModal.setAttribute("aria-hidden","true");
 }
-
 async function doLogout(){
   if(logoutBusy) return;
   logoutBusy = true;
@@ -600,11 +568,8 @@ async function doLogout(){
     setNavLoggedIn(false);
     closeLogoutConfirm();
     alert("ログアウトしました");
-  }finally{
-    logoutBusy = false;
-  }
+  }finally{ logoutBusy = false; }
 }
-
 navLogout?.addEventListener("click", ()=>openLogoutConfirm());
 cancelLogoutBtn.addEventListener("click", ()=>closeLogoutConfirm());
 confirmLogoutBtn.addEventListener("click", ()=>doLogout());
@@ -616,12 +581,15 @@ await ensureAuthModel();
 </script>
 
 <script>
-/* ===== 掲示板本体（あなたのコードそのまま） ===== */
+/* =================================================
+   ✅ 掲示板本体（UIサイズをこのサイト基準へ）
+   - もともとのローカル保存版ロジックを維持
+   - 不適切判定は「より厳しめ」に強化
+================================================= */
 const DATA_KEY = "bbs_data_v3";
 const BANNED_NAMES_KEY = "bbs_banned_names_v1";
 const HIDDEN_POST_IDS_KEY = "bbs_hidden_post_ids_v1";
 const VIEWER_ID_KEY = "bbs_viewer_id_v1";
-
 const USER_REPORT_COUNTS_KEY = "bbs_user_report_counts_v1";
 const BANNED_VIEWERS_KEY = "bbs_banned_viewers_v1";
 
@@ -638,9 +606,7 @@ function loadJson(key, fallback){
     if(!raw) return fallback;
     const v = JSON.parse(raw);
     return v ?? fallback;
-  }catch(e){
-    return fallback;
-  }
+  }catch{ return fallback; }
 }
 function saveJson(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
 
@@ -661,33 +627,79 @@ function getViewerId(){
 const viewerId = getViewerId();
 
 let state = { page:"list", currentThreadId:null, threadPage:1, postPage:1 };
-
 let reportContext = { type:null, threadId:null, postIndexFromTop:null };
 let replyContext = null;
 
+/* =========================
+   ✅ 不適切判定（厳しめ強化）
+========================= */
 const NG_WORDS = [
-  "死ね","しね","殺す","ころす","バカ","ばか","馬鹿","アホ","あほ","カス","かす","ゴミ","ごみ","クズ","くず",
-  "ブス","ぶす","キモい","きもい","キショ","きしょ","きしょい","消えろ","うざい","ウザい","ドブ","障害","池沼",
-  "差別","人種差別","障害者","セックス","sex","エロ","えろ","エッチ","hな","性欲","アダルト","av","裏垢","えち",
-  "オナ","オ◯","オ○","ちんこ","ちんちん","まんこ","ぱいおつ","おっぱい","巨乳","自殺","自○","自害","リスカ",
-  "殺人","テロ",
+  "死ね","しね","殺す","ころす","消えろ","バカ","ばか","馬鹿","アホ","あほ","カス","かす","クズ","くず","ゴミ","ごみ",
+  "ブス","ぶす","キモい","きもい","キショ","きしょ","きしょい","うざい","ウザい","池沼","障害","障害者","差別","人種差別",
+  "セックス","sex","エロ","えろ","アダルト","av","裏垢","えち","オナ","ちんこ","ちんちん","まんこ","おっぱい","巨乳",
+  "自殺","自害","リスカ","殺人","テロ",
 ];
 
-function isDisallowedContent(text){
-  if(!text) return false;
-  const t = text.toLowerCase();
+function normalizeText(s){
+  return (s||"")
+    .toLowerCase()
+    .replace(/[ 　\t\r\n]/g,"")
+    .replace(/[‐-‒–—―ー]/g,"-");
+}
+
+function looksLikeContactOrUrl(raw){
+  const t = raw.toLowerCase();
   if(/https?:\/\//.test(t)) return true;
   if(/www\./.test(t)) return true;
   if(/\.(com|net|jp|org|io|gg|xyz|club|info|biz|co)\b/.test(t)) return true;
+  if(/\b[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}\b/i.test(t)) return true;
+  if(/\b\d{2,4}-\d{2,4}-\d{3,4}\b/.test(t)) return true;
+  if(/\b0\d{1,3}\d{6,8}\b/.test(t)) return true;
+  if(/\b(line|instagram|insta|x|twitter|dm|dｍ)\b/.test(t)) return true;
+  if(/(ライン|インスタ|ツイ|twitter|x|dm|ディーエム)/.test(t)) return true;
   if(/@/.test(t)) return true;
-  if(/id[:：]/.test(t)) return true;
-  if(/(死|殺|セックス|sex|エロ|ちん|まん|おっ?ぱい)[〇◯○＊\*]/.test(text)) return true;
-  if(/[!?！？]{3,}/.test(text)) return true;
-  if(/ｗ{3,}/.test(text)) return true;
-  if(/草{3,}/.test(text)) return true;
-  for(const w of NG_WORDS){ if(t.includes(w.toLowerCase())) return true; }
-  const noSpaces = t.replace(/\s/g,"");
-  if(noSpaces.length <= 1) return true;
+  if(/\bid[:：]/.test(t)) return true;
+  if(/(id|アカ|垢|アカウント|連絡|連絡先)/.test(t)) return true;
+  return false;
+}
+
+function tooNoisy(raw){
+  if(/[!?！？]{3,}/.test(raw)) return true;
+  if(/ｗ{3,}/.test(raw)) return true;
+  if(/w{3,}/i.test(raw)) return true;
+  if(/草{3,}/.test(raw)) return true;
+  if(/(.)\1{6,}/.test(raw)) return true;
+  return false;
+}
+
+function isOnlySymbols(raw){
+  const s = (raw||"").trim();
+  if(!s) return true;
+  const removed = s.replace(/[ぁ-んァ-ヶ一-龠a-zA-Z0-9]/g,"");
+  return removed.length === s.length;
+}
+
+function isDisallowedContent(text, kind="post"){
+  const raw = (text ?? "").toString();
+  const trimmed = raw.trim();
+  if(!trimmed) return true;
+
+  const len = trimmed.length;
+  if(kind==="title" && len < 4) return true;
+  if(kind==="desc"  && len > 0 && len < 6) return true;
+  if(kind==="post"  && len < 6) return true;
+  if(len > 600) return true;
+
+  if(isOnlySymbols(trimmed)) return true;
+  if(looksLikeContactOrUrl(trimmed)) return true;
+  if(tooNoisy(trimmed)) return true;
+
+  const n = normalizeText(trimmed);
+  for(const w of NG_WORDS){
+    if(n.includes(normalizeText(w))) return true;
+  }
+  if(/(死|殺|セックス|sex|エロ|ちん|まん|おっ?ぱい)[〇◯○＊\*]/.test(trimmed)) return true;
+
   return false;
 }
 
@@ -746,6 +758,16 @@ function addUserReport(targetViewerId){
   }
 }
 
+/* ===== 連投抑制（荒れ防止） ===== */
+const LAST_THREAD_CREATE_KEY = "bbs_last_thread_create_at_v1";
+const LAST_POST_CREATE_KEY   = "bbs_last_post_create_at_v1";
+function throttle(key, ms){
+  const last = Number(localStorage.getItem(key) || 0);
+  if(Date.now() - last < ms) return false;
+  localStorage.setItem(key, String(Date.now()));
+  return true;
+}
+
 const app = document.getElementById("app");
 function render(){ state.page === "thread" ? renderThreadPage() : renderThreadList(); }
 
@@ -770,9 +792,10 @@ function renderPager({page, total, perPage, onPrev, onNext, onJump}){
   `;
 }
 
+/* ✅ 変更はここだけ：「スレッド一覧」をとにかく小さく */
 function renderThreadList(){
   app.innerHTML = `
-    <h2>スレッド一覧</h2>
+    <h2 style="margin:6px 0 10px; font-size:1.05rem; font-weight:900; letter-spacing:.02em; line-height:1.1;">スレッド一覧</h2>
     <button class="btn" onclick="goCreateThread()">＋ 新規スレッド作成</button>
     <div id="threadList" style="margin-top:14px;"></div>
     <div id="threadPager"></div>
@@ -836,25 +859,39 @@ function jumpThreadPage(p){ state.threadPage = p; renderThreadList(); }
 
 function goCreateThread(){
   app.innerHTML = `
-    <h2>新規スレッド作成</h2>
+    <div class="back-link" onclick="backToList()">← スレッド一覧へ</div>
+    <h2 style="margin:8px 0 10px; font-size:1.2rem; font-weight:900;">新規スレッド作成</h2>
+
     <div class="form-card">
-      <input id="threadTitle" placeholder="スレッドタイトル（必須）" />
-      <textarea id="threadDesc" placeholder="スレッド説明（任意）"></textarea>
-      <button class="btn" onclick="createThread()">作成</button>
-      <button class="btn-secondary" onclick="backToList()">戻る</button>
+      <input id="threadTitle" placeholder="スレッドタイトル（必須）" maxlength="40"/>
+      <textarea id="threadDesc" placeholder="スレッド説明（任意）" maxlength="120"></textarea>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn" onclick="createThread()">作成</button>
+        <button class="btn-secondary" onclick="backToList()">戻る</button>
+      </div>
     </div>
   `;
 }
 
 function createThread(){
   if(!ensureCanPost()) return;
-  const title = document.getElementById("threadTitle").value.trim();
-  const desc = document.getElementById("threadDesc").value.trim();
-  if(!title){ alert("タイトルを入力してください。"); return; }
-  if(isDisallowedContent(title) || isDisallowedContent(desc)){
-    alert("不適切な表現またはURLなどが含まれているため、このタイトル/説明は使用できません。");
+
+  if(!throttle(LAST_THREAD_CREATE_KEY, 8000)){
+    alert("連続作成が早すぎます。少し待ってから作成してください。");
     return;
   }
+
+  const title = document.getElementById("threadTitle").value.trim();
+  const desc = document.getElementById("threadDesc").value.trim();
+
+  if(!title){ alert("タイトルを入力してください。"); return; }
+
+  if(isDisallowedContent(title, "title") || (desc && isDisallowedContent(desc, "desc"))){
+    alert("不適切な表現（URL/連絡先/短すぎ/記号連打/NGワード等）が含まれているため作成できません。");
+    return;
+  }
+
   const id = "t_" + Date.now();
   data.threads.push({ id, title, desc, createdAt:Date.now(), ownerViewerId:viewerId, posts:[], reports:[] });
   saveAll();
@@ -878,11 +915,13 @@ function renderThreadPage(){
 
   app.innerHTML = `
     <div class="back-link" onclick="backToList()">← スレッド一覧へ</div>
+
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-      <h2 style="margin:0;">${thread.title}</h2>
+      <h2 style="margin:6px 0; font-size:1.2rem; font-weight:900;">${escapeHtml(thread.title)}</h2>
       <button class="btn-thread-report" onclick="openThreadReportDialog('${thread.id}')">通報${reportLabel}</button>
     </div>
-    <div style="color:#999;margin-bottom:10px;">${thread.desc || ""}</div>
+
+    ${thread.desc ? `<div style="color:#999;margin-bottom:10px;font-size:0.85rem;line-height:1.6;">${escapeHtml(thread.desc)}</div>` : `<div style="margin-bottom:10px;"></div>`}
 
     <div class="form-card">
       <div id="replyBanner" class="reply-banner">
@@ -894,18 +933,28 @@ function renderThreadPage(){
           <button class="btn-action" onclick="cancelReply()">解除</button>
         </div>
       </div>
-      <input id="nameInput" placeholder="名前（任意。未入力なら『名無し』）" />
-      <textarea id="bodyInput" placeholder="本文（必須）"></textarea>
+
+      <input id="nameInput" placeholder="名前（任意）" maxlength="16"/>
+      <textarea id="bodyInput" placeholder="本文（必須）" maxlength="600"></textarea>
       <button class="btn" onclick="postToThread()">投稿</button>
     </div>
 
-    <h3>投稿一覧（${thread.posts.length}件）</h3>
+    <h3 style="margin:10px 0 10px; font-size:0.95rem; color:#ddd;">投稿一覧（${thread.posts.length}件）</h3>
     <div id="postList"></div>
     <div id="postPager"></div>
   `;
 
   if(replyContext) showReplyBanner();
   renderPosts();
+}
+
+function escapeHtml(s){
+  return (s ?? "").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#39;");
 }
 
 function showReplyBanner(){
@@ -941,7 +990,7 @@ function renderPosts(){
     const name = (p.name && p.name.trim()) ? p.name.trim() : "名無し";
     if(bannedNames.includes(name)) return;
     if(hiddenPostIds.includes(p.id)) return;
-    if(isDisallowedContent(name) || isDisallowedContent(p.body)) return;
+    if(isDisallowedContent(name, "name") || isDisallowedContent(p.body, "post")) return;
     visible.push({ p, idxFromTop });
   });
 
@@ -984,7 +1033,7 @@ function renderPosts(){
         chip.className = "reply-to-chip";
         const rn = p.replyTo.name || "名無し";
         const rs = p.replyTo.snippet || "";
-        chip.innerHTML = `返信先：<b>${rn}</b> ${rs ? `- ${rs}` : ""}`;
+        chip.innerHTML = `返信先：<b>${escapeHtml(rn)}</b> ${rs ? `- ${escapeHtml(rs)}` : ""}`;
         chip.onclick = (e)=>{ e.stopPropagation(); scrollToPost(p.replyTo.postId); };
         card.insertBefore(chip, card.querySelector(".post-body"));
       }
@@ -1026,6 +1075,12 @@ function startReply(idxFromTop){
 
 function postToThread(){
   if(!ensureCanPost()) return;
+
+  if(!throttle(LAST_POST_CREATE_KEY, 4000)){
+    alert("連続投稿が早すぎます。少し待ってから投稿してください。");
+    return;
+  }
+
   const thread = getThreadById(state.currentThreadId);
   if(!thread) return;
 
@@ -1034,9 +1089,14 @@ function postToThread(){
   const name = nameRaw || "名無し";
 
   if(!body){ alert("本文を入力してください。"); return; }
-  if(bannedNames.includes(name)){ alert("この名前は制限されています。別の名前を使用してください。"); return; }
-  if(isDisallowedContent(name) || isDisallowedContent(body)){
-    alert("不適切な表現やURL・メールアドレス等が含まれているため投稿できません。表現を変えてください。");
+
+  if(isDisallowedContent(name, "name") || isDisallowedContent(body, "post")){
+    alert("不適切な表現（URL/連絡先/短すぎ/記号連打/NGワード等）が含まれているため投稿できません。");
+    return;
+  }
+
+  if(bannedNames.includes(name)){
+    alert("この名前は制限されています。別の名前を使用してください。");
     return;
   }
 
@@ -1078,6 +1138,7 @@ function deletePost(idxFromTop){
   renderThreadPage();
 }
 
+/* ===== 通報 ===== */
 const reportOverlay = document.getElementById("reportOverlay");
 const reportTitle = document.getElementById("reportTitle");
 
