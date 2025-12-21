@@ -226,9 +226,9 @@
       <span>Googleでログイン</span>
     </button>
 
-    <button class="btn x-login" type="button" id="xBtn">
-      <span class="x-icon">X</span>
-      Xでログイン
+    <!-- ✅ ここだけ修正：表示を「Xでログイン」だけに -->
+    <button class="btn x-login" type="button" id="xBtn" aria-label="Xでログイン">
+      <span>Xでログイン</span>
     </button>
 
     <button class="btn btn-logout" id="logoutBtn" type="button">ログアウト</button>
@@ -435,7 +435,6 @@
         }, 650);
 
       } catch (err) {
-        /* ✅ ここが今回の修正：詳細を画面＆consoleに出す */
         try { if (popup && !popup.closed) popup.close(); } catch {}
         console.error("X OAuth error:", err);
 
