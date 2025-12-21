@@ -13,6 +13,8 @@
       --muted:#aaa;
       --accent:#66ff99;
       --danger:#ff7777;
+
+      --fb:#1877F2;
     }
     *{ box-sizing:border-box; }
     body{
@@ -122,7 +124,26 @@
     }
     .google-icon{ width:20px; height:20px; }
 
-    /* ===== Xログイン（画像のCSS） ===== */
+    /* ===== Facebookログイン ===== */
+    .btn.fb-login{
+      margin-top:12px;
+      height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      background: linear-gradient(180deg, rgba(24,119,242,1), rgba(16,94,200,1));
+      color:#fff;
+      border:1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 10px 30px rgba(24,119,242,0.18);
+    }
+    .btn.fb-login:hover{ filter:brightness(1.03); }
+    .fb-icon{
+      width:18px; height:18px;
+      display:inline-block;
+    }
+
+    /* ===== Xログイン ===== */
     .btn.x-login{
       background:#000;
       color:#fff;
@@ -135,10 +156,6 @@
       gap:10px;
     }
     .btn.x-login:hover{ background:#111; }
-    .x-icon{
-      margin-right:8px;
-      font-weight:bold;
-    }
     /* ===== /Xログイン ===== */
 
     .btn-logout{
@@ -189,6 +206,7 @@
       input{ padding:14px 12px; border-radius:12px; }
       .btn{ padding:14px 12px; border-radius:12px; }
       .google-btn{ height:48px; border-radius:12px; }
+      .btn.fb-login{ height:48px; border-radius:12px; }
       .btn.x-login{ height:48px; border-radius:12px; }
       footer{ margin-top:12px; }
     }
@@ -226,7 +244,15 @@
       <span>Googleでログイン</span>
     </button>
 
-    <!-- ✅ ここだけ修正：表示を「Xでログイン」だけに -->
+    <!-- ✅ Facebookログイン（追加） -->
+    <button class="btn fb-login" type="button" id="fbBtn" aria-label="Facebookでログイン">
+      <svg class="fb-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="white" d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06C2 17.08 5.66 21.22 10.44 22v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.77-3.91 1.09 0 2.23.2 2.23.2v2.47h-1.25c-1.23 0-1.61.77-1.61 1.56v1.88h2.74l-.44 2.91h-2.3V22C18.34 21.22 22 17.08 22 12.06z"/>
+      </svg>
+      <span>Facebookでログイン</span>
+    </button>
+
+    <!-- X -->
     <button class="btn x-login" type="button" id="xBtn" aria-label="Xでログイン">
       <span>Xでログイン</span>
     </button>
@@ -353,13 +379,22 @@
       }
     });
 
+    // 共通: popup開始
+    function tryOpenPopup(){
+      let popup = null;
+      try { popup = window.open("about:blank", "_blank"); } catch {}
+      return popup;
+    }
+    function tryClosePopup(popup){
+      try { if (popup && !popup.closed) popup.close(); } catch {}
+    }
+
     // ===== Google OAuth =====
     document.getElementById("googleBtn").addEventListener("click", async () => {
       msg.style.color = "#ccc";
       msg.textContent = "Googleログイン処理中です…";
 
-      let popup = null;
-      try { popup = window.open("about:blank", "_blank"); } catch {}
+      const popup = tryOpenPopup();
 
       try {
         const authData = await pb.collection("users").authWithOAuth2({
@@ -374,7 +409,7 @@
         if(!ok){
           msg.style.color = "#ff7777";
           msg.textContent = "⚠️ Googleログイン後の更新に失敗しました。再読み込みして下さい。";
-          try { if (popup && !popup.closed) popup.close(); } catch {}
+          tryClosePopup(popup);
           return;
         }
 
@@ -386,14 +421,68 @@
         if (userEmail) localStorage.setItem("fde_last_email", userEmail);
 
         setTimeout(() => {
-          try { if (popup && !popup.closed) popup.close(); } catch {}
+          tryClosePopup(popup);
           goNext();
         }, 650);
 
       } catch (err) {
-        try { if (popup && !popup.closed) popup.close(); } catch {}
+        tryClosePopup(popup);
         msg.style.color = "#ff7777";
         msg.textContent = "⚠️ Googleログイン失敗：" + (err?.message || err);
+      }
+    });
+
+    // ===== Facebook OAuth（追加）=====
+    document.getElementById("fbBtn").addEventListener("click", async () => {
+      msg.style.color = "#ccc";
+      msg.textContent = "Facebookログイン処理中です…";
+
+      const popup = tryOpenPopup();
+
+      try {
+        // 重要：今は email スコープを外す（Invalid Scopes: email 対策）
+        const authData = await pb.collection("users").authWithOAuth2({
+          provider: "facebook",
+          scopes: ["public_profile"],
+          urlCallback: (url) => {
+            if (popup && !popup.closed) popup.location.href = url;
+            else window.location.href = url;
+          },
+        });
+
+        const ok = await ensureAuthFresh();
+        if(!ok){
+          msg.style.color = "#ff7777";
+          msg.textContent = "⚠️ Facebookログイン後の更新に失敗しました。再読み込みして下さい。";
+          tryClosePopup(popup);
+          return;
+        }
+
+        msg.style.color = "#66ff99";
+        msg.textContent = "✅ Facebookログイン成功！";
+        logoutBtn.style.display = "block";
+
+        // Facebookは email を渡してこない可能性があるので、取れたら保存、取れなければスキップ
+        const userEmail = authData?.meta?.email || pb.authStore.model?.email;
+        if (userEmail) localStorage.setItem("fde_last_email", userEmail);
+
+        setTimeout(() => {
+          tryClosePopup(popup);
+          goNext();
+        }, 650);
+
+      } catch (err) {
+        tryClosePopup(popup);
+        console.error("Facebook OAuth error:", err);
+
+        const detail =
+          err?.data?.message ||
+          err?.response?.message ||
+          err?.message ||
+          JSON.stringify(err?.data || err, null, 2);
+
+        msg.style.color = "#ff7777";
+        msg.textContent = "⚠️ Facebookログイン失敗： " + detail;
       }
     });
 
@@ -402,8 +491,7 @@
       msg.style.color = "#ccc";
       msg.textContent = "Xログイン処理中です…";
 
-      let popup = null;
-      try { popup = window.open("about:blank", "_blank"); } catch {}
+      const popup = tryOpenPopup();
 
       try {
         const authData = await pb.collection("users").authWithOAuth2({
@@ -418,7 +506,7 @@
         if(!ok){
           msg.style.color = "#ff7777";
           msg.textContent = "⚠️ Xログイン後の更新に失敗しました。再読み込みして下さい。";
-          try { if (popup && !popup.closed) popup.close(); } catch {}
+          tryClosePopup(popup);
           return;
         }
 
@@ -430,12 +518,12 @@
         if (userEmail) localStorage.setItem("fde_last_email", userEmail);
 
         setTimeout(() => {
-          try { if (popup && !popup.closed) popup.close(); } catch {}
+          tryClosePopup(popup);
           goNext();
         }, 650);
 
       } catch (err) {
-        try { if (popup && !popup.closed) popup.close(); } catch {}
+        tryClosePopup(popup);
         console.error("X OAuth error:", err);
 
         const detail =
