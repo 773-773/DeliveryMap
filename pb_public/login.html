@@ -122,6 +122,25 @@
     }
     .google-icon{ width:20px; height:20px; }
 
+    /* ===== Xログイン（画像のCSS） ===== */
+    .btn.x-login{
+      background:#000;
+      color:#fff;
+      border:1px solid #333;
+      margin-top:12px;
+      height:46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+    }
+    .btn.x-login:hover{ background:#111; }
+    .x-icon{
+      margin-right:8px;
+      font-weight:bold;
+    }
+    /* ===== /Xログイン ===== */
+
     .btn-logout{
       background:#ff4444;
       color:#fff;
@@ -136,6 +155,7 @@
       min-height:1.2em;
       white-space:pre-wrap;
       line-height:1.55;
+      word-break:break-word;
     }
 
     .signup-link{
@@ -162,15 +182,14 @@
     }
 
     @media (max-width: 520px){
-      /* ✅ ここだけ変更：上寄せ→中央寄せ */
       body{ justify-content:center; padding:18px 12px 14px; }
-
       .card{ width: min(94vw, 420px); padding:28px 18px; border-radius:16px; }
       h1{ font-size:1.55em; }
       p.subtitle{ margin-bottom:14px; }
       input{ padding:14px 12px; border-radius:12px; }
       .btn{ padding:14px 12px; border-radius:12px; }
       .google-btn{ height:48px; border-radius:12px; }
+      .btn.x-login{ height:48px; border-radius:12px; }
       footer{ margin-top:12px; }
     }
     @media (max-width: 380px){
@@ -191,7 +210,6 @@
       <input type="password" id="password" name="password" placeholder="パスワード" required>
 
       <div class="forgot-link">
-        <!-- ✅ 修正：押したら“下記のページ（パスワード再設定メール送信ページ）”に飛ぶ -->
         <a id="forgotLink" href="reset-request.html">パスワードをお忘れの方はこちら</a>
       </div>
 
@@ -206,6 +224,11 @@
         <path fill="#34A853" d="M24 46c5.57 0 10.23-1.83 13.64-4.95l-7.37-5.73c-2.03 1.36-4.63 2.17-7.27 2.17-6.38 0-11.71-4.83-13.15-11.23l-7.41 5.76C7.03 41.36 14.83 46 24 46z"/>
       </svg>
       <span>Googleでログイン</span>
+    </button>
+
+    <button class="btn x-login" type="button" id="xBtn">
+      <span class="x-icon">X</span>
+      Xでログイン
     </button>
 
     <button class="btn btn-logout" id="logoutBtn" type="button">ログアウト</button>
@@ -278,11 +301,9 @@
     const lastEmail = localStorage.getItem("fde_last_email");
     if (lastEmail) emailInput.value = lastEmail;
 
-    // ✅ 修正：パスワード再設定ページへ遷移するとき、メールを引き継ぐ（下記のページ側がprefillを読む仕様）
-    forgotLink.addEventListener("click", (e) => {
+    forgotLink.addEventListener("click", () => {
       const v = emailInput.value.trim();
       if (v) localStorage.setItem("fde_reset_email_prefill", v);
-      // href="reset-request.html" へ通常遷移（このままでOK）
     });
 
     (async ()=>{
@@ -332,6 +353,7 @@
       }
     });
 
+    // ===== Google OAuth =====
     document.getElementById("googleBtn").addEventListener("click", async () => {
       msg.style.color = "#ccc";
       msg.textContent = "Googleログイン処理中です…";
@@ -372,6 +394,59 @@
         try { if (popup && !popup.closed) popup.close(); } catch {}
         msg.style.color = "#ff7777";
         msg.textContent = "⚠️ Googleログイン失敗：" + (err?.message || err);
+      }
+    });
+
+    // ===== X(Twitter) OAuth =====
+    document.getElementById("xBtn").addEventListener("click", async () => {
+      msg.style.color = "#ccc";
+      msg.textContent = "Xログイン処理中です…";
+
+      let popup = null;
+      try { popup = window.open("about:blank", "_blank"); } catch {}
+
+      try {
+        const authData = await pb.collection("users").authWithOAuth2({
+          provider: "twitter",
+          urlCallback: (url) => {
+            if (popup && !popup.closed) popup.location.href = url;
+            else window.location.href = url;
+          },
+        });
+
+        const ok = await ensureAuthFresh();
+        if(!ok){
+          msg.style.color = "#ff7777";
+          msg.textContent = "⚠️ Xログイン後の更新に失敗しました。再読み込みして下さい。";
+          try { if (popup && !popup.closed) popup.close(); } catch {}
+          return;
+        }
+
+        msg.style.color = "#66ff99";
+        msg.textContent = "✅ Xログイン成功！";
+        logoutBtn.style.display = "block";
+
+        const userEmail = authData?.meta?.email || pb.authStore.model?.email;
+        if (userEmail) localStorage.setItem("fde_last_email", userEmail);
+
+        setTimeout(() => {
+          try { if (popup && !popup.closed) popup.close(); } catch {}
+          goNext();
+        }, 650);
+
+      } catch (err) {
+        /* ✅ ここが今回の修正：詳細を画面＆consoleに出す */
+        try { if (popup && !popup.closed) popup.close(); } catch {}
+        console.error("X OAuth error:", err);
+
+        const detail =
+          err?.data?.message ||
+          err?.response?.message ||
+          err?.message ||
+          JSON.stringify(err?.data || err, null, 2);
+
+        msg.style.color = "#ff7777";
+        msg.textContent = "⚠️ Xログイン失敗： " + detail;
       }
     });
 
