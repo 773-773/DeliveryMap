@@ -661,28 +661,34 @@ function saveLocalModeration(){
   saveJson(BANNED_VIEWERS_KEY, bannedViewers);
 }
 
-/* NGフィルタ（そのまま） */
+/* =========================
+   ✅ NGフィルタ（緩くした版）
+   - 1文字禁止を撤去（? だけでもOK）
+   - 連続記号は10個以上でNG
+   - NGワードは「殺害/自殺/テロ」系の強いものだけ
+========================= */
 const NG_WORDS = [
-  "死ね","しね","殺す","ころす","バカ","ばか","馬鹿","アホ","あほ","カス","かす","ゴミ","ごみ","クズ","くず",
-  "ブス","ぶす","キモい","きもい","キショ","きしょ","きしょい","消えろ","うざい","ウザい","ドブ","障害","池沼",
-  "差別","人種差別","障害者","セックス","sex","エロ","えろ","エッチ","hな","性欲","アダルト","av","裏垢","えち",
-  "オナ","オ◯","オ○","ちんこ","ちんちん","まんこ","ぱいおつ","おっぱい","巨乳","自殺","自○","自害","リスカ",
-  "殺人","テロ",
+  "死ね","しね","殺す","ころす","殺害","自殺","自害","リスカ","テロ","爆破","爆弾"
 ];
 
 function isDisallowedContent(text){
-  if(!text) return false;
-  const t = text.toLowerCase();
+  if(text == null) return false;
+  const s = String(text);
+  const t = s.toLowerCase();
 
+  // URL / メールはNG（スパム対策）
   if(/https?:\/\//.test(t)) return true;
-  if(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(text)) return true;
-  if(/[!?！？]{6,}/.test(text)) return true;
+  if(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(s)) return true;
 
-  for(const w of NG_WORDS){ if(t.includes(w.toLowerCase())) return true; }
+  // 記号連打（緩め：10以上）
+  if(/[!?！？]{10,}/.test(s)) return true;
 
-  const noSpaces = t.replace(/\s/g,"");
-  if(noSpaces.length <= 1) return true;
+  // 強いNGワードのみ
+  for(const w of NG_WORDS){
+    if(t.includes(w.toLowerCase())) return true;
+  }
 
+  // 文字数が0だけNG（空は別で弾く）
   return false;
 }
 
@@ -776,13 +782,11 @@ async function createReport(targetType, targetId, reason){
 
 /* ✅ PB上でスレッドを非表示化 */
 async function hideThreadInPB(threadId){
-  // threads.Update rule が true である必要
   await pbSafe(()=>pb.collection("threads").update(threadId, { isHidden:true }));
 }
 
 /* ✅ PB上で投稿を非表示化（本人だけ） */
 async function hidePostInPB(postId){
-  // posts.Update rule が true である必要
   await pbSafe(()=>pb.collection("posts").update(postId, { isHidden:true }));
 }
 
@@ -865,7 +869,6 @@ async function renderThreadList(){
       return;
     }
 
-    // 最新投稿があるスレが上
     const items = res.items || [];
     const enriched = await Promise.all(items.map(async t=>{
       const info = await fetchLatestPostForThread(t.id);
@@ -927,7 +930,7 @@ async function createThread(){
   const desc = document.getElementById("threadDesc").value.trim();
   if(!title){ alert("タイトルを入力してください。"); return; }
   if(isDisallowedContent(title) || isDisallowedContent(desc)){
-    alert("不適切な表現またはURLなどが含まれているため、このタイトル/説明は使用できません。");
+    alert("URL/メール等が含まれているため使用できません。");
     return;
   }
 
@@ -1005,8 +1008,7 @@ function showReplyBanner(){
   const preview = document.getElementById("replyPreview");
   if(!banner || !preview) return;
   const name = replyContext.name || "名無し";
-  const when = replyContext.createdAt ? formatDate(replyContext.createdAt) : "";
-  preview.textContent = `${name} / ${when} / ${replyContext.snippet}`;
+  preview.textContent = `${name} / ${replyContext.snippet || ""}`;
   banner.style.display = "flex";
 }
 function cancelReply(){
@@ -1080,10 +1082,13 @@ async function renderPosts(){
       card.querySelector(".post-name").textContent = name;
       card.querySelector(".post-body").textContent = p.body || "";
 
+      /* ✅ 返信先：IDじゃなくて名前にする（保存済みの replyToName / replyToSnippet を使う） */
       if(p.replyToPostId){
+        const rtName = (p.replyToName && String(p.replyToName).trim()) ? String(p.replyToName).trim() : "名無し";
+        const rtSnip = (p.replyToSnippet && String(p.replyToSnippet).trim()) ? String(p.replyToSnippet).trim() : "";
         const chip = document.createElement("div");
         chip.className = "reply-to-chip";
-        chip.innerHTML = `返信先：<b>投稿</b> - ${p.replyToPostId}`;
+        chip.innerHTML = `返信先：<b>${escapeHtml(rtName)}</b>${rtSnip ? " - " + escapeHtml(rtSnip) : ""}`;
         chip.onclick = (e)=>{ e.stopPropagation(); scrollToPost(p.replyToPostId); };
         card.insertBefore(chip, card.querySelector(".post-body"));
       }
@@ -1114,7 +1119,6 @@ async function startReply(postId){
     replyContext = {
       postId: p.id,
       name,
-      createdAt: new Date(p.created).getTime(),
       snippet: toSnippet(p.body || "", 48)
     };
     showReplyBanner();
@@ -1132,9 +1136,10 @@ async function postToThread(){
   const name = nameRaw || "名無し";
 
   if(!body){ alert("本文を入力してください。"); return; }
-  if(bannedNames.includes(name)){ alert("この名前は制限されています。別の名前を使用してください。"); return; }
+
+  // ✅ 判定は「URL/メール/強NGのみ」
   if(isDisallowedContent(name) || isDisallowedContent(body)){
-    alert("不適切な表現やURL・メールアドレス等が含まれているため投稿できません。表現を変えてください。");
+    alert("URL/メール/強いNG表現が含まれているため投稿できません。");
     return;
   }
 
@@ -1145,6 +1150,8 @@ async function postToThread(){
       body,
       viewerId: viewerId,
       replyToPostId: replyContext?.postId || "",
+      replyToName: replyContext?.name || "",
+      replyToSnippet: replyContext?.snippet || "",
       isHidden: false
     }));
 
@@ -1169,8 +1176,7 @@ async function deletePost(postId){
       return;
     }
 
-    await hidePostInPB(postId); // ✅ PB更新（isHidden=true）
-    // ついでにこの端末ローカルでも非表示扱いに（再描画を早くする）
+    await hidePostInPB(postId);
     if(!hiddenPostIds.includes(postId)) hiddenPostIds.push(postId);
     saveLocalModeration();
 
@@ -1258,7 +1264,6 @@ async function submitPostReport(reason){
   }
 }
 
-/* ✅ スレッド通報：5件で PBの threads.isHidden=true */
 async function submitThreadReport(reason){
   const threadId = reportContext.threadId;
   if(!threadId){ closeReportDialog(); return; }
@@ -1278,7 +1283,6 @@ async function submitThreadReport(reason){
     const c = await countReports("thread", threadId);
 
     if(c >= THREAD_REPORT_THRESHOLD){
-      // ✅ PBに反映（完全に消える）
       try{
         await hideThreadInPB(threadId);
       }catch{
