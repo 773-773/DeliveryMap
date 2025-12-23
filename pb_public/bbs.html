@@ -654,6 +654,12 @@ const USER_TOTAL_REPORT_THRESHOLD = 10;
 const THREADS_PER_PAGE = 20;
 const POSTS_PER_PAGE = 20;
 
+/* ===== Anti-abuse（ログイン無しの止血）===== */
+const POST_COOLDOWN_MS = 25 * 1000; // 25秒
+const POST_LAST_KEY = "bbs_post_last_ts_v1";
+const POST_DAILY_KEY = "bbs_post_daily_v1"; // {date:"YYYY-MM-DD", count:n}
+const POST_DAILY_LIMIT = 40; // 1日40投稿まで（好きに変えて）
+
 function saveLocalModeration(){
   saveJson(BANNED_NAMES_KEY, bannedNames);
   saveJson(HIDDEN_POST_IDS_KEY, hiddenPostIds);
@@ -707,13 +713,43 @@ function toSnippet(text, max=70){
   return raw.length > max ? raw.slice(0, max) + "…" : raw;
 }
 
+function todayKey(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,"0");
+  const day = String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${day}`;
+}
+
 function ensureCanPost(){
+  // 端末BAN
   if(bannedViewers.includes(viewerId)){
-    alert("通報が累計10回に達したため、この端末からの投稿はできません。");
+    alert("この端末は通報累計が多いため、投稿できません。");
     return false;
   }
+
+  // 連投クールダウン
+  const last = Number(localStorage.getItem(POST_LAST_KEY) || 0);
+  const now = Date.now();
+  if(last && now - last < POST_COOLDOWN_MS){
+    const sec = Math.ceil((POST_COOLDOWN_MS - (now - last))/1000);
+    alert(`連投防止のため、あと${sec}秒待ってください。`);
+    return false;
+  }
+
+  // 1日投稿上限
+  let daily = {};
+  try{ daily = JSON.parse(localStorage.getItem(POST_DAILY_KEY) || "{}"); }catch{}
+  const t = todayKey();
+  if(daily.date !== t) daily = { date:t, count:0 };
+  if((daily.count || 0) >= POST_DAILY_LIMIT){
+    alert("投稿数が多すぎるため、本日は投稿できません。");
+    return false;
+  }
+
   return true;
 }
+
 function addUserReport(targetViewerId){
   if(!targetViewerId) return;
   const cur = Number(userReportCounts[targetViewerId] || 0);
@@ -1154,6 +1190,15 @@ async function postToThread(){
       replyToSnippet: replyContext?.snippet || "",
       isHidden: false
     }));
+
+    // ===== 投稿成功後に Anti-abuse 記録 =====
+    localStorage.setItem(POST_LAST_KEY, String(Date.now()));
+    let daily = {};
+    try{ daily = JSON.parse(localStorage.getItem(POST_DAILY_KEY) || "{}"); }catch{}
+    const t = todayKey();
+    if(daily.date !== t) daily = { date:t, count:0 };
+    daily.count = (daily.count || 0) + 1;
+    localStorage.setItem(POST_DAILY_KEY, JSON.stringify(daily));
 
     document.getElementById("bodyInput").value = "";
     replyContext = null;
