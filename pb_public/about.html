@@ -51,19 +51,19 @@ h1{
   margin:0 auto;
 }
 
-/* リード（中央揃えで見やすく） */
+/* リード */
 .lead{
   font-size:clamp(16px, 2.6vw, 20px);
   font-weight:800;
   color:var(--text);
-  margin:0 auto 26px;
+  margin:0 auto 22px;
   max-width:48em;
   line-height:1.8;
 }
 
-/* 箇条書き（中央揃えで“カード風”） */
+/* 箇条書き（カード風） */
 .point{
-  margin:18px auto 26px;
+  margin:18px auto 22px;
   max-width:52em;
   padding:18px 16px;
   border:1px solid var(--hair);
@@ -82,7 +82,7 @@ h1{
 
 .point li{
   display:flex;
-  justify-content:center;   /* ✅ 中央揃え */
+  justify-content:center;
   align-items:flex-start;
   gap:10px;
   color:var(--accent2);
@@ -99,7 +99,7 @@ h1{
   transform:translateY(1px);
 }
 
-/* 本文（中央揃え＋読みやすい改行） */
+/* 本文 */
 p{
   margin:18px 0;
   overflow-wrap:anywhere;
@@ -122,7 +122,7 @@ p strong{
 }
 .backLink a:hover{ text-decoration:underline; }
 
-/* ✅ スマホ最適化（中央揃えのまま読みやすく） */
+/* スマホ最適化 */
 @media (max-width: 520px){
   header{ padding:18px 10px; }
   h1{ font-size:19px; }
@@ -144,7 +144,7 @@ p strong{
   }
 
   .point li{
-    justify-content:flex-start; /* ✅ スマホは視線移動少なくする */
+    justify-content:flex-start;
     text-align:left;
   }
 
@@ -167,26 +167,28 @@ p strong{
 
 <div class="container">
 
+  <!-- ✅ 画像の改行に合わせる -->
   <div class="lead">
-    FoodDeliveryEyeは、フードデリバリー配達員が<br>
-    “リアルな現場の声”を共有する参加型プラットフォームです。
+    FoodDeliveryEyeは、 フードデリバリー配達員が<br>
+    ”リアルな現場の声” を<br>
+    共有する参加型プラットフォームです。
   </div>
 
   <div class="point" aria-label="よくある困りごと">
     <ul>
-      <li>ピックアップへ向かうも、毎回調理待ちで時間をロスした経験</li>
+      <!-- ✅ 画像の改行に合わせる -->
+      <li>調理待ちが多い店舗を事前に把握して立ち回りたい</li>
       <li>初めて行くタワマンの入館方法は？</li>
       <li>最近のフーデリ事情や情報を共有したい！</li>
     </ul>
   </div>
 
+  <!-- ✅ 画像の改行に合わせる -->
   <p>
-    私自身が配達員をやっていて思った毎日の「ちょっと不便」を、<br>
-    みんなの投票と投稿で解決できる場所を目指しています。
-  </p>
-
-  <p>
-    <strong>あなたの１票・１投稿が、次の誰かの助けになります。</strong>
+    私自身が配達員をやっていて思った毎日の<br>
+    「ちょっと不便」を<br>
+   </strong> みんなの投票と投稿で解決できる場所を目指しています。</strong>
+ 
   </p>
 
   <div class="backLink">
