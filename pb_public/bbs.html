@@ -16,7 +16,7 @@ body{
 /* ✅ h2（スレッド一覧/新規スレッド作成など）を小さく */
 h2{
   margin:0 0 10px;
-  font-size:16px;         /* ← とにかく小さく */
+  font-size:16px;
   font-weight:900;
   letter-spacing:.02em;
 }
@@ -83,6 +83,7 @@ header h1{
   background:rgba(255,255,255,.10);
   color:#f5f5f7;
 }
+.btn-action:disabled{ opacity:.4; cursor:not-allowed; }
 
 /* スレッドの通報（目立たない）※スレッドを開いた時だけ表示 */
 .btn-thread-report{
@@ -505,23 +506,29 @@ nav button{ appearance:none; -webkit-appearance:none; }
     <h3 id="reportTitle">通報しますか？</h3>
     <div>理由を選択してください。</div>
     <div class="report-reasons">
-      <button class="btn-action" onclick="submitReport('誹謗中傷・攻撃的')">① 誹謗中傷・攻撃的</button>
-      <button class="btn-action" onclick="submitReport('不適切・下ネタ')">② 不適切・下ネタ</button>
-      <button class="btn-action" onclick="submitReport('スパム・広告・URL')">③ スパム・広告・URL</button>
-      <button class="btn-action" onclick="submitReport('個人情報・危険')">④ 個人情報・危険</button>
-      <button class="btn-action" onclick="submitReport('その他')">⑤ その他</button>
+      <button class="btn-action" data-reason="誹謗中傷・攻撃的">① 誹謗中傷・攻撃的</button>
+      <button class="btn-action" data-reason="不適切・下ネタ">② 不適切・下ネタ</button>
+      <button class="btn-action" data-reason="スパム・広告・URL">③ スパム・広告・URL</button>
+      <button class="btn-action" data-reason="個人情報・危険">④ 個人情報・危険</button>
+      <button class="btn-action" data-reason="その他">⑤ その他</button>
     </div>
     <div style="text-align:right;margin-top:10px;">
-      <button class="btn-action" onclick="closeReportDialog()">キャンセル</button>
+      <button class="btn-action" id="reportCancelBtn">キャンセル</button>
     </div>
   </div>
 </div>
 
 <script type="module">
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+
+/* =========================
+   PocketBase
+========================= */
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
-/* next（戻り先）保存 */
+/* =========================
+   ナビ（既存挙動維持）
+========================= */
 const KEY_NEXT_STORE = "fdel_next_url_v1";
 const navLogin = document.getElementById("navLogin");
 navLogin?.addEventListener("click", ()=>{
@@ -554,7 +561,6 @@ function setNavLoggedIn(isLoggedIn){
     navLogout.style.display = "none";
   }
 }
-
 async function ensureAuthModel(){
   if(!pb.authStore.isValid){
     setNavLoggedIn(false);
@@ -596,50 +602,20 @@ async function doLogout(){
   }
 }
 navLogout?.addEventListener("click", ()=>openLogoutConfirm());
-cancelLogoutBtn.addEventListener("click", ()=>closeLogoutConfirm());
-confirmLogoutBtn.addEventListener("click", ()=>doLogout());
-logoutConfirmModal.addEventListener("click", (e)=>{ if(e.target === logoutConfirmModal) closeLogoutConfirm(); });
-document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && logoutConfirmModal.style.display === "flex") closeLogoutConfirm(); });
+cancelLogoutBtn?.addEventListener("click", ()=>closeLogoutConfirm());
+confirmLogoutBtn?.addEventListener("click", ()=>doLogout());
+logoutConfirmModal?.addEventListener("click", (e)=>{ if(e.target === logoutConfirmModal) closeLogoutConfirm(); });
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && logoutConfirmModal?.style.display === "flex") closeLogoutConfirm(); });
 
 setNavLoggedIn(pb.authStore.isValid);
 await ensureAuthModel();
-</script>
 
-<script>
-/* ===== 掲示板本体 ===== */
-const DATA_KEY = "bbs_data_v3";
-const BANNED_NAMES_KEY = "bbs_banned_names_v1";
-const HIDDEN_POST_IDS_KEY = "bbs_hidden_post_ids_v1";
+/* =========================
+   掲示板（UIそのまま・永続化PocketBase）
+========================= */
+
+/* 端末ID（匿名でも同一端末の識別に使う） */
 const VIEWER_ID_KEY = "bbs_viewer_id_v1";
-
-const USER_REPORT_COUNTS_KEY = "bbs_user_report_counts_v1";
-const BANNED_VIEWERS_KEY = "bbs_banned_viewers_v1";
-
-const REPORT_THRESHOLD = 2;
-const THREAD_REPORT_THRESHOLD = 5;
-const USER_TOTAL_REPORT_THRESHOLD = 10;
-
-const THREADS_PER_PAGE = 20;
-const POSTS_PER_PAGE = 20;
-
-function loadJson(key, fallback){
-  try{
-    const raw = localStorage.getItem(key);
-    if(!raw) return fallback;
-    const v = JSON.parse(raw);
-    return v ?? fallback;
-  }catch(e){
-    return fallback;
-  }
-}
-function saveJson(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
-
-let data = loadJson(DATA_KEY, { threads: [] });
-let bannedNames = loadJson(BANNED_NAMES_KEY, []);
-let hiddenPostIds = loadJson(HIDDEN_POST_IDS_KEY, []);
-let userReportCounts = loadJson(USER_REPORT_COUNTS_KEY, {});
-let bannedViewers = loadJson(BANNED_VIEWERS_KEY, []);
-
 function getViewerId(){
   let id = localStorage.getItem(VIEWER_ID_KEY);
   if(!id){
@@ -650,11 +626,42 @@ function getViewerId(){
 }
 const viewerId = getViewerId();
 
-let state = { page:"list", currentThreadId:null, threadPage:1, postPage:1 };
-let reportContext = { type:null, threadId:null, postIndexFromTop:null };
-let replyContext = null;
+/* ローカルでのみ使う（UIロジック維持用） */
+const BANNED_NAMES_KEY = "bbs_banned_names_v1";
+const HIDDEN_POST_IDS_KEY = "bbs_hidden_post_ids_v1";
+const USER_REPORT_COUNTS_KEY = "bbs_user_report_counts_v1";
+const BANNED_VIEWERS_KEY = "bbs_banned_viewers_v1";
 
-/* ここは前のまま（緩めたいならここだけ調整してOK） */
+function loadJson(key, fallback){
+  try{
+    const raw = localStorage.getItem(key);
+    if(!raw) return fallback;
+    const v = JSON.parse(raw);
+    return v ?? fallback;
+  }catch{ return fallback; }
+}
+function saveJson(key, value){ localStorage.setItem(key, JSON.stringify(value)); }
+
+let bannedNames = loadJson(BANNED_NAMES_KEY, []);
+let hiddenPostIds = loadJson(HIDDEN_POST_IDS_KEY, []);
+let userReportCounts = loadJson(USER_REPORT_COUNTS_KEY, {});
+let bannedViewers = loadJson(BANNED_VIEWERS_KEY, []);
+
+const REPORT_THRESHOLD = 2;
+const THREAD_REPORT_THRESHOLD = 5;
+const USER_TOTAL_REPORT_THRESHOLD = 10;
+
+const THREADS_PER_PAGE = 20;
+const POSTS_PER_PAGE = 20;
+
+function saveLocalModeration(){
+  saveJson(BANNED_NAMES_KEY, bannedNames);
+  saveJson(HIDDEN_POST_IDS_KEY, hiddenPostIds);
+  saveJson(USER_REPORT_COUNTS_KEY, userReportCounts);
+  saveJson(BANNED_VIEWERS_KEY, bannedViewers);
+}
+
+/* NGフィルタ（そのまま） */
 const NG_WORDS = [
   "死ね","しね","殺す","ころす","バカ","ばか","馬鹿","アホ","あほ","カス","かす","ゴミ","ごみ","クズ","くず",
   "ブス","ぶす","キモい","きもい","キショ","きしょ","きしょい","消えろ","うざい","ウザい","ドブ","障害","池沼",
@@ -667,13 +674,8 @@ function isDisallowedContent(text){
   if(!text) return false;
   const t = text.toLowerCase();
 
-  // URL（明確なものだけ）
   if(/https?:\/\//.test(t)) return true;
-
-  // メール
   if(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(text)) return true;
-
-  // 記号連打（緩め）
   if(/[!?！？]{6,}/.test(text)) return true;
 
   for(const w of NG_WORDS){ if(t.includes(w.toLowerCase())) return true; }
@@ -682,14 +684,6 @@ function isDisallowedContent(text){
   if(noSpaces.length <= 1) return true;
 
   return false;
-}
-
-function saveAll(){
-  saveJson(DATA_KEY, data);
-  saveJson(BANNED_NAMES_KEY, bannedNames);
-  saveJson(HIDDEN_POST_IDS_KEY, hiddenPostIds);
-  saveJson(USER_REPORT_COUNTS_KEY, userReportCounts);
-  saveJson(BANNED_VIEWERS_KEY, bannedViewers);
 }
 
 function formatDate(ts){
@@ -701,26 +695,12 @@ function formatDate(ts){
   const min = String(d.getMinutes()).padStart(2,"0");
   return `${y}/${m}/${day} ${h}:${min}`;
 }
-function generatePostId(){ return "p_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8); }
-function getThreadById(id){ return data.threads.find(t => t.id === id) || null; }
-function getThreadLastAt(thread){
-  const posts = thread.posts || [];
-  if(posts.length > 0) return posts[posts.length - 1].createdAt || 0;
-  return thread.createdAt || 0;
-}
-function getLastPostInfo(thread){
-  const posts = thread.posts || [];
-  if(posts.length === 0) return { lastAt:null, preview:"まだ投稿がありません。" };
-  const last = posts[posts.length - 1];
-  const raw = (last.body || "").replace(/\s+/g, " ").trim();
-  const preview = raw.length > 60 ? raw.slice(0, 60) + "…" : (raw || "（本文なし）");
-  return { lastAt:last.createdAt || null, preview };
-}
 function toSnippet(text, max=70){
   const raw = (text || "").replace(/\s+/g, " ").trim();
   if(!raw) return "（本文なし）";
   return raw.length > max ? raw.slice(0, max) + "…" : raw;
 }
+
 function ensureCanPost(){
   if(bannedViewers.includes(viewerId)){
     alert("通報が累計10回に達したため、この端末からの投稿はできません。");
@@ -737,10 +717,82 @@ function addUserReport(targetViewerId){
     bannedViewers.push(targetViewerId);
     alert("通報が累計10回に達したため、該当ユーザーは投稿できない状態になりました。");
   }
+  saveLocalModeration();
 }
 
+/* =========================
+   PocketBaseアクセス
+========================= */
+async function pbSafe(fn){
+  try{ return await fn(); }
+  catch(e){ console.error(e); throw e; }
+}
+
+async function fetchThreadsPage(page){
+  return await pbSafe(()=>pb.collection("threads").getList(page, THREADS_PER_PAGE, {
+    filter: "isHidden = false",
+    sort: "-created"
+  }));
+}
+
+async function fetchLatestPostForThread(threadId){
+  const res = await pbSafe(()=>pb.collection("posts").getList(1, 1, {
+    filter: `thread = "${threadId}" && isHidden = false`,
+    sort: "-created"
+  }));
+  const p = res.items?.[0] || null;
+  if(!p) return { lastAt:null, preview:"まだ投稿がありません。" };
+  return { lastAt: new Date(p.created).getTime(), preview: toSnippet(p.body || "", 60) };
+}
+
+async function fetchPostsPage(threadId, page){
+  return await pbSafe(()=>pb.collection("posts").getList(page, POSTS_PER_PAGE, {
+    filter: `thread = "${threadId}" && isHidden = false`,
+    sort: "-created"
+  }));
+}
+
+/* 通報（重複通報防止：reporter+target） */
+async function alreadyReported(targetType, targetId){
+  const res = await pbSafe(()=>pb.collection("bbs_reports").getList(1, 1, {
+    filter: `targetType = "${targetType}" && targetId = "${targetId}" && reporter = "${viewerId}"`,
+    sort: "-created"
+  }));
+  return (res.totalItems || 0) > 0;
+}
+async function countReports(targetType, targetId){
+  const res = await pbSafe(()=>pb.collection("bbs_reports").getList(1, 1, {
+    filter: `targetType = "${targetType}" && targetId = "${targetId}"`,
+    sort: "-created"
+  }));
+  return Number(res.totalItems || 0);
+}
+async function createReport(targetType, targetId, reason){
+  await pbSafe(()=>pb.collection("bbs_reports").create({
+    targetType, targetId, reason,
+    reporter: viewerId,
+  }));
+}
+
+/* ✅ PB上でスレッドを非表示化 */
+async function hideThreadInPB(threadId){
+  // threads.Update rule が true である必要
+  await pbSafe(()=>pb.collection("threads").update(threadId, { isHidden:true }));
+}
+
+/* ✅ PB上で投稿を非表示化（本人だけ） */
+async function hidePostInPB(postId){
+  // posts.Update rule が true である必要
+  await pbSafe(()=>pb.collection("posts").update(postId, { isHidden:true }));
+}
+
+/* =========================
+   画面状態
+========================= */
 const app = document.getElementById("app");
-function render(){ state.page === "thread" ? renderThreadPage() : renderThreadList(); }
+let state = { page:"list", currentThreadId:null, threadPage:1, postPage:1 };
+let reportContext = { type:null, threadId:null, postId:null };
+let replyContext = null;
 
 function clampPage(page, totalPages){
   const p = Number(page || 1);
@@ -763,69 +815,99 @@ function renderPager({page, total, perPage, onPrev, onNext, onJump}){
   `;
 }
 
-function renderThreadList(){
+/* グローバルに公開（onclick用） */
+window.prevThreadPage = ()=>{ state.threadPage = Math.max(1, state.threadPage - 1); renderThreadList(); };
+window.nextThreadPage = ()=>{ state.threadPage = state.threadPage + 1; renderThreadList(); };
+window.jumpThreadPage = (p)=>{ state.threadPage = p; renderThreadList(); };
+
+window.goCreateThread = ()=>goCreateThread();
+window.backToList = ()=>backToList();
+window.createThread = ()=>createThread();
+window.postToThread = ()=>postToThread();
+window.cancelReply = ()=>cancelReply();
+window.startReply = (id)=>startReply(id);
+window.deletePost = (id)=>deletePost(id);
+window.openPostReportDialog = (id)=>openPostReportDialog(id);
+window.openThreadReportDialog = (id)=>openThreadReportDialog(id);
+window.closeReportDialog = ()=>closeReportDialog();
+window.prevPostPage = ()=>{ state.postPage = Math.max(1, state.postPage - 1); renderPosts(); };
+window.nextPostPage = ()=>{ state.postPage = state.postPage + 1; renderPosts(); };
+window.jumpPostPage = (p)=>{ state.postPage = p; renderPosts(); };
+
+function render(){ state.page === "thread" ? renderThreadPage() : renderThreadList(); }
+
+/* =========================
+   スレッド一覧
+========================= */
+async function renderThreadList(){
   app.innerHTML = `
     <h2>スレッド一覧</h2>
     <button class="btn" onclick="goCreateThread()">＋ 新規スレッド作成</button>
     <div id="threadList" style="margin-top:14px;"></div>
     <div id="threadPager"></div>
+    <div id="errBox" style="margin-top:10px;color:#f2a3a3;"></div>
   `;
 
   const list = document.getElementById("threadList");
   const pager = document.getElementById("threadPager");
+  const errBox = document.getElementById("errBox");
 
-  if(!data.threads || data.threads.length === 0){
-    list.innerHTML = `<div style="color:#777;margin-top:20px;">まだスレッドがありません。</div>`;
+  try{
+    const res = await fetchThreadsPage(state.threadPage);
+    const total = Number(res.totalItems || 0);
+    const totalPages = Math.max(1, Number(res.totalPages || 1));
+    state.threadPage = clampPage(state.threadPage, totalPages);
+
+    if(total === 0){
+      list.innerHTML = `<div style="color:#777;margin-top:20px;">まだスレッドがありません。</div>`;
+      pager.innerHTML = "";
+      errBox.textContent = "";
+      return;
+    }
+
+    // 最新投稿があるスレが上
+    const items = res.items || [];
+    const enriched = await Promise.all(items.map(async t=>{
+      const info = await fetchLatestPostForThread(t.id);
+      return { t, info, lastAt: info.lastAt || new Date(t.created).getTime() };
+    }));
+    enriched.sort((a,b)=> (b.lastAt||0) - (a.lastAt||0));
+
+    list.innerHTML = "";
+    enriched.forEach(({t, info})=>{
+      const div = document.createElement("div");
+      div.className = "thread-card";
+
+      const title = document.createElement("h3");
+      title.className = "thread-title";
+      title.textContent = t.title;
+
+      const infoDiv = document.createElement("div");
+      infoDiv.className = "thread-info";
+      infoDiv.innerHTML = `最新の投稿：${info.lastAt ? formatDate(info.lastAt) : "—"}`;
+
+      const prev = document.createElement("div");
+      prev.className = "thread-preview";
+      prev.textContent = `最新の投稿：${info.preview}`;
+
+      div.appendChild(title);
+      div.appendChild(infoDiv);
+      div.appendChild(prev);
+      div.onclick = ()=>enterThread(t.id);
+      list.appendChild(div);
+    });
+
+    pager.innerHTML = renderPager({
+      page: state.threadPage, total, perPage: THREADS_PER_PAGE,
+      onPrev: "prevThreadPage()", onNext: "nextThreadPage()", onJump: "jumpThreadPage"
+    });
+    errBox.textContent = "";
+  }catch(e){
+    list.innerHTML = "";
     pager.innerHTML = "";
-    return;
+    errBox.textContent = "読み込みに失敗しました。PocketBaseの設定（CORS/ルール）とコレクション名を確認してください。";
   }
-
-  const sorted = data.threads.slice().sort((a,b)=> getThreadLastAt(b) - getThreadLastAt(a));
-
-  const total = sorted.length;
-  const totalPages = Math.max(1, Math.ceil(total / THREADS_PER_PAGE));
-  state.threadPage = clampPage(state.threadPage, totalPages);
-
-  const startIndex = (state.threadPage - 1) * THREADS_PER_PAGE;
-  const pageItems = sorted.slice(startIndex, startIndex + THREADS_PER_PAGE);
-
-  list.innerHTML = "";
-  pageItems.forEach(thread=>{
-    const div = document.createElement("div");
-    div.className = "thread-card";
-
-    const { lastAt, preview } = getLastPostInfo(thread);
-
-    const title = document.createElement("h3");
-    title.className = "thread-title";
-    title.textContent = thread.title;
-
-    const info = document.createElement("div");
-    info.className = "thread-info";
-    info.innerHTML = `
-      投稿数：${(thread.posts||[]).length}件<br>
-      最新の投稿：${lastAt ? formatDate(lastAt) : "—"}
-    `;
-
-    const prev = document.createElement("div");
-    prev.className = "thread-preview";
-    prev.textContent = `最新の投稿：${preview}`;
-
-    div.appendChild(title);
-    div.appendChild(info);
-    div.appendChild(prev);
-    div.onclick = ()=>enterThread(thread.id);
-    list.appendChild(div);
-  });
-
-  pager.innerHTML = renderPager({
-    page: state.threadPage, total, perPage: THREADS_PER_PAGE,
-    onPrev: "prevThreadPage()", onNext: "nextThreadPage()", onJump: "jumpThreadPage"
-  });
 }
-function prevThreadPage(){ state.threadPage = Math.max(1, state.threadPage - 1); renderThreadList(); }
-function nextThreadPage(){ state.threadPage = state.threadPage + 1; renderThreadList(); }
-function jumpThreadPage(p){ state.threadPage = p; renderThreadList(); }
 
 function goCreateThread(){
   app.innerHTML = `
@@ -839,7 +921,7 @@ function goCreateThread(){
   `;
 }
 
-function createThread(){
+async function createThread(){
   if(!ensureCanPost()) return;
   const title = document.getElementById("threadTitle").value.trim();
   const desc = document.getElementById("threadDesc").value.trim();
@@ -848,10 +930,18 @@ function createThread(){
     alert("不適切な表現またはURLなどが含まれているため、このタイトル/説明は使用できません。");
     return;
   }
-  const id = "t_" + Date.now();
-  data.threads.push({ id, title, desc, createdAt:Date.now(), ownerViewerId:viewerId, posts:[], reports:[] });
-  saveAll();
-  enterThread(id);
+
+  try{
+    const created = await pbSafe(()=>pb.collection("threads").create({
+      title,
+      desc,
+      ownerViewerId: viewerId,
+      isHidden: false
+    }));
+    enterThread(created.id);
+  }catch(e){
+    alert("スレッド作成に失敗しました。PocketBaseのCreateルールを確認してください。");
+  }
 }
 
 function enterThread(id){
@@ -862,18 +952,29 @@ function enterThread(id){
   renderThreadPage();
 }
 
-function renderThreadPage(){
-  const thread = getThreadById(state.currentThreadId);
-  if(!thread){ state.page="list"; render(); return; }
+/* =========================
+   スレッド詳細（投稿一覧）
+========================= */
+async function renderThreadPage(){
+  let thread = null;
+  try{
+    thread = await pbSafe(()=>pb.collection("threads").getOne(state.currentThreadId));
+    if(thread.isHidden){
+      backToList();
+      return;
+    }
+  }catch{
+    backToList();
+    return;
+  }
 
   app.innerHTML = `
     <div class="back-link" onclick="backToList()">← スレッド一覧へ</div>
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-      <h2 style="margin:0;">${thread.title}</h2>
-      <!-- ✅ 通報(◯件)の表示をやめる：常に「通報」だけ -->
+      <h2 style="margin:0;">${escapeHtml(thread.title)}</h2>
       <button class="btn-thread-report" onclick="openThreadReportDialog('${thread.id}')">通報</button>
     </div>
-    <div style="color:#999;margin-bottom:10px;">${thread.desc || ""}</div>
+    <div style="color:#999;margin-bottom:10px;">${escapeHtml(thread.desc || "")}</div>
 
     <div class="form-card">
       <div id="replyBanner" class="reply-banner">
@@ -890,13 +991,13 @@ function renderThreadPage(){
       <button class="btn" onclick="postToThread()">投稿</button>
     </div>
 
-    <h3>投稿一覧（${thread.posts.length}件）</h3>
+    <h3 id="postCountTitle">投稿一覧</h3>
     <div id="postList"></div>
     <div id="postPager"></div>
   `;
 
   if(replyContext) showReplyBanner();
-  renderPosts();
+  await renderPosts();
 }
 
 function showReplyBanner(){
@@ -914,41 +1015,52 @@ function cancelReply(){
   if(banner) banner.style.display = "none";
 }
 
-function renderPosts(){
-  const thread = getThreadById(state.currentThreadId);
+async function renderPosts(){
   const list = document.getElementById("postList");
   const pager = document.getElementById("postPager");
+  const title = document.getElementById("postCountTitle");
+  if(!list || !pager || !title) return;
+
   list.innerHTML = "";
 
-  if(!thread.posts || thread.posts.length === 0){
+  let res;
+  try{
+    res = await fetchPostsPage(state.currentThreadId, state.postPage);
+  }catch{
+    list.innerHTML = `<div style="color:#f2a3a3;">投稿の読み込みに失敗しました。</div>`;
+    pager.innerHTML = "";
+    title.textContent = "投稿一覧";
+    return;
+  }
+
+  const total = Number(res.totalItems || 0);
+  const totalPages = Math.max(1, Number(res.totalPages || 1));
+  state.postPage = clampPage(state.postPage, totalPages);
+
+  title.textContent = `投稿一覧（${total}件）`;
+
+  if(total === 0){
     list.innerHTML = `<div style="color:#777;">まだ投稿がありません。</div>`;
     pager.innerHTML = "";
     return;
   }
 
-  const visible = [];
-  const reversed = thread.posts.slice().reverse();
-  reversed.forEach((p, idxFromTop)=>{
+  const items = res.items || [];
+
+  const visible = items.filter(p=>{
     const name = (p.name && p.name.trim()) ? p.name.trim() : "名無し";
-    if(bannedNames.includes(name)) return;
-    if(hiddenPostIds.includes(p.id)) return;
-    if(isDisallowedContent(name) || isDisallowedContent(p.body)) return;
-    visible.push({ p, idxFromTop });
+    if(bannedNames.includes(name)) return false;
+    if(hiddenPostIds.includes(p.id)) return false;
+    if(isDisallowedContent(name) || isDisallowedContent(p.body)) return false;
+    return true;
   });
 
-  const total = visible.length;
-  const totalPages = Math.max(1, Math.ceil(total / POSTS_PER_PAGE));
-  state.postPage = clampPage(state.postPage, totalPages);
-
-  const startIndex = (state.postPage - 1) * POSTS_PER_PAGE;
-  const pageItems = visible.slice(startIndex, startIndex + POSTS_PER_PAGE);
-
-  if(pageItems.length === 0){
+  if(visible.length === 0){
     list.innerHTML = `<div style="color:#777;">表示できる投稿がありません。</div>`;
   }else{
-    pageItems.forEach(({p, idxFromTop})=>{
+    visible.forEach((p)=>{
       const name = (p.name && p.name.trim()) ? p.name.trim() : "名無し";
-      const canDeletePost = (p.authorViewerId && p.authorViewerId === viewerId);
+      const canDeletePost = (p.viewerId && p.viewerId === viewerId); // ✅ 本人だけ
 
       const card = document.createElement("div");
       card.className = "post-card";
@@ -956,26 +1068,23 @@ function renderPosts(){
 
       card.innerHTML = `
         <div class="post-name"></div>
-        <!-- ✅ 通報：◯件 の表示をやめる（日時だけ） -->
-        <div class="post-date">${formatDate(p.createdAt)}</div>
+        <div class="post-date">${formatDate(new Date(p.created).getTime())}</div>
         <div class="post-body"></div>
         <div class="post-footer">
-          <button class="btn-action" onclick="startReply(${idxFromTop})">返信</button>
-          <button class="btn-action" onclick="openPostReportDialog(${idxFromTop})">通報</button>
-          ${canDeletePost ? `<button class="btn-action" onclick="deletePost(${idxFromTop})">削除</button>` : ``}
+          <button class="btn-action" onclick="startReply('${p.id}')">返信</button>
+          <button class="btn-action" onclick="openPostReportDialog('${p.id}')">通報</button>
+          ${canDeletePost ? `<button class="btn-action" onclick="deletePost('${p.id}')">削除</button>` : ``}
         </div>
       `;
 
       card.querySelector(".post-name").textContent = name;
-      card.querySelector(".post-body").textContent = p.body;
+      card.querySelector(".post-body").textContent = p.body || "";
 
-      if(p.replyTo && p.replyTo.postId){
+      if(p.replyToPostId){
         const chip = document.createElement("div");
         chip.className = "reply-to-chip";
-        const rn = p.replyTo.name || "名無し";
-        const rs = p.replyTo.snippet || "";
-        chip.innerHTML = `返信先：<b>${rn}</b> ${rs ? `- ${rs}` : ""}`;
-        chip.onclick = (e)=>{ e.stopPropagation(); scrollToPost(p.replyTo.postId); };
+        chip.innerHTML = `返信先：<b>投稿</b> - ${p.replyToPostId}`;
+        chip.onclick = (e)=>{ e.stopPropagation(); scrollToPost(p.replyToPostId); };
         card.insertBefore(chip, card.querySelector(".post-body"));
       }
 
@@ -989,35 +1098,34 @@ function renderPosts(){
   });
 }
 
-function prevPostPage(){ state.postPage = Math.max(1, state.postPage - 1); renderPosts(); }
-function nextPostPage(){ state.postPage = state.postPage + 1; renderPosts(); }
-function jumpPostPage(p){ state.postPage = p; renderPosts(); }
-
 function scrollToPost(postId){
   const el = document.querySelector(`[data-post-id="${postId}"]`);
-  if(!el){ alert("返信先の投稿が見つかりません（非表示/削除の可能性）"); return; }
+  if(!el){ alert("返信先の投稿が見つかりません（別ページの可能性）"); return; }
   el.scrollIntoView({ behavior:"smooth", block:"center" });
   const old = el.style.boxShadow;
   el.style.boxShadow = "0 0 0 2px rgba(102,255,153,.35), 0 12px 40px rgba(0,0,0,.45)";
   setTimeout(()=>{ el.style.boxShadow = old; }, 900);
 }
 
-function startReply(idxFromTop){
-  const thread = getThreadById(state.currentThreadId);
-  if(!thread) return;
-  const realIndex = thread.posts.length - 1 - idxFromTop;
-  const post = thread.posts[realIndex];
-  if(!post) return;
-  const name = (post.name && post.name.trim()) ? post.name.trim() : "名無し";
-  replyContext = { postId: post.id, name, createdAt: post.createdAt, snippet: toSnippet(post.body, 48) };
-  showReplyBanner();
-  document.getElementById("bodyInput")?.focus();
+async function startReply(postId){
+  try{
+    const p = await pbSafe(()=>pb.collection("posts").getOne(postId));
+    const name = (p.name && p.name.trim()) ? p.name.trim() : "名無し";
+    replyContext = {
+      postId: p.id,
+      name,
+      createdAt: new Date(p.created).getTime(),
+      snippet: toSnippet(p.body || "", 48)
+    };
+    showReplyBanner();
+    document.getElementById("bodyInput")?.focus();
+  }catch{
+    alert("返信先の取得に失敗しました。");
+  }
 }
 
-function postToThread(){
+async function postToThread(){
   if(!ensureCanPost()) return;
-  const thread = getThreadById(state.currentThreadId);
-  if(!thread) return;
 
   const nameRaw = document.getElementById("nameInput").value.trim();
   const body = document.getElementById("bodyInput").value.trim();
@@ -1030,133 +1138,167 @@ function postToThread(){
     return;
   }
 
-  const post = {
-    id: generatePostId(),
-    name, body,
-    createdAt: Date.now(),
-    authorViewerId: viewerId,
-    reports: [],
-    replyTo: replyContext ? { ...replyContext } : null
-  };
+  try{
+    await pbSafe(()=>pb.collection("posts").create({
+      thread: state.currentThreadId,
+      name,
+      body,
+      viewerId: viewerId,
+      replyToPostId: replyContext?.postId || "",
+      isHidden: false
+    }));
 
-  thread.posts.push(post);
-  saveAll();
+    document.getElementById("bodyInput").value = "";
+    replyContext = null;
 
-  document.getElementById("bodyInput").value = "";
-  replyContext = null;
-
-  state.postPage = 1;
-  renderThreadPage();
-}
-
-function deletePost(idxFromTop){
-  const thread = getThreadById(state.currentThreadId);
-  if(!thread) return;
-
-  const realIndex = thread.posts.length - 1 - idxFromTop;
-  if(realIndex < 0 || realIndex >= thread.posts.length) return;
-
-  const post = thread.posts[realIndex];
-  if(!post.authorViewerId || post.authorViewerId !== viewerId){
-    alert("この投稿は作成者のみ削除できます。");
-    return;
+    state.postPage = 1;
+    await renderThreadPage();
+  }catch(e){
+    alert("投稿に失敗しました。postsのCreateルールを確認してください。");
   }
-  if(!confirm("この投稿を削除しますか？（この端末内だけで削除されます）")) return;
-
-  thread.posts.splice(realIndex,1);
-  saveAll();
-  renderThreadPage();
 }
 
+/* ✅ 投稿削除：本人だけ & PB上で isHidden=true */
+async function deletePost(postId){
+  if(!confirm("この投稿を削除しますか？（PocketBase上でも非表示になります）")) return;
+
+  try{
+    const p = await pbSafe(()=>pb.collection("posts").getOne(postId));
+    if(!p.viewerId || p.viewerId !== viewerId){
+      alert("この投稿はあなたの投稿ではないため削除できません。");
+      return;
+    }
+
+    await hidePostInPB(postId); // ✅ PB更新（isHidden=true）
+    // ついでにこの端末ローカルでも非表示扱いに（再描画を早くする）
+    if(!hiddenPostIds.includes(postId)) hiddenPostIds.push(postId);
+    saveLocalModeration();
+
+    await renderPosts();
+  }catch{
+    alert("削除に失敗しました。posts の Update rule を確認してください。");
+  }
+}
+
+/* =========================
+   通報モーダル
+========================= */
 const reportOverlay = document.getElementById("reportOverlay");
 const reportTitle = document.getElementById("reportTitle");
+const reportCancelBtn = document.getElementById("reportCancelBtn");
 
-function openPostReportDialog(idxFromTop){
+reportCancelBtn?.addEventListener("click", ()=>closeReportDialog());
+reportOverlay?.addEventListener("click", (e)=>{ if(e.target === reportOverlay) closeReportDialog(); });
+
+document.querySelectorAll(".report-reasons button").forEach(btn=>{
+  btn.addEventListener("click", async ()=>{
+    const reason = btn.getAttribute("data-reason") || "その他";
+    await submitReport(reason);
+  });
+});
+
+function openPostReportDialog(postId){
   reportContext.type = "post";
   reportContext.threadId = state.currentThreadId;
-  reportContext.postIndexFromTop = idxFromTop;
+  reportContext.postId = postId;
   reportTitle.textContent = "この投稿を通報しますか？";
   reportOverlay.style.display = "flex";
 }
 function openThreadReportDialog(threadId){
   reportContext.type = "thread";
   reportContext.threadId = threadId;
-  reportContext.postIndexFromTop = null;
+  reportContext.postId = null;
   reportTitle.textContent = "このスレッドを通報しますか？";
   reportOverlay.style.display = "flex";
 }
 function closeReportDialog(){
   reportContext.type = null;
   reportContext.threadId = null;
-  reportContext.postIndexFromTop = null;
+  reportContext.postId = null;
   reportOverlay.style.display = "none";
 }
-function submitReport(reason){
-  if(reportContext.type === "post") submitPostReport(reason);
-  else if(reportContext.type === "thread") submitThreadReport(reason);
+
+async function submitReport(reason){
+  if(reportContext.type === "post") await submitPostReport(reason);
+  else if(reportContext.type === "thread") await submitThreadReport(reason);
 }
 
-function submitPostReport(reason){
-  const thread = getThreadById(reportContext.threadId);
-  if(!thread){ closeReportDialog(); return; }
+async function submitPostReport(reason){
+  const postId = reportContext.postId;
+  if(!postId){ closeReportDialog(); return; }
 
-  const idxFromTop = reportContext.postIndexFromTop;
-  const realIndex = thread.posts.length - 1 - idxFromTop;
-  const post = thread.posts[realIndex];
-  if(!post){ closeReportDialog(); return; }
+  try{
+    if(await alreadyReported("post", postId)){
+      alert("この投稿は既に通報済みです。");
+      closeReportDialog();
+      return;
+    }
 
-  if(!post.reports) post.reports = [];
-  if(post.reports.some(r=>r.userId === viewerId)){
-    alert("この投稿は既に通報済みです。");
+    await createReport("post", postId, reason);
+
+    const p = await pbSafe(()=>pb.collection("posts").getOne(postId));
+    addUserReport(p.viewerId);
+
+    const c = await countReports("post", postId);
+    if(c >= REPORT_THRESHOLD){
+      const authorName = (p.name && p.name.trim()) ? p.name.trim() : "名無し";
+      if(!hiddenPostIds.includes(postId)) hiddenPostIds.push(postId);
+      if(!bannedNames.includes(authorName)) bannedNames.push(authorName);
+      saveLocalModeration();
+      alert("通報が一定数に達したため、この投稿は自動的に非表示となり、同じ名前の投稿は制限されます。");
+    }else{
+      alert("通報を受け付けました。");
+    }
+
     closeReportDialog();
-    return;
+    renderPosts();
+  }catch{
+    alert("通報に失敗しました。bbs_reports の Create ルールを確認してください。");
+    closeReportDialog();
   }
+}
 
-  post.reports.push({ userId: viewerId, reason, at: Date.now() });
-  addUserReport(post.authorViewerId);
+/* ✅ スレッド通報：5件で PBの threads.isHidden=true */
+async function submitThreadReport(reason){
+  const threadId = reportContext.threadId;
+  if(!threadId){ closeReportDialog(); return; }
 
-  if(post.reports.length >= REPORT_THRESHOLD){
-    const authorName = (post.name && post.name.trim()) ? post.name.trim() : "名無し";
-    if(!hiddenPostIds.includes(post.id)) hiddenPostIds.push(post.id);
-    if(!bannedNames.includes(authorName)) bannedNames.push(authorName);
-    alert("通報が一定数に達したため、この投稿は自動的に非表示となり、同じ名前の投稿は制限されます。");
-  }else{
+  try{
+    if(await alreadyReported("thread", threadId)){
+      alert("このスレッドは既に通報済みです。");
+      closeReportDialog();
+      return;
+    }
+
+    await createReport("thread", threadId, reason);
+
+    const t = await pbSafe(()=>pb.collection("threads").getOne(threadId));
+    addUserReport(t.ownerViewerId);
+
+    const c = await countReports("thread", threadId);
+
+    if(c >= THREAD_REPORT_THRESHOLD){
+      // ✅ PBに反映（完全に消える）
+      try{
+        await hideThreadInPB(threadId);
+      }catch{
+        alert("通報は成立しましたが、threads の Update rule が原因で非表示にできませんでした。");
+        closeReportDialog();
+        return;
+      }
+
+      alert("通報が一定数に達したため、このスレッドは自動的に非表示になりました。");
+      closeReportDialog();
+      backToList();
+      return;
+    }
+
     alert("通報を受け付けました。");
-  }
-
-  saveAll();
-  closeReportDialog();
-  renderThreadPage();
-}
-
-function submitThreadReport(reason){
-  const thread = getThreadById(reportContext.threadId);
-  if(!thread){ closeReportDialog(); return; }
-  if(!thread.reports) thread.reports = [];
-  if(thread.reports.some(r=>r.userId === viewerId)){
-    alert("このスレッドは既に通報済みです。");
     closeReportDialog();
-    return;
-  }
-
-  thread.reports.push({ userId: viewerId, reason, at: Date.now() });
-  addUserReport(thread.ownerViewerId);
-
-  if(thread.reports.length >= THREAD_REPORT_THRESHOLD){
-    data.threads = data.threads.filter(t => t.id !== thread.id);
-    alert("通報が一定数に達したため、このスレッドは自動的に削除されました。");
-    saveAll();
+  }catch{
+    alert("通報に失敗しました。bbs_reports の Create ルールを確認してください。");
     closeReportDialog();
-    if(state.page === "thread" && state.currentThreadId === thread.id) backToList();
-    else renderThreadList();
-    return;
   }
-
-  alert("通報を受け付けました。");
-  saveAll();
-  closeReportDialog();
-  if(state.page === "thread" && state.currentThreadId === thread.id) renderThreadPage();
-  else renderThreadList();
 }
 
 function backToList(){
@@ -1166,8 +1308,18 @@ function backToList(){
   render();
 }
 
-if(!data.threads) data.threads = [];
+/* HTMLエスケープ */
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
 render();
 </script>
+
 </body>
 </html>
