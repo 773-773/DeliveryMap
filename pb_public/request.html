@@ -1,158 +1,407 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>店舗申請フォーム（PocketBase版）</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>店舗申請フォーム</title>
+
 <style>
-body { font-family:sans-serif; margin:0; padding:12px; background:#0d0d0d; color:#fff; }
-h2 { color:#66ff99; font-size:18px; margin-bottom:12px; }
-label { display:block; margin-top:8px; margin-bottom:4px; font-size:0.85em; }
-input, select, button { width:100%; padding:6px; border-radius:6px; border:1px solid #333; font-size:0.85em; }
-input, select { background:#111; color:#fff; }
-button { background:#ff6600; color:#fff; border:none; cursor:pointer; margin-top:12px; }
-small { display:block; font-size:0.7em; color:#ccc; margin-top:2px; }
-#nameSuggestions { background:#111; color:#fff; list-style:none; padding:4px; margin:0; border:1px solid #333; border-radius:4px; max-height:120px; overflow-y:auto; position:absolute; display:none; z-index:1000; }
-#nameSuggestions li { padding:2px 4px; cursor:pointer; }
-#nameSuggestions li:hover { background:#333; }
+  :root{
+    --bg:#0d0d0d;
+    --panel:#111;
+    --hair:#222;
+    --muted:#bdbdbd;
+    --text:#fff;
+    --input:#1a1a1a;
+    --border:#333;
+    --accent:#ffa500;
+    --ok:#66ff99;
+    --ng:#ff6666;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    padding:10px;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",system-ui,sans-serif;
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px;
+    background:var(--panel);
+    border-bottom:1px solid var(--hair);
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  header .status{ font-size:.8em;color:var(--muted); }
+  #logoutBtn{
+    display:none;
+    background:#333;color:#fff;border:none;
+    padding:6px 10px;border-radius:8px;
+    cursor:pointer;font-weight:800;font-size:.8em;
+  }
+
+  main{ max-width:720px; margin:10px auto 30px; }
+  h2{ margin:12px 0 6px; }
+
+  .desc{
+    background:var(--panel);
+    border:1px solid var(--hair);
+    border-radius:10px;
+    padding:10px;
+    color:var(--muted);
+    font-size:.85em;
+    line-height:1.6;
+    margin-bottom:12px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--hair);
+    border-radius:12px;
+    padding:14px;
+  }
+
+  .row{ margin-bottom:10px; position:relative; }
+  label{
+    display:block;
+    font-size:.85em;
+    margin-bottom:6px;
+  }
+  .req{ color:var(--ng); font-size:.8em; margin-left:6px; }
+
+  input, select, textarea{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--input);
+    color:var(--text);
+    font-size:.95em;
+    outline:none;
+  }
+  textarea{ min-height:90px; resize:vertical; }
+
+  .hint{
+    margin-top:6px;
+    color:#9a9a9a;
+    font-size:.78em;
+    line-height:1.35;
+  }
+
+  #submitBtn{
+    width:100%;
+    margin-top:8px;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:var(--accent);
+    color:#000;
+    font-weight:900;
+    cursor:pointer;
+  }
+  #submitBtn:disabled{ opacity:.55; cursor:not-allowed; }
+
+  #messageBox{
+    margin-top:10px;
+    white-space:pre-wrap;
+    line-height:1.45;
+    font-size:.85em;
+  }
+  .msg-success{ color:var(--ok); }
+  .msg-error{ color:var(--ng); }
+
+  /* 店舗名サジェスト */
+  #nameSuggestions{
+    display:none;
+    position:absolute;
+    left:0;
+    right:0;
+    top:calc(100% + 6px);
+    list-style:none;
+    margin:0;
+    padding:6px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:rgba(17,17,17,0.98);
+    max-height:180px;
+    overflow:auto;
+    z-index:50;
+  }
+  #nameSuggestions li{
+    padding:8px 10px;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:.92em;
+    color:rgba(255,255,255,0.92);
+  }
+  #nameSuggestions li:hover{ background:rgba(255,255,255,0.06); }
+
+  /* login modal */
+  .modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+    padding:14px;
+  }
+  .modal .box{
+    width:min(360px, 100%);
+    background:var(--panel);
+    border:1px solid var(--hair);
+    border-radius:14px;
+    padding:16px;
+    text-align:center;
+  }
+  .modal h3{ margin:0 0 10px; }
+  .modal .muted{ color:var(--muted); font-size:.82em; line-height:1.35; }
+  .modal button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:900;
+  }
+  #googleLoginBtn{ background:#fff; color:#000; }
+  #closeModalBtn{ background:#333; color:#fff; }
 </style>
 </head>
+
 <body>
+<header>
+  <div class="status" id="userStatus">未ログイン</div>
+  <button id="logoutBtn">ログアウト</button>
+</header>
 
-<h2>掲載店舗を申請する</h2>
-<small>※店舗名は正式名称で入力してください</small>
+<main>
+  <h2>掲載店舗を申請する</h2>
+  <div class="desc">
+    未掲載の店舗を運営に申請するページです。<br>
+    申請内容は運営側で確認後、掲載します。<br>
+    ※店舗名は正式名称で入力してください。
+  </div>
 
-<label>店舗名（必須）</label>
-<input type="text" id="reqName" placeholder="例：マクドナルド 渋谷店" autocomplete="off">
-<ul id="nameSuggestions"></ul>
+  <div class="card">
+    <form id="requestForm">
+      <div class="row">
+        <label>店舗名 <span class="req">※必須</span></label>
+        <input id="nameInput" type="text" placeholder="例：マクドナルド 渋谷店" autocomplete="off">
+        <ul id="nameSuggestions" aria-label="店舗名候補"></ul>
+        <div class="hint">※ 既存の店舗名を入力補助します（完全一致でなくても候補表示）。</div>
+      </div>
 
-<label>都道府県（必須）</label>
-<select id="reqPref">
-  <option value="">都道府県を選択</option>
-</select>
+      <div class="row">
+        <label>都道府県 <span class="req">※必須</span></label>
+        <select id="prefSelect"><option value="">選択してください</option></select>
+      </div>
 
-<label>市区町村（必須）</label>
-<select id="reqCity" style="display:none">
-  <option value="">市区町村を選択</option>
-</select>
+      <!-- ✅ 市区町村：選択制 → 手動入力 -->
+      <div class="row">
+        <label>市区町村 <span class="req">※必須</span></label>
+        <input id="cityInput" type="text" placeholder="例）渋谷区、港区、横浜市西区">
+        <div class="hint">※ 「◯◯区」まで（市の場合は「◯◯市◯◯区」など）。</div>
+      </div>
 
-<label>以下住所（必須）</label>
-<input type="text" id="reqAddress" placeholder="例：道玄坂2-11-1">
+      <div class="row">
+        <label>以下住所 <span class="req">※必須</span></label>
+        <input id="addressInput" type="text" placeholder="例：道玄坂2-11-1">
+      </div>
 
-<button id="submitRequest" disabled>申請する</button>
+      <button id="submitBtn" type="submit">この内容で申請する</button>
+      <div id="messageBox"></div>
+    </form>
+  </div>
+</main>
+
+<!-- ログインモーダル -->
+<div id="loginModal" class="modal">
+  <div class="box">
+    <h3>ログインが必要です</h3>
+    <button id="googleLoginBtn">Googleでログイン</button>
+    <button id="closeModalBtn">閉じる</button>
+    <div class="muted">ログイン後に「この内容で申請する」を押してください。</div>
+  </div>
+</div>
 
 <script type="module">
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+
 const pb = new PocketBase("https://delivery-eye.onrender.com");
+pb.autoCancellation(false);
 
-// ===== DOM =====
-const reqName = document.getElementById("reqName");
-const nameSuggestions = document.getElementById("nameSuggestions");
-const reqPref = document.getElementById("reqPref");
-const reqCity = document.getElementById("reqCity");
-const reqAddress = document.getElementById("reqAddress");
-const submitBtn = document.getElementById("submitRequest");
+const $ = (id)=>document.getElementById(id);
 
-// ===== 都道府県リスト =====
-const prefectures = [
-"北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
-"茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
-"新潟県","富山県","石川県","福井県","山梨県","長野県",
-"岐阜県","静岡県","愛知県","三重県",
-"滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県",
-"鳥取県","島根県","岡山県","広島県","山口県",
-"徳島県","香川県","愛媛県","高知県",
-"福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"
+const userStatus = $("userStatus");
+const logoutBtn  = $("logoutBtn");
+const loginModal = $("loginModal");
+const googleBtn  = $("googleLoginBtn");
+const closeBtn   = $("closeModalBtn");
+
+const form    = $("requestForm");
+const submit  = $("submitBtn");
+const msgBox  = $("messageBox");
+
+const nameEl  = $("nameInput");
+const prefEl  = $("prefSelect");
+const cityEl  = $("cityInput");     // ✅ input
+const addrEl  = $("addressInput");
+
+const suggBox = $("nameSuggestions");
+
+/* ===== 都道府県 ===== */
+const prefs = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+  "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+  "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+  "熊本県","大分県","宮崎県","鹿児島県","沖縄県"
 ];
-prefectures.forEach(p=>{
-  const opt=document.createElement("option");
-  opt.value=p;
-  opt.textContent=p;
-  reqPref.appendChild(opt);
-});
-
-// ===== 匿名ID（ローカルブラウザごと） =====
-let browserId = localStorage.getItem("browserId");
-if(!browserId){
-  browserId="id-"+Math.random().toString(36).substring(2)+Date.now();
-  localStorage.setItem("browserId", browserId);
+for(const p of prefs){
+  const o=document.createElement("option");
+  o.value=p; o.textContent=p;
+  prefEl.appendChild(o);
 }
-submitBtn.disabled=false;
 
-// ===== 店舗名補完のために stores 一覧取得 =====
-let allStores = [];
-async function fetchStoreNames(){
-  try{
-    const list = await pb.collection("stores").getList(1,200);
-    allStores = list.items;
-  }catch(e){ console.error("店舗リスト取得失敗",e); }
+function showMsg(text,type="success"){
+  msgBox.textContent = text;
+  msgBox.className = type==="success" ? "msg-success" : "msg-error";
 }
-fetchStoreNames();
 
-// 入力補助
-reqName.addEventListener("input", ()=>{
-  const val=reqName.value.trim().toLowerCase();
-  nameSuggestions.innerHTML="";
-  if(!val){ nameSuggestions.style.display="none"; return; }
-  const matches = allStores
-    .filter(s=>s.name && s.name.toLowerCase().includes(val))
-    .slice(0,10);
-  matches.forEach(s=>{
-    const li=document.createElement("li");
-    li.textContent=s.name;
-    li.addEventListener("click",()=>{
-      reqName.value=s.name;
-      nameSuggestions.style.display="none";
-    });
-    nameSuggestions.appendChild(li);
-  });
-  nameSuggestions.style.display = matches.length ? "block" : "none";
-});
-document.addEventListener("click", e=>{
-  if(!nameSuggestions.contains(e.target) && e.target!==reqName){
-    nameSuggestions.style.display="none";
+/* ===== ログイン表示 ===== */
+function updateStatus(){
+  if(pb.authStore.isValid){
+    userStatus.textContent = "ログイン中：" + (pb.authStore.model?.email || "");
+    logoutBtn.style.display = "inline-block";
+  }else{
+    userStatus.textContent = "未ログイン";
+    logoutBtn.style.display = "none";
   }
-});
+}
+updateStatus();
 
-// ===== 都道府県選択で市区町村リスト生成 =====
-reqPref.onchange = async ()=>{
-  const pref=reqPref.value;
-  reqCity.innerHTML=`<option value="">市区町村を選択</option>`;
-  if(!pref){ reqCity.style.display="none"; return; }
-
-  try{
-    const list = await pb.collection("stores").getList(1,200,{ filter:`prefecture="${pref}"` });
-    const cities=[...new Set(list.items.map(s=>s.city).filter(Boolean))].sort();
-    cities.forEach(c=>{
-      const opt=document.createElement("option");
-      opt.value=c;
-      opt.textContent=c;
-      reqCity.appendChild(opt);
-    });
-    reqCity.style.display=cities.length?"block":"none";
-  }catch(e){
-    console.error("市区町村取得失敗",e);
-  }
+logoutBtn.onclick = ()=>{
+  pb.authStore.clear();
+  updateStatus();
+  showMsg("ログアウトしました。","success");
 };
 
-// ===== 申請処理 =====
-submitBtn.onclick = async ()=>{
-  const name=reqName.value.trim();
-  const pref=reqPref.value;
-  const city=reqCity.value;
-  const addr=reqAddress.value.trim();
-  if(!name || !pref || !city || !addr){
-    alert("必須項目をすべて入力してください");
+googleBtn.onclick = async ()=>{
+  try{
+    await pb.collection("users").authWithOAuth2({ provider:"google" });
+    loginModal.style.display="none";
+    updateStatus();
+    showMsg("ログインしました。","success");
+  }catch(e){
+    showMsg("Googleログインに失敗しました。","error");
+  }
+};
+closeBtn.onclick = ()=> loginModal.style.display="none";
+
+/* ===== 匿名ID（ローカルブラウザごと） ===== */
+let browserId = localStorage.getItem("browserId");
+if(!browserId){
+  browserId = "id-" + Math.random().toString(36).slice(2) + Date.now();
+  localStorage.setItem("browserId", browserId);
+}
+
+/* ===== 店舗名サジェスト（stores から取得） ===== */
+let allStores = [];
+
+async function fetchAllStoreNames(){
+  allStores = [];
+  try{
+    let page = 1;
+    const perPage = 200;
+    while(true){
+      const list = await pb.collection("stores").getList(page, perPage, { sort:"name" });
+      allStores.push(...(list.items || []));
+      if(page >= (list.totalPages || 1)) break;
+      page++;
+      if(page > 10) break; // 念のため上限（必要なら増やしてOK）
+    }
+  }catch(e){
+    console.error("店舗リスト取得失敗", e);
+  }
+}
+fetchAllStoreNames();
+
+function renderSuggestions(keyword){
+  const val = keyword.trim().toLowerCase();
+  suggBox.innerHTML = "";
+  if(!val){
+    suggBox.style.display="none";
+    return;
+  }
+  const matches = allStores
+    .filter(s => s?.name && String(s.name).toLowerCase().includes(val))
+    .slice(0, 10);
+
+  for(const s of matches){
+    const li = document.createElement("li");
+    li.textContent = s.name;
+    li.addEventListener("click", ()=>{
+      nameEl.value = s.name;
+      suggBox.style.display="none";
+    });
+    suggBox.appendChild(li);
+  }
+  suggBox.style.display = matches.length ? "block" : "none";
+}
+
+nameEl.addEventListener("input", ()=> renderSuggestions(nameEl.value));
+document.addEventListener("click", (e)=>{
+  if(!suggBox.contains(e.target) && e.target !== nameEl){
+    suggBox.style.display="none";
+  }
+});
+
+/* ===== フィルタ用エスケープ ===== */
+function escapeFilter(s){
+  return String(s ?? "").replaceAll("\\","\\\\").replaceAll('"','\\"').replaceAll("'","\\'");
+}
+
+/* ===== submit ===== */
+form.onsubmit = async (e)=>{
+  e.preventDefault();
+  msgBox.textContent = "";
+
+  const name = nameEl.value.trim();
+  const pref = prefEl.value;
+  const city = cityEl.value.trim();      // ✅ input
+  const address = addrEl.value.trim();
+
+  if(!name || !pref || !city || !address){
+    showMsg("必須項目が未入力です。","error");
     return;
   }
 
-  // 重複チェック
+  if(!pb.authStore.isValid){
+    loginModal.style.display="flex";
+    showMsg("ログイン後に申請できます。","error");
+    return;
+  }
+
   try{
-    const existing = await pb.collection("stores").getList(1,200,{
-      filter:`name="${name}" && prefecture="${pref}" && city="${city}"`
+    submit.disabled = true;
+    showMsg("送信中…","success");
+
+    // 重複チェック（storesに同一 name + prefecture + city があるか）
+    const existing = await pb.collection("stores").getList(1, 1, {
+      filter:`name="${escapeFilter(name)}" && prefecture="${escapeFilter(pref)}" && city="${escapeFilter(city)}"`
     });
-    if(existing.items.length>0){
-      alert("この店舗はすでに登録されています");
+    if((existing.items || []).length > 0){
+      showMsg("この店舗はすでに登録されています。","error");
       return;
     }
 
@@ -160,25 +409,29 @@ submitBtn.onclick = async ()=>{
     await pb.collection("storeRequests").create({
       browserId,
       name,
-      prefecture:pref,
+      prefecture: pref,
       city,
-      address:addr,
-      createdAt:new Date().toISOString()
+      address,
+      userEmail: pb.authStore.model?.email || "",
+      createdAt: new Date().toISOString()
     });
 
-    alert("申請完了しました。管理者承認後に表示されます。");
+    showMsg("申請が完了しました！","success");
+    form.reset();
+    suggBox.style.display = "none";
+  }catch(err){
+    console.error("PB error:", err);
+    const detail =
+      (err?.data && JSON.stringify(err.data, null, 2)) ||
+      err?.message ||
+      String(err);
 
-    // フォームリセット
-    reqName.value="";
-    reqPref.value="";
-    reqCity.innerHTML=`<option value="">市区町村を選択</option>`;
-    reqCity.style.display="none";
-    reqAddress.value="";
-  }catch(e){
-    console.error("申請エラー",e);
-    alert("申請に失敗しました。");
+    showMsg("申請に失敗しました。\n\n--- 詳細 ---\n" + detail, "error");
+  }finally{
+    submit.disabled = false;
   }
 };
 </script>
+
 </body>
 </html>
