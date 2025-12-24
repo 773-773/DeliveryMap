@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>黒モダンA 月表示付き（投票＋口コミ＋お気に入り）</title>
+<title>調理待ち時間（投票＋口コミ＋お気に入り） - FoodDeliveryEye</title>
 
 <style>
 :root{
@@ -208,7 +208,6 @@ nav button{ appearance:none; -webkit-appearance:none; }
 /* =========================
    ▼ ここから下：元ページの見た目（そのまま）
 ========================= */
-
 h2 { margin:12px 0 6px; }
 h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 
@@ -483,7 +482,6 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
     </div>
   </header>
 
-  <!-- ✅ 修正①：文言を「調理待ち時間」に -->
   <h2>調理待ち時間<small>※お店到着後に商品受取までにかかった時間</small></h2>
   <button id="requestBtn" onclick="location.href='request.html'">掲載店舗を申請する</button>
 
@@ -535,6 +533,7 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 <script type="module">
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 const pb = new PocketBase("https://delivery-eye.onrender.com");
+if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
 /* ========================
    ✅ ヘッダー（ログイン状態で出し分け）
@@ -544,6 +543,12 @@ const navLogin    = document.getElementById("navLogin");
 const navSignup   = document.getElementById("navSignup");
 const navLoggedIn = document.getElementById("navLoggedIn");
 const navLogout   = document.getElementById("navLogout");
+
+// ✅ login後にvote.htmlへ戻す
+try{
+  const nextUrl = "vote.html";
+  navLogin.href = "login.html?next=" + encodeURIComponent(nextUrl);
+}catch{}
 
 function setNavLoggedIn(isLoggedIn){
   if(isLoggedIn){
@@ -616,7 +621,7 @@ async function doLogout(){
     favOnlyCheckbox.checked = false;
 
     closeLogoutConfirm();
-    loadPage(1);
+    await loadPage(1);
     alert("ログアウトしました");
   }finally{
     logoutBusy = false;
@@ -636,7 +641,7 @@ document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && logoutConfi
 ======================== */
 function redirectToLogin(){
   alert("ログインが必要です。ログイン画面に移動します。");
-  window.location.href = "login.html";
+  window.location.href = "login.html?next=" + encodeURIComponent("vote.html");
 }
 function escapeHtml(s){
   return String(s ?? "").replace(/[&<>"']/g, c=>({
@@ -677,7 +682,7 @@ function isToxicTone(text){
   return false;
 }
 
-/* ✅ 住所を「番地まで」と「建物名以降」にざっくり分割（見た目の下線を番地までにする） */
+/* ✅ 住所を「番地まで」と「建物名以降」にざっくり分割 */
 function splitAddressBanchiAndBuilding(raw){
   const s = String(raw ?? "").trim();
   if(!s) return { banchi:"", building:"" };
@@ -717,7 +722,7 @@ prefs.forEach(p=>{
 });
 const citySelect=document.getElementById("citySelect");
 
-/* ✅ 修正②：東京都の表示順を固定 */
+/* ✅ 東京都の表示順を固定 */
 const TOKYO_CITY_ORDER = [
   "千代田区","中央区","港区","新宿区","文京区","台東区","墨田区","江東区","品川区","目黒区","大田区","世田谷区","渋谷区","中野区","杉並区",
   "豊島区","北区","荒川区","板橋区","練馬区","足立区","葛飾区","江戸川区",
@@ -745,15 +750,19 @@ prefSelect.onchange = async ()=>{
     return;
   }
 
-  // それ以外はDBからユニーク取得
-  const res = await pb.collection("stores").getList(1,500,{ filter:`prefecture="${pref}"` });
-  const cities=[...new Set(res.items.map(i=>i.city).filter(Boolean))].sort();
-  cities.forEach(c=>{
-    const o=document.createElement("option");
-    o.value=c; o.textContent=c;
-    citySelect.appendChild(o);
-  });
-  citySelect.style.display="block";
+  try{
+    const res = await pb.collection("stores").getList(1,500,{ filter:`prefecture="${pref}"` });
+    const cities=[...new Set(res.items.map(i=>i.city).filter(Boolean))].sort();
+    cities.forEach(c=>{
+      const o=document.createElement("option");
+      o.value=c; o.textContent=c;
+      citySelect.appendChild(o);
+    });
+    citySelect.style.display="block";
+  }catch(e){
+    console.error(e);
+    citySelect.style.display="none";
+  }
 };
 
 /* ========================
@@ -761,7 +770,7 @@ prefSelect.onchange = async ()=>{
 ======================== */
 document.getElementById("searchBtn").onclick=()=>loadPage(1);
 
-/* ✅ 修正③：1ページ10店舗 */
+/* ✅ 1ページ10店舗 */
 let pageSize=10;
 
 let favoriteOnly=false;
@@ -816,6 +825,10 @@ async function loadPage(page=1){
 
     if(favoriteOnly){
       stores = stores.filter(s => favoriteMap.has(s.id));
+      // ✅ お気に入りだけでページ数が変わるので、簡易的にページ表示を1ページ固定
+      // （気になるなら "favorites" を基準にサーバー側でページング設計にすると良い）
+      totalPages = 1;
+      currentPage = 1;
     }
 
     renderStores(stores);
@@ -828,7 +841,7 @@ async function loadPage(page=1){
   }
 }
 
-/* ページネーションの描画（数字ボタン方式） */
+/* ページネーション */
 function renderPagination(){
   const pEl = document.getElementById("pagination");
   if(!pEl) return;
