@@ -7,6 +7,11 @@
   <!-- ✅ Google Search Console 所有権確認（head内に配置） -->
   <meta name="google-site-verification" content="WjEO0gKNZqkmnxzf6ndfmbzgUvXw5juJmXK_3Xr89Zc" />
 
+  <!-- ✅ AdSense 所有権確認（これが無いと「コード未配置」扱いになりやすい） -->
+  <script async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4389309905551232"
+    crossorigin="anonymous"></script>
+
   <title>FoodDeliveryEye</title>
 
   <style>
@@ -57,6 +62,22 @@
     margin:0 auto;
     padding:18px 14px 42px;
   }
+
+  /* ✅ JSが死んだ時も「何も見えない」を防ぐための保険表示 */
+  .hardFallback{
+    display:none;
+    margin:12px 0 16px;
+    padding:12px 12px;
+    border-radius:16px;
+    background:rgba(255,120,120,0.10);
+    border:1px solid rgba(255,120,120,0.22);
+    color:rgba(255,220,220,0.92);
+    box-shadow:0 16px 50px rgba(0,0,0,0.55);
+    line-height:1.7;
+    font-size:12px;
+  }
+  .hardFallback strong{ color:#ffd9d9; }
+  .hardFallback code{ color:#fff; background:rgba(255,255,255,0.08); padding:1px 6px; border-radius:8px; }
 
   /* Header */
   header {
@@ -355,7 +376,6 @@
 
   .cards { display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:8px; }
 
-  /* ✅ カード全体リンク（どこ押しても飛ぶ） */
   .cardLinkWrap{
     display:block;
     text-decoration:none;
@@ -409,7 +429,6 @@
     border-color: rgba(255,255,255,0.16);
   }
 
-  /* Tag */
   .cardTag {
     display:inline-flex;
     align-items:center;
@@ -447,7 +466,6 @@
     line-break: loose;
   }
 
-  /* 右上の矢印 */
   .cardGo{
     position:absolute;
     right:12px;
@@ -796,7 +814,15 @@
 </head>
 
 <body>
-  <div class="page">
+  <div class="page" id="pageRoot">
+
+    <!-- ✅ JSが落ちても「何も見えない」を防ぐ表示 -->
+    <div class="hardFallback" id="hardFallback">
+      <strong>表示トラブル検知</strong><br>
+      JavaScript でエラーが発生している可能性があります。<br>
+      右クリック → <code>検証</code> → <code>Console</code> の赤いエラーを確認してください。
+      <div style="margin-top:8px;opacity:.9" id="hardFallbackMsg"></div>
+    </div>
 
     <header>
       <div class="logoArea">
@@ -1129,7 +1155,7 @@
     <h2>免責事項</h2>
     <p class="small">最終更新日：2025年12月20日</p>
     <ul>
-      <li>当サイトに掲載される情報は、利用者の投稿等に基づくものであり、当サイトはその正確性・完全性・有用性を保証しません。</li>
+      <li>当サイトに掲載される情報は、利用者の投稿等に基づくものであり、その正確性・完全性・有用性を保証しません。</li>
       <li>当サイトの情報を利用したことにより生じた損害・トラブルについて、当サイトは一切の責任を負いません（ただし、故意または重過失がある場合を除きます）。</li>
       <li>当サイトからリンクされている外部サイトの内容について、当サイトは責任を負いません。</li>
       <li>本サービスは予告なく変更・停止される場合があります。</li>
@@ -1198,14 +1224,32 @@
     </form>
   </template>
 
+  <!-- ✅ PocketBase（落ちてもページが消えないようにJS側で保険してる） -->
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
 
   <script>
   (() => {
-    const PB_URL = "https://delivery-eye.onrender.com";
-    const pb = new window.PocketBase(PB_URL);
-    if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
+    // ✅ 画面が「背景だけ」になった時に原因を出す（保険）
+    const hardFallback = document.getElementById("hardFallback");
+    const hardFallbackMsg = document.getElementById("hardFallbackMsg");
+    function showHardFallback(msg){
+      if(!hardFallback) return;
+      hardFallback.style.display = "block";
+      if(hardFallbackMsg) hardFallbackMsg.textContent = msg || "";
+    }
+    window.addEventListener("error", (e) => {
+      showHardFallback("JSエラー: " + (e?.message || "unknown"));
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      const m = e?.reason?.message || e?.reason || "unknown";
+      showHardFallback("Promiseエラー: " + m);
+    });
 
+    // ====== ここから元ロジック（落ちないように try/catchで包む） ======
+    let pb = null;
+    const PB_URL = "https://delivery-eye.onrender.com";
+
+    // nav
     const navAbout = document.getElementById("navAbout");
     const navLogin = document.getElementById("navLogin");
     const navSignup = document.getElementById("navSignup");
@@ -1243,7 +1287,38 @@
       }
     }
 
+    // poll UI refs
+    const elQ = document.getElementById("pollQuestion");
+    const elChoices = document.getElementById("pollChoices");
+    const elMetaLine = document.getElementById("pollMetaLine");
+    const msgBox = document.getElementById("pollMsg");
+
+    const errText = (e)=> (e?.data?.message || e?.message || String(e));
+
+    // ✅ PocketBaseが読み込めない時のフォールバック（ここが今回のキモ）
+    function renderPollFallback(reason){
+      if(elQ) elQ.textContent = "現在、アンケートを読み込めません。";
+      if(elChoices) elChoices.innerHTML = "";
+      if(elMetaLine) elMetaLine.textContent = "";
+      if(msgBox) msgBox.textContent = reason || "PocketBaseに接続できませんでした。";
+      // ログイン機能も止まるので、ログインUIは通常表示のままにする
+      setNavLoggedIn(false);
+    }
+
+    // ✅ PocketBase 初期化（失敗してもページは見える）
+    try{
+      if(!window.PocketBase) throw new Error("PocketBase CDN が読み込めませんでした");
+      pb = new window.PocketBase(PB_URL);
+      if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
+    }catch(e){
+      console.error(e);
+      renderPollFallback(errText(e));
+      // ここで終了（ただしページ自体は見える）
+      // share / modalだけは動かすため、続行する
+    }
+
     async function ensureAuthModel(){
+      if(!pb) return;
       if(!pb.authStore.isValid){
         setNavLoggedIn(false);
         return;
@@ -1259,17 +1334,11 @@
       }
     }
 
-    const elQ = document.getElementById("pollQuestion");
-    const elChoices = document.getElementById("pollChoices");
-    const elMetaLine = document.getElementById("pollMetaLine");
-    const msgBox = document.getElementById("pollMsg");
-
+    // poll state
     let currentTopic = null;
     let choiceKeys = [];
     let choiceLabels = {};
     let isBusy = false;
-
-    const errText = (e)=> (e?.data?.message || e?.message || String(e));
 
     function buildChoicesFromTopic(t){
       const keys = [];
@@ -1296,6 +1365,7 @@
     }
 
     function renderChoiceButtons(counts, total, votedChoiceKey){
+      if(!elChoices) return;
       elChoices.innerHTML = "";
 
       for(const key of choiceKeys){
@@ -1322,38 +1392,40 @@
         }
 
         btn.addEventListener("click", async ()=>{
-          if(!currentTopic || isBusy) return;
+          if(!pb || !currentTopic || isBusy) return;
 
           if(!pb.authStore.isValid){
-            msgBox.innerHTML = `
-              <div style="margin-top:6px;">
-                🔒 <strong style="color:#e9ecff;">投票にはログインが必要です</strong><br>
-                <span style="font-size:10px;">ログインすると投票が反映されます。</span>
-              </div>
-              <div style="display:flex; gap:8px; margin-top:10px;">
-                <a href="login.html?next=${encodeURIComponent("index.html")}&v=20251220" class="pollCta">ログイン</a>
-                <a href="signup.html" class="pollCta pollCtaPrimary">新規登録</a>
-              </div>
-            `;
+            if(msgBox){
+              msgBox.innerHTML = `
+                <div style="margin-top:6px;">
+                  🔒 <strong style="color:#e9ecff;">投票にはログインが必要です</strong><br>
+                  <span style="font-size:10px;">ログインすると投票が反映されます。</span>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                  <a href="login.html?next=${encodeURIComponent("index.html")}&v=20251220" class="pollCta">ログイン</a>
+                  <a href="signup.html" class="pollCta pollCtaPrimary">新規登録</a>
+                </div>
+              `;
+            }
             return;
           }
 
           isBusy = true;
-          msgBox.textContent = "投票を反映中…";
+          if(msgBox) msgBox.textContent = "投票を反映中…";
           Array.from(elChoices.querySelectorAll("button")).forEach(b => b.disabled = true);
 
           try{
             await saveVoteOnce(currentTopic.id, key);
             await refreshResults();
-            msgBox.textContent = "投票済みです。";
+            if(msgBox) msgBox.textContent = "投票済みです。";
           }catch(e){
             const m = errText(e);
             console.error(e);
             if (String(m).includes("already") || String(m).includes("unique") || String(m).includes("409")) {
               await refreshResults();
-              msgBox.textContent = "投票済みです。";
+              if(msgBox) msgBox.textContent = "投票済みです。";
             } else {
-              msgBox.textContent = "投票に失敗しました。";
+              if(msgBox) msgBox.textContent = "投票に失敗しました。";
               await refreshResults();
             }
           }finally{
@@ -1374,7 +1446,7 @@
     }
 
     async function getMyVote(topicId){
-      if(!pb.authStore.isValid) return null;
+      if(!pb || !pb.authStore.isValid) return null;
       const me = pb.authStore.model?.id;
       if(!me) return null;
 
@@ -1420,7 +1492,7 @@
     }
 
     async function refreshResults(){
-      if(!currentTopic) return;
+      if(!pb || !currentTopic) return;
 
       const votes = await fetchAllVotes(currentTopic.id);
 
@@ -1440,56 +1512,63 @@
       const myChoice = await getMyVote(currentTopic.id);
 
       renderChoiceButtons(counts, total, myChoice);
-      elMetaLine.textContent = total + "人が回答";
-      msgBox.textContent = myChoice ? "投票済みです。" : "";
+      if(elMetaLine) elMetaLine.textContent = total + "人が回答";
+      if(msgBox) msgBox.textContent = myChoice ? "投票済みです。" : "";
     }
 
     async function bootPollPanel(){
-      msgBox.textContent = "";
-      elMetaLine.textContent = "";
+      if(!pb){
+        renderPollFallback("PocketBase未接続（CDN/ネットワーク/URLを確認）");
+        return;
+      }
+
+      if(msgBox) msgBox.textContent = "";
+      if(elMetaLine) elMetaLine.textContent = "";
 
       try{
         currentTopic = await fetchActiveTopic();
 
         if(!currentTopic){
-          elQ.textContent = "現在、公開中のアンケートはありません。";
-          elChoices.innerHTML = "";
+          if(elQ) elQ.textContent = "現在、公開中のアンケートはありません。";
+          if(elChoices) elChoices.innerHTML = "";
           return;
         }
 
-        elQ.textContent = currentTopic.question || "アンケート";
+        if(elQ) elQ.textContent = currentTopic.question || "アンケート";
 
         const built = buildChoicesFromTopic(currentTopic);
         choiceKeys = built.keys;
         choiceLabels = built.labels;
 
         if(choiceKeys.length < 2){
-          elChoices.innerHTML = `<div style="font-size:10px;color:#a7aed0">選択肢が不足しています。</div>`;
+          if(elChoices) elChoices.innerHTML = `<div style="font-size:10px;color:#a7aed0">選択肢が不足しています。</div>`;
           return;
         }
 
         await refreshResults();
       }catch(e){
         console.error(e);
-        elQ.textContent = "読み込みに失敗しました。";
-        msgBox.textContent = errText(e);
+        if(elQ) elQ.textContent = "読み込みに失敗しました。";
+        if(msgBox) msgBox.textContent = errText(e);
+        showHardFallback("Poll読み込み失敗: " + errText(e));
       }
     }
 
-    setNavLoggedIn(pb.authStore.isValid);
+    // nav logout
+    setNavLoggedIn(!!(pb && pb.authStore && pb.authStore.isValid));
     if(navLogout){
       navLogout.addEventListener("click", async () => {
         const ok = window.confirm("ログアウトしますか？");
         if(!ok) return;
 
-        pb.authStore.clear();
+        if(pb) pb.authStore.clear();
         setNavLoggedIn(false);
-        msgBox.textContent = "";
+        if(msgBox) msgBox.textContent = "";
         try{ await refreshResults(); }catch{}
       });
     }
 
-    // share
+    // share（ここもnull安全）
     const pageUrl = window.location.href;
     const shareText = "FoodDeliveryEye：配達員の体験を、みんなの安心と効率へ";
 
@@ -1500,32 +1579,36 @@
     const copyBottom = document.getElementById("copyBottom");
     const toastBottom = document.getElementById("copyToastBottom");
 
-    siteUrlInput.value = pageUrl;
-    siteUrlInput.addEventListener("click", () => siteUrlInput.select());
-
-    shareXBottom.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
-    shareFBBottom.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
-    shareLineBottom.href = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(pageUrl)}`;
+    if(siteUrlInput){
+      siteUrlInput.value = pageUrl;
+      siteUrlInput.addEventListener("click", () => siteUrlInput.select());
+    }
+    if(shareXBottom) shareXBottom.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
+    if(shareFBBottom) shareFBBottom.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+    if(shareLineBottom) shareLineBottom.href = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(pageUrl)}`;
 
     function showToastBottom(msg){
+      if(!toastBottom) return;
       toastBottom.textContent = msg;
       setTimeout(()=>{ if(toastBottom.textContent === msg) toastBottom.textContent=""; }, 1600);
     }
 
-    copyBottom.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(pageUrl);
-        showToastBottom("コピーしました");
-      } catch {
-        const tmp = document.createElement("textarea");
-        tmp.value = pageUrl;
-        document.body.appendChild(tmp);
-        tmp.select();
-        document.execCommand("copy");
-        tmp.remove();
-        showToastBottom("コピーしました");
-      }
-    });
+    if(copyBottom){
+      copyBottom.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pageUrl);
+          showToastBottom("コピーしました");
+        } catch {
+          const tmp = document.createElement("textarea");
+          tmp.value = pageUrl;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand("copy");
+          tmp.remove();
+          showToastBottom("コピーしました");
+        }
+      });
+    }
 
     // modal
     const overlay = document.getElementById("modalOverlay");
@@ -1543,6 +1626,7 @@
     };
 
     function wireContactFormIfExists(){
+      if(!modalBody) return;
       const form = modalBody.querySelector("#contactForm");
       if(!form) return;
 
@@ -1581,7 +1665,7 @@
 
     function openModal(key){
       const item = map[key];
-      if(!item) return;
+      if(!item || !overlay || !modalTitle || !modalBody) return;
       modalTitle.textContent = item.title;
       const tpl = document.getElementById(item.tpl);
       modalBody.innerHTML = tpl ? tpl.innerHTML : "<p>内容がありません。</p>";
@@ -1594,6 +1678,7 @@
     }
 
     function closeModal(){
+      if(!overlay) return;
       overlay.classList.remove("show");
       overlay.setAttribute("aria-hidden","true");
       document.body.style.overflow = "";
@@ -1603,13 +1688,24 @@
       btn.addEventListener("click", ()=> openModal(btn.dataset.open));
     });
 
-    closeBtn.addEventListener("click", closeModal);
-    overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeModal(); });
-    window.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && overlay.classList.contains("show")) closeModal(); });
+    if(closeBtn) closeBtn.addEventListener("click", closeModal);
+    if(overlay) overlay.addEventListener("click", (e)=>{ if(e.target === overlay) closeModal(); });
+    window.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && overlay && overlay.classList.contains("show")) closeModal(); });
 
     (async () => {
-      await ensureAuthModel();
-      await bootPollPanel();
+      try{
+        await ensureAuthModel();
+      }catch(e){
+        console.error(e);
+        showHardFallback("認証更新で失敗: " + errText(e));
+      }
+
+      try{
+        await bootPollPanel();
+      }catch(e){
+        console.error(e);
+        showHardFallback("初期化で失敗: " + errText(e));
+      }
     })();
   })();
   </script>
