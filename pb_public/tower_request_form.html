@@ -36,6 +36,7 @@
     position:sticky;
     top:0;
     z-index:10;
+    gap:10px;
   }
   header .status{ font-size:.8em;color:var(--muted); }
   #logoutBtn{
@@ -43,7 +44,22 @@
     background:#333;color:#fff;border:none;
     padding:6px 10px;border-radius:8px;
     cursor:pointer;font-weight:800;font-size:.8em;
+    white-space:nowrap;
   }
+
+  /* ✅ 戻るリンク */
+  .backLink{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    color:rgba(245,245,247,0.85);
+    text-decoration:underline;
+    text-underline-offset:3px;
+    font-size:.85em;
+    white-space:nowrap;
+    cursor:pointer;
+  }
+  .backLink:hover{ color:#fff; }
 
   main{ max-width:720px; margin:10px auto 30px; }
   h2{ margin:12px 0 6px; }
@@ -152,6 +168,9 @@
 
 <body>
 <header>
+  <!-- ✅ 戻る -->
+  <a class="backLink" href="tower.html">← 一覧へ戻る</a>
+
   <div class="status" id="userStatus">未ログイン</div>
   <button id="logoutBtn">ログアウト</button>
 </header>
@@ -187,8 +206,6 @@
 
       <div class="row">
         <label>入館方法 <span class="req">※必須</span></label>
-
-        <!-- ★ PB側が Text なので「日本語そのまま」でOK -->
         <select id="entryTypeSelect">
           <option value="">選択してください</option>
           <option value="正面可">正面可</option>
@@ -196,7 +213,6 @@
           <option value="防災センター経由">防災センター経由</option>
           <option value="その他">その他</option>
         </select>
-
         <div class="hint">※ 入館方法は Text として保存されます（Selectの厳密一致エラーが出ません）。</div>
       </div>
 
@@ -306,9 +322,9 @@ form.onsubmit = async (e)=>{
     prefecture: prefEl.value,
     city: cityEl.value.trim(),
     address: addrEl.value.trim(),
-    entryType: entryEl.value,       // ★ Textに保存（日本語OK）
+    entryType: entryEl.value,
     memo: memoEl.value.trim(),
-    userEmail: pb.authStore.model?.email || "" // ★ tower_requests に userEmail がある前提
+    userEmail: pb.authStore.model?.email || ""
   };
 
   if(!data.name || !data.prefecture || !data.city || !data.address || !data.entryType){
@@ -330,7 +346,6 @@ form.onsubmit = async (e)=>{
 
     showMsg("申請が完了しました！","success");
     form.reset();
-
   }catch(err){
     console.error("PB error:", err);
     const detail =
