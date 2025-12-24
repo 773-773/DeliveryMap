@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>タワマン登録申請フォーム</title>
+
+<style>
+  :root{
+    --bg:#0d0d0d;
+    --panel:#111;
+    --hair:#222;
+    --muted:#bdbdbd;
+    --text:#fff;
+    --input:#1a1a1a;
+    --border:#333;
+    --accent:#ffa500;
+    --ok:#66ff99;
+    --ng:#ff6666;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    padding:10px;
+    background:var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",system-ui,sans-serif;
+  }
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px;
+    background:var(--panel);
+    border-bottom:1px solid var(--hair);
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  header .status{ font-size:.8em;color:var(--muted); }
+  #logoutBtn{
+    display:none;
+    background:#333;color:#fff;border:none;
+    padding:6px 10px;border-radius:8px;
+    cursor:pointer;font-weight:800;font-size:.8em;
+  }
+
+  main{ max-width:720px; margin:10px auto 30px; }
+  h2{ margin:12px 0 6px; }
+
+  .desc{
+    background:var(--panel);
+    border:1px solid var(--hair);
+    border-radius:10px;
+    padding:10px;
+    color:var(--muted);
+    font-size:.85em;
+    line-height:1.6;
+    margin-bottom:12px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--hair);
+    border-radius:12px;
+    padding:14px;
+  }
+
+  .row{ margin-bottom:10px; }
+  label{
+    display:block;
+    font-size:.85em;
+    margin-bottom:6px;
+  }
+  .req{ color:var(--ng); font-size:.8em; margin-left:6px; }
+
+  input, select, textarea{
+    width:100%;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--input);
+    color:var(--text);
+    font-size:.95em;
+    outline:none;
+  }
+  textarea{ min-height:90px; resize:vertical; }
+
+  .hint{
+    margin-top:6px;
+    color:#9a9a9a;
+    font-size:.78em;
+    line-height:1.35;
+  }
+
+  #submitBtn{
+    width:100%;
+    margin-top:8px;
+    padding:12px;
+    border:none;
+    border-radius:12px;
+    background:var(--accent);
+    color:#000;
+    font-weight:900;
+    cursor:pointer;
+  }
+  #submitBtn:disabled{ opacity:.55; cursor:not-allowed; }
+
+  #messageBox{
+    margin-top:10px;
+    white-space:pre-wrap;
+    line-height:1.45;
+    font-size:.85em;
+  }
+  .msg-success{ color:var(--ok); }
+  .msg-error{ color:var(--ng); }
+
+  /* login modal */
+  .modal{
+    display:none;
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.75);
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+    padding:14px;
+  }
+  .modal .box{
+    width:min(360px, 100%);
+    background:var(--panel);
+    border:1px solid var(--hair);
+    border-radius:14px;
+    padding:16px;
+    text-align:center;
+  }
+  .modal h3{ margin:0 0 10px; }
+  .modal .muted{ color:var(--muted); font-size:.82em; line-height:1.35; }
+  .modal button{
+    width:100%;
+    padding:10px;
+    margin-top:10px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-weight:900;
+  }
+  #googleLoginBtn{ background:#fff; color:#000; }
+  #closeModalBtn{ background:#333; color:#fff; }
+</style>
+</head>
+
+<body>
+<header>
+  <div class="status" id="userStatus">未ログイン</div>
+  <button id="logoutBtn">ログアウト</button>
+</header>
+
+<main>
+  <h2>タワマン登録申請フォーム</h2>
+  <div class="desc">
+    未掲載のタワマン・大型マンションを運営に申請するページです。<br>
+    申請内容は運営側で確認後、掲載します。
+  </div>
+
+  <div class="card">
+    <form id="requestForm">
+      <div class="row">
+        <label>建物名 <span class="req">※必須</span></label>
+        <input id="nameInput" type="text" placeholder="例）◯◯タワー レジデンス">
+      </div>
+
+      <div class="row">
+        <label>都道府県 <span class="req">※必須</span></label>
+        <select id="prefSelect"><option value="">選択してください</option></select>
+      </div>
+
+      <div class="row">
+        <label>市区町村 <span class="req">※必須（◯◯区まで）</span></label>
+        <input id="cityInput" type="text" placeholder="例）港区、渋谷区、横浜市西区">
+      </div>
+
+      <div class="row">
+        <label>それ以降の住所 <span class="req">※必須</span></label>
+        <input id="addressInput" type="text" placeholder="例）芝浦1-2-3 ◯◯タワー 20F">
+      </div>
+
+      <div class="row">
+        <label>入館方法 <span class="req">※必須</span></label>
+
+        <!-- ★ PB側が Text なので「日本語そのまま」でOK -->
+        <select id="entryTypeSelect">
+          <option value="">選択してください</option>
+          <option value="正面可">正面可</option>
+          <option value="正面可（エントランスで入館手続き）">正面可（エントランスで入館手続き）</option>
+          <option value="防災センター経由">防災センター経由</option>
+          <option value="その他">その他</option>
+        </select>
+
+        <div class="hint">※ 入館方法は Text として保存されます（Selectの厳密一致エラーが出ません）。</div>
+      </div>
+
+      <div class="row">
+        <label>補足メモ（任意）</label>
+        <textarea id="memoInput" placeholder="例）受付で身分証提示、エレベーター2回乗り継ぎ など"></textarea>
+      </div>
+
+      <button id="submitBtn" type="submit">この内容で申請する</button>
+      <div id="messageBox"></div>
+    </form>
+  </div>
+</main>
+
+<!-- ログインモーダル -->
+<div id="loginModal" class="modal">
+  <div class="box">
+    <h3>ログインが必要です</h3>
+    <button id="googleLoginBtn">Googleでログイン</button>
+    <button id="closeModalBtn">閉じる</button>
+    <div class="muted">ログイン後に「この内容で申請する」を押してください。</div>
+  </div>
+</div>
+
+<script type="module">
+import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+
+const pb = new PocketBase("https://delivery-eye.onrender.com");
+pb.autoCancellation(false);
+
+const $ = (id)=>document.getElementById(id);
+
+const userStatus = $("userStatus");
+const logoutBtn  = $("logoutBtn");
+const loginModal = $("loginModal");
+const googleBtn  = $("googleLoginBtn");
+const closeBtn   = $("closeModalBtn");
+
+const form    = $("requestForm");
+const submit  = $("submitBtn");
+const msgBox  = $("messageBox");
+
+const nameEl  = $("nameInput");
+const prefEl  = $("prefSelect");
+const cityEl  = $("cityInput");
+const addrEl  = $("addressInput");
+const entryEl = $("entryTypeSelect");
+const memoEl  = $("memoInput");
+
+/* 都道府県 */
+const prefs = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県",
+  "静岡県","愛知県","三重県","滋賀県","京都府","大阪府","兵庫県",
+  "奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県","福岡県","佐賀県","長崎県",
+  "熊本県","大分県","宮崎県","鹿児島県","沖縄県"
+];
+for(const p of prefs){
+  const o=document.createElement("option");
+  o.value=p; o.textContent=p;
+  prefEl.appendChild(o);
+}
+
+function showMsg(text,type="success"){
+  msgBox.textContent = text;
+  msgBox.className = type==="success" ? "msg-success" : "msg-error";
+}
+
+function updateStatus(){
+  if(pb.authStore.isValid){
+    userStatus.textContent = "ログイン中：" + (pb.authStore.model?.email || "");
+    logoutBtn.style.display = "inline-block";
+  }else{
+    userStatus.textContent = "未ログイン";
+    logoutBtn.style.display = "none";
+  }
+}
+updateStatus();
+
+logoutBtn.onclick = ()=>{
+  pb.authStore.clear();
+  updateStatus();
+  showMsg("ログアウトしました。","success");
+};
+
+googleBtn.onclick = async ()=>{
+  try{
+    await pb.collection("users").authWithOAuth2({ provider:"google" });
+    loginModal.style.display="none";
+    updateStatus();
+    showMsg("ログインしました。","success");
+  }catch(e){
+    showMsg("Googleログインに失敗しました。","error");
+  }
+};
+closeBtn.onclick = ()=> loginModal.style.display="none";
+
+/* submit */
+form.onsubmit = async (e)=>{
+  e.preventDefault();
+  msgBox.textContent = "";
+
+  const data = {
+    name: nameEl.value.trim(),
+    prefecture: prefEl.value,
+    city: cityEl.value.trim(),
+    address: addrEl.value.trim(),
+    entryType: entryEl.value,       // ★ Textに保存（日本語OK）
+    memo: memoEl.value.trim(),
+    userEmail: pb.authStore.model?.email || "" // ★ tower_requests に userEmail がある前提
+  };
+
+  if(!data.name || !data.prefecture || !data.city || !data.address || !data.entryType){
+    showMsg("必須項目が未入力です。","error");
+    return;
+  }
+
+  if(!pb.authStore.isValid){
+    loginModal.style.display="flex";
+    showMsg("ログイン後に申請できます。","error");
+    return;
+  }
+
+  try{
+    submit.disabled = true;
+    showMsg("送信中…","success");
+
+    await pb.collection("tower_requests").create(data);
+
+    showMsg("申請が完了しました！","success");
+    form.reset();
+
+  }catch(err){
+    console.error("PB error:", err);
+    const detail =
+      (err?.data && JSON.stringify(err.data, null, 2)) ||
+      err?.message ||
+      String(err);
+
+    showMsg("申請に失敗しました。\n\n--- 詳細 ---\n" + detail, "error");
+  }finally{
+    submit.disabled = false;
+  }
+};
+</script>
+
+</body>
+</html>
