@@ -206,7 +206,7 @@ nav button{ appearance:none; -webkit-appearance:none; }
 .confirmBtnDanger:hover{ background:rgba(255,150,150,0.16); }
 
 /* =========================
-   ▼ ここから下：towerページUI
+   ▼ towerページUI
 ========================= */
 
 h2 { margin:12px 0 6px; }
@@ -222,7 +222,6 @@ h2 { margin:12px 0 6px; }
   cursor:pointer;
 }
 
-/* ✅✅✅ 検索（参照HTMLと“完全に同じ”CSS） */
 .searchContainer {
   display:flex;
   flex-direction:column;
@@ -249,18 +248,14 @@ h2 { margin:12px 0 6px; }
   font-size:0.95em;
   font-weight:800;
 }
-/* 参照HTMLの「右側にラベル」行を維持するためのダミー（towerはお気に入り無し） */
-.searchRightDummy{
-  height:24px; /* 行の高さを揃える */
-  min-width:1px;
-}
+.searchRightDummy{ height:24px; min-width:1px; }
 
 /* ✅ ページネーション（15件ごと） */
 .paginationBar{
   display:flex;
   gap:10px;
   align-items:center;
-  justify-content:center; /* ✅ 中央揃え */
+  justify-content:center;
   margin:10px 0 14px;
 }
 .pageBtn{
@@ -288,10 +283,7 @@ h2 { margin:12px 0 6px; }
   width:auto;
   padding:0 18px;
 }
-.pageBtn:disabled{
-  opacity:.45;
-  cursor:not-allowed;
-}
+.pageBtn:disabled{ opacity:.45; cursor:not-allowed; }
 
 /* towerカード */
 .towerCard{
@@ -309,7 +301,6 @@ h2 { margin:12px 0 6px; }
 .towerName{ font-weight:900; font-size:1.05em; color:#66ff99; }
 .addr{ font-size:0.9em; color:#bbb; line-height:1.5; }
 
-/* ✅ 住所リンク（下線＋マップへ） */
 .addrLink{
   color:#bbb;
   text-decoration:underline;
@@ -339,16 +330,15 @@ h2 { margin:12px 0 6px; }
 .btn{
   border:none;
   border-radius:10px;
-  padding:8px 10px; /* ✅ 小さめ */
+  padding:8px 10px;
   cursor:pointer;
   font-weight:900;
-  font-size:0.86em; /* ✅ 小さめ */
+  font-size:0.86em;
   border:1px solid #333;
 }
 .btnEntry{ background:#66ff99; color:#000; }
 .btn:disabled{ opacity:.5; cursor:not-allowed; }
 
-/* ✅ 報告：ボタンではなく、右下の小さい下線リンク */
 .reportLink{
   position:absolute;
   right:12px;
@@ -360,11 +350,8 @@ h2 { margin:12px 0 6px; }
   cursor:pointer;
   user-select:none;
 }
-.reportLink:hover{
-  color:rgba(245,245,247,0.85);
-}
+.reportLink:hover{ color:rgba(245,245,247,0.85); }
 
-/* 申請状態ピル */
 .pendingPill{
   display:inline-flex;
   align-items:center;
@@ -476,10 +463,12 @@ h2 { margin:12px 0 6px; }
 
   <h2>配達員マンション入館方法</h2>
 
-  <!-- ✅ ここだけ変更：遷移先を指定の申請フォームに -->
-  <button id="requestBtn" onclick="location.href='tower_request_form.html'">マンション掲載申請はこちら</button>
+  <!-- ✅✅✅ ここが重要：申請ページへ確実に遷移 -->
+  <button id="requestBtn" type="button" onclick="location.href='tower_request_form.html'">
+    マンション掲載申請はこちら
+  </button>
 
-  <!-- ✅✅✅ 検索欄：参照HTMLと同じ構造 -->
+  <!-- ✅✅✅ 検索欄 -->
   <div class="searchContainer">
     <input id="nameInput" placeholder="建物名で検索">
     <div>
@@ -493,12 +482,11 @@ h2 { margin:12px 0 6px; }
   </div>
 
   <div id="towerContainer"></div>
-
   <div id="pagination" class="paginationBar" aria-label="ページネーション"></div>
 
 </div>
 
-<!-- ✅ ログアウト確認（ワンクッション） -->
+<!-- ✅ ログアウト確認 -->
 <div id="logoutConfirmModal" class="confirmModal" aria-hidden="true">
   <div class="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <h3 class="confirmTitle" id="confirmTitle">本当にログアウトしますか？</h3>
@@ -658,8 +646,6 @@ function escapeHtml(s){
 function escapeFilter(s){
   return String(s ?? "").replaceAll("\\","\\\\").replaceAll('"','\\"').replaceAll("'","\\'");
 }
-
-/* ✅ 住所（都道府県〜番地だけ）を作る */
 function buildAddressOnly(t){
   const pref = String(t?.prefecture ?? "").trim();
   const city = String(t?.city ?? "").trim();
@@ -667,8 +653,6 @@ function buildAddressOnly(t){
   const parts = [pref, city, addr].filter(Boolean);
   return parts.join(" ").trim();
 }
-
-/* ✅ Google Maps に飛ばす（住所のみで検索） */
 function mapUrlFromAddress(address){
   const q = encodeURIComponent(address);
   return `https://www.google.com/maps/search/?api=1&query=${q}`;
@@ -690,7 +674,6 @@ prefs.forEach(p=>{
 });
 const citySelect=document.getElementById("citySelect");
 
-/* ✅ 東京都の表示順（指定どおり固定） */
 const TOKYO_CITY_ORDER = [
   "千代田区","中央区","港区","新宿区","文京区","台東区","墨田区","江東区","品川区","目黒区","大田区","世田谷区","渋谷区","中野区","杉並区",
   "豊島区","北区","荒川区","板橋区","練馬区","足立区","葛飾区","江戸川区",
@@ -708,7 +691,6 @@ prefSelect.onchange = async ()=>{
 
   citySelect.innerHTML = '<option value="">市区町村を選択</option>';
 
-  // ✅ 東京都だけは指定順でそのまま出す
   if(pref === "東京都"){
     TOKYO_CITY_ORDER.forEach(c=>{
       const o=document.createElement("option");
@@ -719,7 +701,6 @@ prefSelect.onchange = async ()=>{
     return;
   }
 
-  // それ以外はDBからユニーク取得（従来通り）
   const res = await pb.collection("towers").getList(1,500,{ filter:`prefecture="${escapeFilter(pref)}"` });
   const cities=[...new Set(res.items.map(i=>i.city).filter(Boolean))].sort();
   cities.forEach(c=>{
@@ -739,7 +720,6 @@ const pagination = document.getElementById("pagination");
 
 let currentTowerId = null;
 
-/* ✅ ページング（15件ごと） */
 const PER_PAGE = 15;
 let currentPage = 1;
 let totalPages = 1;
@@ -751,7 +731,6 @@ function isEntryLocked(t){
   return false;
 }
 
-/* ブラウザID（申請/報告の簡易重複防止用） */
 let browserId = localStorage.getItem("towerBrowserId");
 if(!browserId){
   browserId = "id-" + Math.random().toString(36).slice(2);
@@ -852,7 +831,6 @@ function renderTowers(items){
     const addr = document.createElement("div");
     addr.className = "addr";
 
-    // ✅ 都道府県〜番地のみを下線リンクにしてマップへ（建物名は含めない）
     const addressOnly = buildAddressOnly(t);
     if(addressOnly){
       const a = document.createElement("a");
@@ -889,7 +867,7 @@ function renderTowers(items){
         const entryBtn = document.createElement("button");
         entryBtn.className = "btn btnEntry";
         entryBtn.textContent = "入館方法を申請";
-        entryBtn.onclick = ()=>openEntryModal(t.id, t.name);
+        entryBtn.onclick = ()=>openEntryModal(t.id);
         actions.appendChild(entryBtn);
       }
     }
@@ -919,7 +897,7 @@ const entryComment = document.getElementById("entryComment");
 const sendEntryBtn = document.getElementById("sendEntryBtn");
 const closeEntryBtn = document.getElementById("closeEntryBtn");
 
-function openEntryModal(towerId, towerName){
+function openEntryModal(towerId){
   if(!pb.authStore.isValid){
     redirectToLogin();
     return;
@@ -995,7 +973,6 @@ function openReportModal(t){
   }
   reportTowerId = t.id;
 
-  // ✅ モーダルの表示も「住所のみ」（建物名は対象として表示するが、住所は住所のみ）
   const addressOnly = buildAddressOnly(t);
   reportInfo.innerHTML = `対象：<b>${escapeHtml(t.name || "（名称未設定）")}</b><br>住所：${escapeHtml(addressOnly || "住所不明")}`;
 
