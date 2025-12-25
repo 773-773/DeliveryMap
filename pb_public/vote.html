@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>調理待ち時間（投票＋口コミ＋お気に入り） - FoodDeliveryEye</title>
+<title>黒モダンA 月表示付き（投票＋口コミ＋お気に入り）</title>
 
 <style>
 :root{
@@ -38,7 +38,7 @@ body{
 }
 
 /* =========================
-   ✅ ヘッダー（共通）
+   ✅ 画像と同じヘッダー（共通）
 ========================= */
 header.siteHeader{
   display:flex;
@@ -55,6 +55,7 @@ header.siteHeader{
   position:relative;
   z-index:50;
 }
+
 .logoArea{ display:flex; align-items:center; min-width:0; }
 .logoLink{ display:inline-block; min-width:0; color:inherit; text-decoration:none; }
 .logoTextMain{
@@ -74,6 +75,7 @@ header.siteHeader{
   text-overflow:ellipsis;
   margin-top:2px;
 }
+
 .headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
 nav{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 nav a, nav button{
@@ -204,8 +206,9 @@ nav button{ appearance:none; -webkit-appearance:none; }
 .confirmBtnDanger:hover{ background:rgba(255,150,150,0.16); }
 
 /* =========================
-   ▼ 本文
+   ▼ ここから下：元ページの見た目（そのまま）
 ========================= */
+
 h2 { margin:12px 0 6px; }
 h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 
@@ -271,6 +274,7 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 .storeName{ font-weight:900; font-size:1.05em; color:#66ff99; }
 .address{ font-size:0.85em; color:#bbb; margin-top:2px; }
 
+/* ✅ 住所リンク（薄い下線 + クリックで地図へ） */
 .addressLink{
   color:inherit;
   text-decoration:underline;
@@ -279,7 +283,9 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   text-decoration-thickness:1px;
   cursor:pointer;
 }
-.addressLink:hover{ text-decoration-color:rgba(91,255,156,0.35); }
+.addressLink:hover{
+  text-decoration-color:rgba(91,255,156,0.35);
+}
 
 .avgRating{ font-size:0.9em; color:#ccc; margin-top:2px; }
 
@@ -333,7 +339,7 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   font-size:0.85em;
 }
 
-/* 口コミ */
+/* 口コミタブ */
 .reviewToggleBtn{
   margin-top:8px;
   background:#1a1a1f;
@@ -355,11 +361,13 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   margin-top:8px;
   font-size:0.9em;
 }
+
+/* 星評価（投稿用） */
 .starWrap{ display:flex; gap:6px; cursor:pointer; margin-bottom:8px; }
 .star{ font-size:22px; color:#444; }
 .star.active{ color:#ffcc00; }
 
-/* お気に入り */
+/* お気に入りボタン */
 .favoriteBtn{
   position:absolute;
   top:10px;
@@ -372,7 +380,7 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 }
 .favoriteBtn.active{ color:#ff6699; }
 
-/* 店舗報告（リンク風） */
+/* 店舗報告ボタン（目立たないリンク風） */
 .storeReportBtn{
   align-self:flex-end;
   font-size:0.8em;
@@ -498,7 +506,7 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 
 </div>
 
-<!-- ✅ ログアウト確認 -->
+<!-- ✅ ログアウト確認（ワンクッション） -->
 <div id="logoutConfirmModal" class="confirmModal" aria-hidden="true">
   <div class="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <h3 class="confirmTitle" id="confirmTitle">本当にログアウトしますか？</h3>
@@ -529,69 +537,76 @@ const pb = new PocketBase("https://delivery-eye.onrender.com");
 if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
 /* ========================
-   ✅ favorites スキーマ自動判定（重要）
-   - userId/storeId でも user/store でも動く
+   ✅ お気に入りが出ない根本対策
+   - store/storeId が「文字列」でも「配列」でもOK
+   - expand からも拾える
 ======================== */
-let FAV_USER_FIELD = "userId";
+let FAV_USER_FIELD  = "userId";
 let FAV_STORE_FIELD = "storeId";
 
+function pickId(val){
+  // PocketBase relationが multiple の場合は配列になることがある
+  if(Array.isArray(val)) return val[0] || "";
+  return val || "";
+}
 function getUserId(){
-  return pb.authStore?.model?.id || null;
+  return pb.authStore?.model?.id || "";
 }
-function getFavStoreId(f){
-  return f?.[FAV_STORE_FIELD] || null;
-}
+
 function setFavSchemaFromItem(item){
   if(!item) return;
-  // user
-  if(Object.prototype.hasOwnProperty.call(item, "userId")) FAV_USER_FIELD = "userId";
-  else if(Object.prototype.hasOwnProperty.call(item, "user")) FAV_USER_FIELD = "user";
-  // store
-  if(Object.prototype.hasOwnProperty.call(item, "storeId")) FAV_STORE_FIELD = "storeId";
-  else if(Object.prototype.hasOwnProperty.call(item, "store")) FAV_STORE_FIELD = "store";
+  if(Object.prototype.hasOwnProperty.call(item,"userId")) FAV_USER_FIELD="userId";
+  else if(Object.prototype.hasOwnProperty.call(item,"user")) FAV_USER_FIELD="user";
+
+  if(Object.prototype.hasOwnProperty.call(item,"storeId")) FAV_STORE_FIELD="storeId";
+  else if(Object.prototype.hasOwnProperty.call(item,"store")) FAV_STORE_FIELD="store";
+}
+
+function favFilterForUser(uid){
+  return `${FAV_USER_FIELD}="${uid}"`;
+}
+
+function extractStoreIdFromFavRecord(fav){
+  // 1) 直接フィールドから（文字列/配列対応）
+  const direct = pickId(fav?.[FAV_STORE_FIELD]);
+  if(direct) return direct;
+
+  // 2) expand から拾う（expandキーも store/storeId どっちでも）
+  const exp = fav?.expand || {};
+  const maybe = exp?.[FAV_STORE_FIELD] || exp?.store || exp?.storeId;
+  if(maybe && typeof maybe === "object") return pickId(maybe.id);
+
+  return "";
 }
 
 async function detectFavoriteSchema(){
   if(!pb.authStore.isValid) return;
-
   const uid = getUserId();
   if(!uid) return;
 
-  // 1) userId で試す
+  // userId で試す
   try{
-    const r = await pb.collection("favorites").getList(1, 1, {
-      filter:`userId="${uid}"`,
-      sort:"-created"
-    });
+    const r = await pb.collection("favorites").getList(1,1,{ filter:`userId="${uid}"`, sort:"-created", expand:"store,storeId" });
     if(r.items?.length){
       setFavSchemaFromItem(r.items[0]);
       return;
     }
   }catch(e){}
 
-  // 2) user で試す
+  // user で試す
   try{
-    const r = await pb.collection("favorites").getList(1, 1, {
-      filter:`user="${uid}"`,
-      sort:"-created"
-    });
+    const r = await pb.collection("favorites").getList(1,1,{ filter:`user="${uid}"`, sort:"-created", expand:"store,storeId" });
     if(r.items?.length){
       setFavSchemaFromItem(r.items[0]);
       return;
-    }else{
-      // favoritesがまだ0件でも、ユーザーフィールドだけ確定
-      FAV_USER_FIELD = "user";
-      FAV_STORE_FIELD = "store";
     }
+    // 0件でも多い方に寄せる
+    FAV_USER_FIELD="user";
+    FAV_STORE_FIELD="store";
   }catch(e){
-    // どっちでも読めないなら、最後の保険（多い方）
-    FAV_USER_FIELD = "user";
-    FAV_STORE_FIELD = "store";
+    FAV_USER_FIELD="user";
+    FAV_STORE_FIELD="store";
   }
-}
-
-function favFilterForUser(uid){
-  return `${FAV_USER_FIELD}="${uid}"`;
 }
 
 /* ========================
@@ -603,25 +618,24 @@ const navSignup   = document.getElementById("navSignup");
 const navLoggedIn = document.getElementById("navLoggedIn");
 const navLogout   = document.getElementById("navLogout");
 
-try{
-  const nextUrl = "vote.html";
-  navLogin.href = "login.html?next=" + encodeURIComponent(nextUrl);
-}catch{}
-
 function setNavLoggedIn(isLoggedIn){
   if(isLoggedIn){
     navAbout.style.display = "none";
     navLogin.style.display = "none";
     navSignup.style.display = "none";
+
     navLoggedIn.style.display = "";
     navLoggedIn.classList.add("loggedPill");
+
     navLogout.style.display = "";
   }else{
     navAbout.style.display = "";
     navLogin.style.display = "";
     navSignup.style.display = "";
+
     navLoggedIn.style.display = "none";
     navLoggedIn.classList.remove("loggedPill");
+
     navLogout.style.display = "none";
   }
 }
@@ -671,17 +685,19 @@ async function doLogout(){
     favOnlyCheckbox.checked = false;
 
     closeLogoutConfirm();
-    await loadPage(1);
+    loadPage(1);
     alert("ログアウトしました");
   }finally{
     logoutBusy = false;
   }
 }
 
-navLogout?.addEventListener("click", openLogoutConfirm);
-cancelLogoutBtn?.addEventListener("click", closeLogoutConfirm);
-confirmLogoutBtn?.addEventListener("click", doLogout);
-logoutConfirmModal?.addEventListener("click", (e)=>{ if(e.target === logoutConfirmModal) closeLogoutConfirm(); });
+if(navLogout) navLogout.addEventListener("click", openLogoutConfirm);
+if(cancelLogoutBtn) cancelLogoutBtn.addEventListener("click", closeLogoutConfirm);
+if(confirmLogoutBtn) confirmLogoutBtn.addEventListener("click", doLogout);
+if(logoutConfirmModal){
+  logoutConfirmModal.addEventListener("click", (e)=>{ if(e.target === logoutConfirmModal) closeLogoutConfirm(); });
+}
 document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && logoutConfirmModal?.style.display === "flex") closeLogoutConfirm(); });
 
 /* ========================
@@ -689,7 +705,7 @@ document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && logoutConfi
 ======================== */
 function redirectToLogin(){
   alert("ログインが必要です。ログイン画面に移動します。");
-  window.location.href = "login.html?next=" + encodeURIComponent("vote.html");
+  window.location.href = "login.html";
 }
 function escapeHtml(s){
   return String(s ?? "").replace(/[&<>"']/g, c=>({
@@ -729,22 +745,28 @@ function isToxicTone(text){
   if(looksLikeEmojiSpam(text)) return true;
   return false;
 }
+
+/* ✅ 住所分割 */
 function splitAddressBanchiAndBuilding(raw){
   const s = String(raw ?? "").trim();
   if(!s) return { banchi:"", building:"" };
 
   const mSpace = s.match(/^(.+?)[ 　]+(.+)$/);
-  if(mSpace) return { banchi:mSpace[1].trim(), building:mSpace[2].trim() };
-
+  if(mSpace){
+    return { banchi:mSpace[1].trim(), building:mSpace[2].trim() };
+  }
   const mGo = s.match(/^(.*?号)(.*)$/);
-  if(mGo) return { banchi:(mGo[1]||"").trim(), building:(mGo[2]||"").trim() };
-
+  if(mGo){
+    return { banchi:(mGo[1]||"").trim(), building:(mGo[2]||"").trim() };
+  }
   const mBanchi = s.match(/^(.*?番地)(.*)$/);
-  if(mBanchi) return { banchi:(mBanchi[1]||"").trim(), building:(mBanchi[2]||"").trim() };
-
+  if(mBanchi){
+    return { banchi:(mBanchi[1]||"").trim(), building:(mBanchi[2]||"").trim() };
+  }
   const mHyphen = s.match(/^(.*?\d+(?:[-−ー]\d+){1,3})(.*)$/);
-  if(mHyphen) return { banchi:(mHyphen[1]||"").trim(), building:(mHyphen[2]||"").trim() };
-
+  if(mHyphen){
+    return { banchi:(mHyphen[1]||"").trim(), building:(mHyphen[2]||"").trim() };
+  }
   return { banchi:s, building:"" };
 }
 
@@ -764,6 +786,7 @@ prefs.forEach(p=>{
 });
 const citySelect=document.getElementById("citySelect");
 
+/* ✅ 東京都順 */
 const TOKYO_CITY_ORDER = [
   "千代田区","中央区","港区","新宿区","文京区","台東区","墨田区","江東区","品川区","目黒区","大田区","世田谷区","渋谷区","中野区","杉並区",
   "豊島区","北区","荒川区","板橋区","練馬区","足立区","葛飾区","江戸川区",
@@ -830,24 +853,6 @@ favOnlyCheckbox.onchange = ()=>{
   loadPage(1);
 };
 
-function getSearchState(){
-  const name = document.getElementById("nameInput").value.trim();
-  const pref = prefSelect.value;
-  const city = citySelect.value;
-  return { name, pref, city, hasAny: !!(name || pref || city) };
-}
-function matchesStoreBySearch(store, st){
-  if(!store) return false;
-  if(st.name){
-    const hay = normalizeForFilter(store.name || "");
-    const needle = normalizeForFilter(st.name);
-    if(!hay.includes(needle)) return false;
-  }
-  if(st.pref && String(store.prefecture||"") !== String(st.pref)) return false;
-  if(st.city && String(store.city||"") !== String(st.city)) return false;
-  return true;
-}
-
 async function loadFavoriteMap(){
   favoriteMap = new Map();
   if(!pb.authStore.isValid) return;
@@ -857,14 +862,17 @@ async function loadFavoriteMap(){
 
   await detectFavoriteSchema();
 
+  // ✅ expand 付きで、storeId を確実に取る
   try{
     const favList = await pb.collection("favorites").getList(1, 500, {
       filter: favFilterForUser(uid),
-      sort: "-created"
+      sort: "-created",
+      expand: "store,storeId"
     });
+
     favList.items.forEach(f=>{
       setFavSchemaFromItem(f);
-      const sid = getFavStoreId(f);
+      const sid = extractStoreIdFromFavRecord(f);
       if(sid) favoriteMap.set(sid, f.id);
     });
   }catch(e){
@@ -872,85 +880,35 @@ async function loadFavoriteMap(){
   }
 }
 
-/* ✅ favorites expandで「登録順」保持 */
-async function loadFavoriteStoresOrdered(page){
-  const uid = getUserId();
-  const st = getSearchState();
-
-  await detectFavoriteSchema();
-  await loadFavoriteMap();
-
-  const expandField = FAV_STORE_FIELD;
-
-  // フィルタ無し：favoritesをページング + expand
-  if(!st.hasAny){
-    const favPaged = await pb.collection("favorites").getList(page, pageSize, {
-      filter: favFilterForUser(uid),
-      sort: "-created",
-      expand: expandField
-    });
-
-    currentPage = favPaged.page;
-    totalPages  = favPaged.totalPages || 1;
-
-    const stores = favPaged.items
-      .map(f => (f.expand ? f.expand[expandField] : null))
-      .filter(Boolean);
-
-    return stores;
-  }
-
-  // フィルタあり：全件expand→storeで絞り込み→クライアントページング（順序保持）
-  const favAllExpanded = await pb.collection("favorites").getList(1, 500, {
-    filter: favFilterForUser(uid),
-    sort: "-created",
-    expand: expandField
-  });
-
-  const filtered = favAllExpanded.items.filter(f=>{
-    const store = f.expand ? f.expand[expandField] : null;
-    return matchesStoreBySearch(store, st);
-  });
-
-  totalPages  = Math.max(1, Math.ceil(filtered.length / pageSize));
-  currentPage = Math.min(Math.max(1, page), totalPages);
-
-  const start = (currentPage - 1) * pageSize;
-  const slice = filtered.slice(start, start + pageSize);
-
-  return slice.map(f => (f.expand ? f.expand[expandField] : null)).filter(Boolean);
-}
-
 async function loadPage(page=1){
   const container=document.getElementById("storeContainer");
   container.innerHTML="読み込み中…";
 
+  const name=document.getElementById("nameInput").value.trim();
+  const pref=prefSelect.value;
+  const city=citySelect.value;
+
+  let filter="";
+  if(name)filter+=`name~"${name}"`;
+  if(pref)filter+=(filter?" && ":"")+`prefecture="${pref}"`;
+  if(city)filter+=(filter?" && ":"")+`city="${city}"`;
+
   try{
     await loadFavoriteMap();
 
-    if(favoriteOnly){
-      if(!pb.authStore.isValid){
-        redirectToLogin();
-        return;
-      }
-      const stores = await loadFavoriteStoresOrdered(page);
-      renderStores(stores);
-      renderPagination();
-      return;
-    }
-
-    const { name, pref, city } = getSearchState();
-    let filter="";
-    if(name) filter += `name~"${name}"`;
-    if(pref) filter += (filter ? " && " : "") + `prefecture="${pref}"`;
-    if(city) filter += (filter ? " && " : "") + `city="${city}"`;
-
-    const list=await pb.collection("stores").getList(page,pageSize,{ filter, sort:"name" });
+    const list=await pb.collection("stores").getList(page,pageSize,{filter,sort:"name"});
+    let stores=list.items;
 
     currentPage = list.page;
-    totalPages  = list.totalPages || 1;
+    totalPages = list.totalPages || 1;
 
-    renderStores(list.items);
+    if(favoriteOnly){
+      stores = stores.filter(s => favoriteMap.has(s.id));
+      // favoriteOnly のとき、ページ数がズレるのが嫌なら：簡易で表示だけにしてる
+      // 必要なら「お気に入り専用ページング」も作れる
+    }
+
+    renderStores(stores);
     renderPagination();
 
   }catch(e){
@@ -960,6 +918,7 @@ async function loadPage(page=1){
   }
 }
 
+/* ページネーション */
 function renderPagination(){
   const pEl = document.getElementById("pagination");
   if(!pEl) return;
@@ -1015,7 +974,7 @@ if(!browserId){
   localStorage.setItem("browserId",browserId);
 }
 
-/* 店舗報告用の状態 */
+/* 店舗報告用 */
 let reportTargetStoreId = null;
 let selectedStoreReportReason = null;
 
@@ -1176,14 +1135,17 @@ function renderStores(stores){
       });
 
       if(!starValue) return alert("星評価を選んでください");
+
       if(text && isToxicTone(text)){
         alert("誹謗中傷・URL・絵文字スパムなどが含まれている可能性があります。内容を見直してください。");
         return;
       }
+
       if(!pb.authStore.isValid){
         redirectToLogin();
         return;
       }
+
       submitReview(s.id, text, starValue);
     };
 
@@ -1197,7 +1159,7 @@ function renderStores(stores){
 }
 
 /* ========================
-   ✅ お気に入りトグル（スキーマ対応版）
+   ✅ お気に入りトグル（配列/expand対応）
 ======================== */
 async function handleFavoriteClick(storeId, btn){
   if(!pb.authStore.isValid){
@@ -1207,47 +1169,46 @@ async function handleFavoriteClick(storeId, btn){
 
   try{
     await detectFavoriteSchema();
-    const uid = getUserId();
+    await loadFavoriteMap(); // ✅ 押す直前の最新にする（ルール/反映ズレ対策）
 
-    // 既にお気に入りなら削除
+    // すでにお気に入りなら削除
     if(favoriteMap.has(storeId)){
       const favId = favoriteMap.get(storeId);
       await pb.collection("favorites").delete(favId);
-
       favoriteMap.delete(storeId);
+
       btn.classList.remove("active");
       btn.textContent="♡";
 
-      if(favoriteOnly){
-        await loadPage(1);
-      }
+      if(favoriteOnly) loadPage(1);
       return;
     }
 
-    // 未お気に入りなら作成（userId/storeId or user/store 両対応）
+    // 作成
+    const uid = getUserId();
     const payload = {};
     payload[FAV_USER_FIELD] = uid;
     payload[FAV_STORE_FIELD] = storeId;
 
-    const rec = await pb.collection("favorites").create(payload);
-
-    // ここで storeId が保存されてないケースを検知（スキーマ違い）
+    const rec = await pb.collection("favorites").create(payload, { expand:"store,storeId" });
     setFavSchemaFromItem(rec);
 
-    const savedStoreId = getFavStoreId(rec) || storeId;
-    favoriteMap.set(savedStoreId, rec.id);
+    const sid = extractStoreIdFromFavRecord(rec) || storeId;
+    favoriteMap.set(sid, rec.id);
 
     btn.classList.add("active");
     btn.textContent="♥";
 
+    if(favoriteOnly) loadPage(1);
+
   }catch(e){
     console.error(e);
-    alert("お気に入り更新エラー（favoritesのフィールド名が違う可能性あり）");
+    alert("お気に入り更新エラー（PocketBaseのfavoritesルール/フィールドを確認して）");
   }
 }
 
 /* ========================
-   店舗情報の報告
+   店舗情報の報告（そのまま）
 ======================== */
 function handleStoreReport(storeId){
   if(!pb.authStore.isValid){
@@ -1342,7 +1303,7 @@ async function executeVote(id, choice){
 }
 
 /* ========================
-   口コミ表示 + 平均評価 + 投稿者ID表示
+   口コミ（元のまま）
 ======================== */
 async function loadAllReviewsForRenderedStores(stores){
   try{
@@ -1466,9 +1427,6 @@ window.showAllReviews = function(storeId){
     });
 }
 
-/* ========================
-   口コミ投稿（1ユーザー1店舗1件・再編集）
-======================== */
 async function submitReview(storeId,text,star){
   try{
     const userId = pb.authStore.model.id;
@@ -1502,7 +1460,7 @@ async function submitReview(storeId,text,star){
   }
 }
 
-/* 店舗報告モーダル */
+/* 店舗報告モーダルのボタン */
 document.querySelectorAll(".reportReasonOption").forEach(btn=>{
   btn.onclick = ()=>{
     const val = Number(btn.dataset.reason);
@@ -1521,7 +1479,7 @@ document.getElementById("closeStoreReportBtn").onclick = ()=>closeStoreReportMod
 (async ()=>{
   setNavLoggedIn(pb.authStore.isValid);
   await ensureAuthModel();
-  await detectFavoriteSchema();   // ✅ 追加
+  await detectFavoriteSchema();
   await loadPage(1);
 })();
 </script>
