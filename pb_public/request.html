@@ -86,6 +86,7 @@
   }
   textarea{ min-height:90px; resize:vertical; }
 
+  /* ✅ まだ他で使う可能性あるのでCSS自体は残してOK */
   .hint{
     margin-top:6px;
     color:#9a9a9a;
@@ -196,7 +197,7 @@
         <label>店舗名 <span class="req">※必須</span></label>
         <input id="nameInput" type="text" placeholder="例：マクドナルド 渋谷店" autocomplete="off">
         <ul id="nameSuggestions" aria-label="店舗名候補"></ul>
-        <div class="hint">※ 既存の店舗名を入力補助します（完全一致でなくても候補表示）。</div>
+        <!-- ✅ 注意文を削除 -->
       </div>
 
       <div class="row">
@@ -204,11 +205,10 @@
         <select id="prefSelect"><option value="">選択してください</option></select>
       </div>
 
-      <!-- ✅ 市区町村：選択制 → 手動入力 -->
       <div class="row">
         <label>市区町村 <span class="req">※必須</span></label>
         <input id="cityInput" type="text" placeholder="例）渋谷区、港区、横浜市西区">
-        <div class="hint">※ 「◯◯区」まで（市の場合は「◯◯市◯◯区」など）。</div>
+        <!-- ✅ 注意文を削除 -->
       </div>
 
       <div class="row">
@@ -222,7 +222,6 @@
   </div>
 </main>
 
-<!-- ログインモーダル -->
 <div id="loginModal" class="modal">
   <div class="box">
     <h3>ログインが必要です</h3>
@@ -252,7 +251,7 @@ const msgBox  = $("messageBox");
 
 const nameEl  = $("nameInput");
 const prefEl  = $("prefSelect");
-const cityEl  = $("cityInput");     // ✅ input
+const cityEl  = $("cityInput");
 const addrEl  = $("addressInput");
 
 const suggBox = $("nameSuggestions");
@@ -328,7 +327,7 @@ async function fetchAllStoreNames(){
       allStores.push(...(list.items || []));
       if(page >= (list.totalPages || 1)) break;
       page++;
-      if(page > 10) break; // 念のため上限（必要なら増やしてOK）
+      if(page > 20) break;
     }
   }catch(e){
     console.error("店舗リスト取得失敗", e);
@@ -368,7 +367,40 @@ document.addEventListener("click", (e)=>{
 
 /* ===== フィルタ用エスケープ ===== */
 function escapeFilter(s){
-  return String(s ?? "").replaceAll("\\","\\\\").replaceAll('"','\\"').replaceAll("'","\\'");
+  return String(s ?? "")
+    .replaceAll("\\","\\\\")
+    .replaceAll('"','\\"')
+    .replaceAll("'","\\'");
+}
+
+/* ===== 申請保存コレクションを自動判定（404対策） ===== */
+const REQUEST_COLLECTION_CANDIDATES = [
+  "storeRequests",
+  "store_requests",
+  "storeRequest",
+  "store_request"
+];
+
+let resolvedRequestCollection = null;
+
+async function resolveRequestCollection(){
+  if(resolvedRequestCollection) return resolvedRequestCollection;
+
+  for(const col of REQUEST_COLLECTION_CANDIDATES){
+    try{
+      await pb.collection(col).getList(1, 1, { perPage: 1 });
+      resolvedRequestCollection = col;
+      return col;
+    }catch(e){
+      if(Number(e?.status) === 404) continue;
+      if(Number(e?.status) === 403){
+        resolvedRequestCollection = col;
+        return col;
+      }
+      continue;
+    }
+  }
+  return null;
 }
 
 /* ===== submit ===== */
@@ -378,7 +410,7 @@ form.onsubmit = async (e)=>{
 
   const name = nameEl.value.trim();
   const pref = prefEl.value;
-  const city = cityEl.value.trim();      // ✅ input
+  const city = cityEl.value.trim();
   const address = addrEl.value.trim();
 
   if(!name || !pref || !city || !address){
@@ -396,24 +428,37 @@ form.onsubmit = async (e)=>{
     submit.disabled = true;
     showMsg("送信中…","success");
 
-    // 重複チェック（storesに同一 name + prefecture + city があるか）
-    const existing = await pb.collection("stores").getList(1, 1, {
-      filter:`name="${escapeFilter(name)}" && prefecture="${escapeFilter(pref)}" && city="${escapeFilter(city)}"`
-    });
-    if((existing.items || []).length > 0){
-      showMsg("この店舗はすでに登録されています。","error");
+    const reqCol = await resolveRequestCollection();
+    if(!reqCol){
+      showMsg(
+        "申請に失敗しました。\n\n--- 詳細 ---\n" +
+        "PocketBase側に申請用コレクションが見つかりません。\n" +
+        "候補: " + REQUEST_COLLECTION_CANDIDATES.join(", "),
+        "error"
+      );
       return;
     }
 
-    // storeRequests へ登録
-    await pb.collection("storeRequests").create({
+    // 重複チェック（storesに同一 name + prefecture + city があるか）
+    try{
+      const existing = await pb.collection("stores").getList(1, 1, {
+        filter:`name="${escapeFilter(name)}" && prefecture="${escapeFilter(pref)}" && city="${escapeFilter(city)}"`
+      });
+      if((existing.items || []).length > 0){
+        showMsg("この店舗はすでに登録されています。","error");
+        return;
+      }
+    }catch(checkErr){
+      console.warn("重複チェック失敗（フィールド名違い等の可能性）", checkErr);
+    }
+
+    await pb.collection(reqCol).create({
       browserId,
       name,
       prefecture: pref,
       city,
       address,
-      userEmail: pb.authStore.model?.email || "",
-      createdAt: new Date().toISOString()
+      userEmail: pb.authStore.model?.email || ""
     });
 
     showMsg("申請が完了しました！","success");
@@ -421,12 +466,17 @@ form.onsubmit = async (e)=>{
     suggBox.style.display = "none";
   }catch(err){
     console.error("PB error:", err);
-    const detail =
-      (err?.data && JSON.stringify(err.data, null, 2)) ||
-      err?.message ||
-      String(err);
 
-    showMsg("申請に失敗しました。\n\n--- 詳細 ---\n" + detail, "error");
+    const status = err?.status ? `status: ${err.status}\n` : "";
+    const msg = err?.message ? `message: ${err.message}\n` : "";
+    const dataMsg = err?.data?.message ? `data.message: ${err.data.message}\n` : "";
+    const data = err?.data ? JSON.stringify(err.data, null, 2) : "";
+
+    showMsg(
+      "申請に失敗しました。\n\n--- 詳細 ---\n" +
+      status + msg + dataMsg + (data ? ("\n" + data) : ""),
+      "error"
+    );
   }finally{
     submit.disabled = false;
   }
