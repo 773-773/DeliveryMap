@@ -271,7 +271,6 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
 .storeName{ font-weight:900; font-size:1.05em; color:#66ff99; }
 .address{ font-size:0.85em; color:#bbb; margin-top:2px; }
 
-/* 住所リンク */
 .addressLink{
   color:inherit;
   text-decoration:underline;
@@ -356,8 +355,6 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   margin-top:8px;
   font-size:0.9em;
 }
-
-/* 星 */
 .starWrap{ display:flex; gap:6px; cursor:pointer; margin-bottom:8px; }
 .star{ font-size:22px; color:#444; }
 .star.active{ color:#ffcc00; }
@@ -532,6 +529,72 @@ const pb = new PocketBase("https://delivery-eye.onrender.com");
 if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
 /* ========================
+   ✅ favorites スキーマ自動判定（重要）
+   - userId/storeId でも user/store でも動く
+======================== */
+let FAV_USER_FIELD = "userId";
+let FAV_STORE_FIELD = "storeId";
+
+function getUserId(){
+  return pb.authStore?.model?.id || null;
+}
+function getFavStoreId(f){
+  return f?.[FAV_STORE_FIELD] || null;
+}
+function setFavSchemaFromItem(item){
+  if(!item) return;
+  // user
+  if(Object.prototype.hasOwnProperty.call(item, "userId")) FAV_USER_FIELD = "userId";
+  else if(Object.prototype.hasOwnProperty.call(item, "user")) FAV_USER_FIELD = "user";
+  // store
+  if(Object.prototype.hasOwnProperty.call(item, "storeId")) FAV_STORE_FIELD = "storeId";
+  else if(Object.prototype.hasOwnProperty.call(item, "store")) FAV_STORE_FIELD = "store";
+}
+
+async function detectFavoriteSchema(){
+  if(!pb.authStore.isValid) return;
+
+  const uid = getUserId();
+  if(!uid) return;
+
+  // 1) userId で試す
+  try{
+    const r = await pb.collection("favorites").getList(1, 1, {
+      filter:`userId="${uid}"`,
+      sort:"-created"
+    });
+    if(r.items?.length){
+      setFavSchemaFromItem(r.items[0]);
+      return;
+    }
+  }catch(e){}
+
+  // 2) user で試す
+  try{
+    const r = await pb.collection("favorites").getList(1, 1, {
+      filter:`user="${uid}"`,
+      sort:"-created"
+    });
+    if(r.items?.length){
+      setFavSchemaFromItem(r.items[0]);
+      return;
+    }else{
+      // favoritesがまだ0件でも、ユーザーフィールドだけ確定
+      FAV_USER_FIELD = "user";
+      FAV_STORE_FIELD = "store";
+    }
+  }catch(e){
+    // どっちでも読めないなら、最後の保険（多い方）
+    FAV_USER_FIELD = "user";
+    FAV_STORE_FIELD = "store";
+  }
+}
+
+function favFilterForUser(uid){
+  return `${FAV_USER_FIELD}="${uid}"`;
+}
+
+/* ========================
    ✅ ヘッダー（ログイン状態で出し分け）
 ======================== */
 const navAbout    = document.getElementById("navAbout");
@@ -666,8 +729,6 @@ function isToxicTone(text){
   if(looksLikeEmojiSpam(text)) return true;
   return false;
 }
-
-/* ✅ 住所を分割 */
 function splitAddressBanchiAndBuilding(raw){
   const s = String(raw ?? "").trim();
   if(!s) return { banchi:"", building:"" };
@@ -753,7 +814,7 @@ document.getElementById("searchBtn").onclick=()=>loadPage(1);
 let pageSize=10;
 
 let favoriteOnly=false;
-let favoriteMap=new Map(); // storeId -> favorite record id（ハート表示と削除に使う）
+let favoriteMap=new Map(); // storeId -> favorite record id
 let currentPage=1;
 let totalPages=1;
 
@@ -775,76 +836,79 @@ function getSearchState(){
   const city = citySelect.value;
   return { name, pref, city, hasAny: !!(name || pref || city) };
 }
-
 function matchesStoreBySearch(store, st){
-  // store: PocketBase record (stores)
   if(!store) return false;
-
   if(st.name){
     const hay = normalizeForFilter(store.name || "");
     const needle = normalizeForFilter(st.name);
     if(!hay.includes(needle)) return false;
   }
-  if(st.pref){
-    if(String(store.prefecture || "") !== String(st.pref)) return false;
-  }
-  if(st.city){
-    if(String(store.city || "") !== String(st.city)) return false;
-  }
+  if(st.pref && String(store.prefecture||"") !== String(st.pref)) return false;
+  if(st.city && String(store.city||"") !== String(st.city)) return false;
   return true;
 }
 
-/**
- * ✅ favorites を expand で取って、favorite登録順（created desc）のまま store を返す
- * - フィルタなし：favoritesをページングして expand で store を出す（順番も保持）
- * - フィルタあり：favoritesを全件（最大500）expandで取り、store側で絞り込んでからクライアントページング（順番保持）
- */
-async function loadFavoriteStoresOrdered(page){
-  const userId = pb.authStore.model.id;
-  const st = getSearchState();
-
-  // ハート表示のために favoriteMap を作る（フィルタでも安定するように全件で作る）
+async function loadFavoriteMap(){
   favoriteMap = new Map();
+  if(!pb.authStore.isValid) return;
+
+  const uid = getUserId();
+  if(!uid) return;
+
+  await detectFavoriteSchema();
+
   try{
-    const allFav = await pb.collection("favorites").getList(1,500,{
-      filter:`userId="${userId}"`,
-      sort:"-created"
+    const favList = await pb.collection("favorites").getList(1, 500, {
+      filter: favFilterForUser(uid),
+      sort: "-created"
     });
-    allFav.items.forEach(f=>{
-      if(f.storeId) favoriteMap.set(f.storeId, f.id);
+    favList.items.forEach(f=>{
+      setFavSchemaFromItem(f);
+      const sid = getFavStoreId(f);
+      if(sid) favoriteMap.set(sid, f.id);
     });
   }catch(e){
     console.error(e);
   }
+}
 
-  // ① フィルタが無いなら：favoritesをそのままページング + expand
+/* ✅ favorites expandで「登録順」保持 */
+async function loadFavoriteStoresOrdered(page){
+  const uid = getUserId();
+  const st = getSearchState();
+
+  await detectFavoriteSchema();
+  await loadFavoriteMap();
+
+  const expandField = FAV_STORE_FIELD;
+
+  // フィルタ無し：favoritesをページング + expand
   if(!st.hasAny){
     const favPaged = await pb.collection("favorites").getList(page, pageSize, {
-      filter:`userId="${userId}"`,
-      sort:"-created",
-      expand:"storeId"
+      filter: favFilterForUser(uid),
+      sort: "-created",
+      expand: expandField
     });
 
     currentPage = favPaged.page;
     totalPages  = favPaged.totalPages || 1;
 
-    // favoritesの並び順のまま store を取り出す
     const stores = favPaged.items
-      .map(f => f.expand?.storeId)
+      .map(f => (f.expand ? f.expand[expandField] : null))
       .filter(Boolean);
 
     return stores;
   }
 
-  // ② フィルタがあるなら：全favoritesをexpand→storeで絞り込み→ページング（順序はfavorite順のまま）
-  const favAllExpanded = await pb.collection("favorites").getList(1,500,{
-    filter:`userId="${userId}"`,
-    sort:"-created",
-    expand:"storeId"
+  // フィルタあり：全件expand→storeで絞り込み→クライアントページング（順序保持）
+  const favAllExpanded = await pb.collection("favorites").getList(1, 500, {
+    filter: favFilterForUser(uid),
+    sort: "-created",
+    expand: expandField
   });
 
   const filtered = favAllExpanded.items.filter(f=>{
-    const store = f.expand?.storeId;
+    const store = f.expand ? f.expand[expandField] : null;
     return matchesStoreBySearch(store, st);
   });
 
@@ -854,8 +918,7 @@ async function loadFavoriteStoresOrdered(page){
   const start = (currentPage - 1) * pageSize;
   const slice = filtered.slice(start, start + pageSize);
 
-  const stores = slice.map(f => f.expand?.storeId).filter(Boolean);
-  return stores;
+  return slice.map(f => (f.expand ? f.expand[expandField] : null)).filter(Boolean);
 }
 
 async function loadPage(page=1){
@@ -863,22 +926,8 @@ async function loadPage(page=1){
   container.innerHTML="読み込み中…";
 
   try{
-    // ✅ まず通常時も、ハート表示のため favorites を持っておく
-    if(pb.authStore.isValid){
-      favoriteMap = new Map();
-      const userId = pb.authStore.model.id;
-      const favList = await pb.collection("favorites").getList(1,500,{
-        filter:`userId="${userId}"`,
-        sort:"-created"
-      });
-      favList.items.forEach(f=>{
-        if(f.storeId) favoriteMap.set(f.storeId, f.id);
-      });
-    }else{
-      favoriteMap = new Map();
-    }
+    await loadFavoriteMap();
 
-    // ✅ お気に入りのみ：expandで favorite順を保持して表示
     if(favoriteOnly){
       if(!pb.authStore.isValid){
         redirectToLogin();
@@ -890,7 +939,6 @@ async function loadPage(page=1){
       return;
     }
 
-    // ✅ 通常：stores を普通にページング（name/pref/cityはサーバ側filter）
     const { name, pref, city } = getSearchState();
     let filter="";
     if(name) filter += `name~"${name}"`;
@@ -1063,7 +1111,7 @@ function renderStores(stores){
 
     card.appendChild(right);
 
-    /* 口コミタブ */
+    /* 口コミ */
     const toggleBtn=document.createElement("div");
     toggleBtn.className="reviewToggleBtn";
     toggleBtn.textContent="口コミを見る";
@@ -1128,17 +1176,14 @@ function renderStores(stores){
       });
 
       if(!starValue) return alert("星評価を選んでください");
-
       if(text && isToxicTone(text)){
         alert("誹謗中傷・URL・絵文字スパムなどが含まれている可能性があります。内容を見直してください。");
         return;
       }
-
       if(!pb.authStore.isValid){
         redirectToLogin();
         return;
       }
-
       submitReview(s.id, text, starValue);
     };
 
@@ -1152,38 +1197,52 @@ function renderStores(stores){
 }
 
 /* ========================
-   お気に入りトグル
+   ✅ お気に入りトグル（スキーマ対応版）
 ======================== */
 async function handleFavoriteClick(storeId, btn){
   if(!pb.authStore.isValid){
     redirectToLogin();
     return;
   }
+
   try{
+    await detectFavoriteSchema();
+    const uid = getUserId();
+
+    // 既にお気に入りなら削除
     if(favoriteMap.has(storeId)){
       const favId = favoriteMap.get(storeId);
       await pb.collection("favorites").delete(favId);
+
       favoriteMap.delete(storeId);
       btn.classList.remove("active");
       btn.textContent="♡";
 
-      // ✅ お気に入りのみ表示中は、削除後も「お気に入り登録順」を保った再描画をする
       if(favoriteOnly){
         await loadPage(1);
       }
-
-    }else{
-      const rec = await pb.collection("favorites").create({
-        userId: pb.authStore.model.id,
-        storeId
-      });
-      favoriteMap.set(storeId, rec.id);
-      btn.classList.add("active");
-      btn.textContent="♥";
+      return;
     }
+
+    // 未お気に入りなら作成（userId/storeId or user/store 両対応）
+    const payload = {};
+    payload[FAV_USER_FIELD] = uid;
+    payload[FAV_STORE_FIELD] = storeId;
+
+    const rec = await pb.collection("favorites").create(payload);
+
+    // ここで storeId が保存されてないケースを検知（スキーマ違い）
+    setFavSchemaFromItem(rec);
+
+    const savedStoreId = getFavStoreId(rec) || storeId;
+    favoriteMap.set(savedStoreId, rec.id);
+
+    btn.classList.add("active");
+    btn.textContent="♥";
+
   }catch(e){
     console.error(e);
-    alert("お気に入り更新エラー");
+    alert("お気に入り更新エラー（favoritesのフィールド名が違う可能性あり）");
   }
 }
 
@@ -1462,7 +1521,8 @@ document.getElementById("closeStoreReportBtn").onclick = ()=>closeStoreReportMod
 (async ()=>{
   setNavLoggedIn(pb.authStore.isValid);
   await ensureAuthModel();
-  loadPage(1);
+  await detectFavoriteSchema();   // ✅ 追加
+  await loadPage(1);
 })();
 </script>
 
