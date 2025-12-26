@@ -86,14 +86,6 @@
   }
   textarea{ min-height:90px; resize:vertical; }
 
-  /* ✅ まだ他で使う可能性あるのでCSS自体は残してOK */
-  .hint{
-    margin-top:6px;
-    color:#9a9a9a;
-    font-size:.78em;
-    line-height:1.35;
-  }
-
   #submitBtn{
     width:100%;
     margin-top:8px;
@@ -154,7 +146,7 @@
     padding:14px;
   }
   .modal .box{
-    width:min(360px, 100%);
+    width:min(380px, 100%);
     background:var(--panel);
     border:1px solid var(--hair);
     border-radius:14px;
@@ -173,6 +165,7 @@
     font-weight:900;
   }
   #googleLoginBtn{ background:#fff; color:#000; }
+  #goLoginPageBtn{ background:#1f1f28; color:#fff; border:1px solid rgba(255,255,255,.12); }
   #closeModalBtn{ background:#333; color:#fff; }
 </style>
 </head>
@@ -197,7 +190,6 @@
         <label>店舗名 <span class="req">※必須</span></label>
         <input id="nameInput" type="text" placeholder="例：マクドナルド 渋谷店" autocomplete="off">
         <ul id="nameSuggestions" aria-label="店舗名候補"></ul>
-        <!-- ✅ 注意文を削除 -->
       </div>
 
       <div class="row">
@@ -208,7 +200,6 @@
       <div class="row">
         <label>市区町村 <span class="req">※必須</span></label>
         <input id="cityInput" type="text" placeholder="例）渋谷区、港区、横浜市西区">
-        <!-- ✅ 注意文を削除 -->
       </div>
 
       <div class="row">
@@ -225,9 +216,17 @@
 <div id="loginModal" class="modal">
   <div class="box">
     <h3>ログインが必要です</h3>
+
     <button id="googleLoginBtn">Googleでログイン</button>
+
+    <button id="goLoginPageBtn">メール / Facebook / X でログイン（login.htmlへ）</button>
+
     <button id="closeModalBtn">閉じる</button>
-    <div class="muted">ログイン後に「この内容で申請する」を押してください。</div>
+
+    <div class="muted" style="margin-top:10px;">
+      ログインできたら<strong>自動で申請を完了</strong>します。<br>
+      （もう一回「申請する」を押さなくてOK）
+    </div>
   </div>
 </div>
 
@@ -235,7 +234,7 @@
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 
 const pb = new PocketBase("https://delivery-eye.onrender.com");
-pb.autoCancellation(false);
+if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
 const $ = (id)=>document.getElementById(id);
 
@@ -243,6 +242,7 @@ const userStatus = $("userStatus");
 const logoutBtn  = $("logoutBtn");
 const loginModal = $("loginModal");
 const googleBtn  = $("googleLoginBtn");
+const goLoginBtn = $("goLoginPageBtn");
 const closeBtn   = $("closeModalBtn");
 
 const form    = $("requestForm");
@@ -255,6 +255,8 @@ const cityEl  = $("cityInput");
 const addrEl  = $("addressInput");
 
 const suggBox = $("nameSuggestions");
+
+const PENDING_KEY = "fde_pending_store_request_v1";
 
 /* ===== 都道府県 ===== */
 const prefs = [
@@ -295,16 +297,6 @@ logoutBtn.onclick = ()=>{
   showMsg("ログアウトしました。","success");
 };
 
-googleBtn.onclick = async ()=>{
-  try{
-    await pb.collection("users").authWithOAuth2({ provider:"google" });
-    loginModal.style.display="none";
-    updateStatus();
-    showMsg("ログインしました。","success");
-  }catch(e){
-    showMsg("Googleログインに失敗しました。","error");
-  }
-};
 closeBtn.onclick = ()=> loginModal.style.display="none";
 
 /* ===== 匿名ID（ローカルブラウザごと） ===== */
@@ -380,7 +372,6 @@ const REQUEST_COLLECTION_CANDIDATES = [
   "storeRequest",
   "store_request"
 ];
-
 let resolvedRequestCollection = null;
 
 async function resolveRequestCollection(){
@@ -403,67 +394,203 @@ async function resolveRequestCollection(){
   return null;
 }
 
-/* ===== submit ===== */
+/* ===== pending 保存/復元 ===== */
+function savePending(payload){
+  try{ sessionStorage.setItem(PENDING_KEY, JSON.stringify(payload)); }catch{}
+}
+function loadPending(){
+  try{
+    const raw = sessionStorage.getItem(PENDING_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch{ return null; }
+}
+function clearPending(){
+  try{ sessionStorage.removeItem(PENDING_KEY); }catch{}
+}
+
+/* ===== 申請処理（本体）===== */
+async function submitRequest(payload){
+  const { name, pref, city, address } = payload;
+
+  const reqCol = await resolveRequestCollection();
+  if(!reqCol){
+    throw new Error(
+      "PocketBase側に申請用コレクションが見つかりません。\n候補: " +
+      REQUEST_COLLECTION_CANDIDATES.join(", ")
+    );
+  }
+
+  // 重複チェック（storesに同一 name + prefecture + city があるか）
+  try{
+    const existing = await pb.collection("stores").getList(1, 1, {
+      filter:`name="${escapeFilter(name)}" && prefecture="${escapeFilter(pref)}" && city="${escapeFilter(city)}"`
+    });
+    if((existing.items || []).length > 0){
+      throw new Error("この店舗はすでに登録されています。");
+    }
+  }catch(checkErr){
+    // ここで投げた「すでに登録」は止める。それ以外は「フィールド違い」等の可能性があるので続行
+    if(String(checkErr?.message || "").includes("すでに登録")) throw checkErr;
+    console.warn("重複チェック失敗（フィールド名違い等の可能性）", checkErr);
+  }
+
+  await pb.collection(reqCol).create({
+    browserId,
+    name,
+    prefecture: pref,
+    city,
+    address,
+    userEmail: pb.authStore.model?.email || ""
+  });
+}
+
+/* ===== popup系（iOS Safari対策）===== */
+function tryOpenPopup(){
+  let popup = null;
+  try { popup = window.open("about:blank", "_blank"); } catch {}
+  return popup;
+}
+function tryClosePopup(popup){
+  try { if (popup && !popup.closed) popup.close(); } catch {}
+}
+
+/* ===== Googleログイン（モーダルから）→ 成功したら即申請 ===== */
+googleBtn.onclick = async ()=>{
+  msgBox.textContent = "";
+  const pending = loadPending();
+
+  // pendingが無いなら、現在の入力値から作る（念のため）
+  const payload = pending || {
+    name: nameEl.value.trim(),
+    pref: prefEl.value,
+    city: cityEl.value.trim(),
+    address: addrEl.value.trim()
+  };
+
+  savePending(payload);
+
+  showMsg("Googleログイン処理中です…","success");
+
+  const popup = tryOpenPopup();
+  try{
+    await pb.collection("users").authWithOAuth2({
+      provider:"google",
+      urlCallback:(url)=>{
+        if (popup && !popup.closed) popup.location.href = url;
+        else window.location.href = url;
+      }
+    });
+
+    // authRefreshで確実化
+    try{ await pb.collection("users").authRefresh(); }catch{}
+
+    updateStatus();
+    loginModal.style.display="none";
+
+    // ここで自動申請
+    submit.disabled = true;
+    showMsg("ログイン成功。申請を送信中…","success");
+    await submitRequest(loadPending() || payload);
+
+    clearPending();
+    showMsg("申請が完了しました！","success");
+    form.reset();
+    suggBox.style.display = "none";
+
+    tryClosePopup(popup);
+
+  }catch(e){
+    tryClosePopup(popup);
+    console.error(e);
+    showMsg("Googleログインに失敗しました。","error");
+  }finally{
+    submit.disabled = false;
+  }
+};
+
+/* ===== login.html へ飛ばす（メール/FB/X）===== */
+goLoginBtn.onclick = ()=>{
+  // 入力をpendingに保存してからloginへ
+  const payload = {
+    name: nameEl.value.trim(),
+    pref: prefEl.value,
+    city: cityEl.value.trim(),
+    address: addrEl.value.trim()
+  };
+  savePending(payload);
+
+  // 次はこのページに戻す（ファイル名はあなたの実ファイル名に合わせて）
+  // 例: store-request.html / request-store.html など
+  const next = "store-request.html";
+  window.location.href = `login.html?next=${encodeURIComponent(next)}`;
+};
+
+/* ===== 画面ロード時：ログイン済み＆pendingがあるなら自動申請 ===== */
+(async ()=>{
+  updateStatus();
+  const pending = loadPending();
+
+  if(pb.authStore.isValid && pending && pending.name && pending.pref && pending.city && pending.address){
+    try{
+      submit.disabled = true;
+      showMsg("ログイン状態を検出。申請を自動送信中…","success");
+
+      // authRefreshで確実化
+      try{ await pb.collection("users").authRefresh(); }catch{}
+
+      await submitRequest(pending);
+
+      clearPending();
+      showMsg("申請が完了しました！","success");
+      form.reset();
+      suggBox.style.display = "none";
+    }catch(err){
+      console.error(err);
+      showMsg("自動申請に失敗しました。\n\n--- 詳細 ---\n" + (err?.message || err), "error");
+    }finally{
+      submit.disabled = false;
+    }
+  }
+})();
+
+/* ===== submit（未ログインならpending保存→モーダル表示）===== */
 form.onsubmit = async (e)=>{
   e.preventDefault();
   msgBox.textContent = "";
 
-  const name = nameEl.value.trim();
-  const pref = prefEl.value;
-  const city = cityEl.value.trim();
-  const address = addrEl.value.trim();
+  const payload = {
+    name: nameEl.value.trim(),
+    pref: prefEl.value,
+    city: cityEl.value.trim(),
+    address: addrEl.value.trim()
+  };
 
-  if(!name || !pref || !city || !address){
+  if(!payload.name || !payload.pref || !payload.city || !payload.address){
     showMsg("必須項目が未入力です。","error");
     return;
   }
 
+  // 未ログイン → 入力保存してログイン誘導
   if(!pb.authStore.isValid){
+    savePending(payload);
     loginModal.style.display="flex";
     showMsg("ログイン後に申請できます。","error");
     return;
   }
 
+  // ログイン済み → 通常申請
   try{
     submit.disabled = true;
     showMsg("送信中…","success");
 
-    const reqCol = await resolveRequestCollection();
-    if(!reqCol){
-      showMsg(
-        "申請に失敗しました。\n\n--- 詳細 ---\n" +
-        "PocketBase側に申請用コレクションが見つかりません。\n" +
-        "候補: " + REQUEST_COLLECTION_CANDIDATES.join(", "),
-        "error"
-      );
-      return;
-    }
+    await submitRequest(payload);
 
-    // 重複チェック（storesに同一 name + prefecture + city があるか）
-    try{
-      const existing = await pb.collection("stores").getList(1, 1, {
-        filter:`name="${escapeFilter(name)}" && prefecture="${escapeFilter(pref)}" && city="${escapeFilter(city)}"`
-      });
-      if((existing.items || []).length > 0){
-        showMsg("この店舗はすでに登録されています。","error");
-        return;
-      }
-    }catch(checkErr){
-      console.warn("重複チェック失敗（フィールド名違い等の可能性）", checkErr);
-    }
-
-    await pb.collection(reqCol).create({
-      browserId,
-      name,
-      prefecture: pref,
-      city,
-      address,
-      userEmail: pb.authStore.model?.email || ""
-    });
-
+    clearPending();
     showMsg("申請が完了しました！","success");
     form.reset();
     suggBox.style.display = "none";
+
   }catch(err){
     console.error("PB error:", err);
 
