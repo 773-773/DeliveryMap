@@ -488,7 +488,9 @@ h2 small { display:block; font-size:0.7em; color:#bbb; margin-top:2px; }
   </header>
 
   <h2>調理待ち時間<small>※お店到着後に商品受取までにかかった時間</small></h2>
-  <button id="requestBtn" onclick="location.href='request.html'">掲載店舗を申請する</button>
+
+  <!-- ✅ ここは from 付けたいなら後で差し替え可 -->
+  <button id="requestBtn" onclick="location.href='request.html?from=vote.html'">掲載店舗を申請する</button>
 
   <div class="searchContainer">
     <input id="nameInput" placeholder="店舗名で検索">
@@ -541,9 +543,67 @@ const pb = new PocketBase("https://delivery-eye.onrender.com");
 if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
 /* ========================
-   ✅ お気に入りが出ない根本対策
-   - store/storeId が「文字列」でも「配列」でもOK
-   - expand からも拾える
+   ✅ ここが今回の肝：ログイン後に vote.html に戻って自動実行
+======================== */
+const KEY_NEXT_STORE   = "fdel_next_url_v1";          // login.html と同じ
+const KEY_PENDING_ACT  = "fde_pending_action_v1";     // 投票/口コミの保留
+const KEY_OPEN_REVIEW  = "fde_open_review_for_v1";    // ログイン後に口コミパネルを開く用
+
+function safeLocalPath(raw){
+  if(!raw) return null;
+  const v = String(raw).trim();
+  if(!v) return null;
+  if(/^https?:\/\//i.test(v)) return null;
+  if(v.startsWith("//")) return null;
+  if(/^\s*javascript:/i.test(v)) return null;
+  return v;
+}
+function thisPagePath(){
+  // vote.html?xxx をそのまま next にする
+  const file = (location.pathname.split("/").pop() || "vote.html");
+  return safeLocalPath(file + location.search + location.hash) || "vote.html";
+}
+function saveNextToThisPage(){
+  try{ localStorage.setItem(KEY_NEXT_STORE, thisPagePath()); }catch{}
+}
+function redirectToLogin(){
+  alert("ログインが必要です。ログイン画面に移動します。");
+  saveNextToThisPage();
+  const next = encodeURIComponent(thisPagePath());
+  window.location.href = `login.html?next=${next}`;
+}
+function savePendingAction(obj){
+  try{
+    sessionStorage.setItem(KEY_PENDING_ACT, JSON.stringify({
+      ...obj,
+      createdAt: Date.now(),
+      page: currentPage || 1
+    }));
+  }catch{}
+}
+function loadPendingAction(){
+  try{
+    const raw = sessionStorage.getItem(KEY_PENDING_ACT);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch{ return null; }
+}
+function clearPendingAction(){
+  try{ sessionStorage.removeItem(KEY_PENDING_ACT); }catch{}
+}
+function markOpenReview(storeId){
+  try{ sessionStorage.setItem(KEY_OPEN_REVIEW, storeId); }catch{}
+}
+function takeOpenReview(){
+  try{
+    const v = sessionStorage.getItem(KEY_OPEN_REVIEW);
+    if(v) sessionStorage.removeItem(KEY_OPEN_REVIEW);
+    return v || null;
+  }catch{ return null; }
+}
+
+/* ========================
+   ✅ お気に入りが出ない根本対策（そのまま）
 ======================== */
 let FAV_USER_FIELD  = "userId";
 let FAV_STORE_FIELD = "storeId";
@@ -701,10 +761,6 @@ document.addEventListener("keydown", (e)=>{ if(e.key === "Escape" && logoutConfi
 /* ========================
    共通・ユーティリティ
 ======================== */
-function redirectToLogin(){
-  alert("ログインが必要です。ログイン画面に移動します。");
-  window.location.href = "login.html";
-}
 function escapeHtml(s){
   return String(s ?? "").replace(/[&<>"']/g, c=>({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
@@ -973,6 +1029,9 @@ if(!browserId){
 let reportTargetStoreId = null;
 let selectedStoreReportReason = null;
 
+/* ✅ ログイン後に「口コミパネルを開く」要求 */
+let OPEN_REVIEW_TARGET = null;
+
 function renderStores(stores){
   const container=document.getElementById("storeContainer");
   container.innerHTML="";
@@ -1025,7 +1084,7 @@ function renderStores(stores){
       });
       const btn=document.createElement("button");
       btn.textContent="投票";
-      btn.onclick=()=>vote(s.id,sel.value);
+      btn.onclick=()=>vote(s.id, sel.value);
       vBox.appendChild(sel);
       vBox.appendChild(btn);
     }
@@ -1115,7 +1174,7 @@ function renderStores(stores){
       };
     });
 
-    /* 口コミ投稿 */
+    /* ✅ 口コミ投稿（未ログインなら「保留保存 → login → 戻ったら自動投稿」） */
     panel.querySelector(`#reviewBtn-${s.id}`).onclick=()=>{
       const textEl = document.getElementById(`reviewInput-${s.id}`);
       const text = textEl.value.trim();
@@ -1137,6 +1196,9 @@ function renderStores(stores){
       }
 
       if(!pb.authStore.isValid){
+        // ✅ 保留（ログイン後に自動実行）
+        savePendingAction({ kind:"review", storeId:s.id, text, star: starValue });
+        markOpenReview(s.id);
         redirectToLogin();
         return;
       }
@@ -1148,13 +1210,30 @@ function renderStores(stores){
     card.appendChild(panel);
 
     container.appendChild(card);
+
+    // ✅ ログイン後に「この店の口コミパネルを開く」
+    if(OPEN_REVIEW_TARGET && OPEN_REVIEW_TARGET === s.id){
+      panel.style.display = "block";
+      toggleBtn.textContent = "口コミを閉じる";
+      // スクロール
+      setTimeout(()=>{
+        try{
+          card.scrollIntoView({behavior:"smooth", block:"start"});
+        }catch{}
+      }, 30);
+    }
   });
+
+  // 一度開いたらクリア
+  if(OPEN_REVIEW_TARGET){
+    OPEN_REVIEW_TARGET = null;
+  }
 
   loadAllReviewsForRenderedStores(stores);
 }
 
 /* ========================
-   ✅ お気に入りトグル（配列/expand対応）
+   ✅ お気に入りトグル（そのまま）
 ======================== */
 async function handleFavoriteClick(storeId, btn){
   if(!pb.authStore.isValid){
@@ -1201,7 +1280,7 @@ async function handleFavoriteClick(storeId, btn){
 }
 
 /* ========================
-   店舗情報の報告
+   店舗情報の報告（そのまま）
 ======================== */
 function handleStoreReport(storeId){
   if(!pb.authStore.isValid){
@@ -1264,10 +1343,12 @@ async function reportStoreInternal(storeId, reason){
 }
 
 /* ========================
-   投票（日次制限）
+   ✅ 投票（日次制限）
+   未ログインなら「保留保存 → login → 戻ったら自動投票」
 ======================== */
 async function vote(id, choice){
   if(!pb.authStore.isValid){
+    savePendingAction({ kind:"vote", storeId:id, choice });
     redirectToLogin();
     return;
   }
@@ -1296,7 +1377,7 @@ async function executeVote(id, choice){
 }
 
 /* ========================
-   口コミ
+   口コミ（そのまま + ログイン後自動投稿に対応）
 ======================== */
 async function loadAllReviewsForRenderedStores(stores){
   try{
@@ -1450,7 +1531,8 @@ async function submitReview(storeId,text,star){
       alert("口コミを投稿しました！");
     }
 
-    document.getElementById(`reviewInput-${storeId}`).value="";
+    const input = document.getElementById(`reviewInput-${storeId}`);
+    if(input) input.value="";
     loadPage(currentPage);
 
   }catch(e){
@@ -1459,7 +1541,9 @@ async function submitReview(storeId,text,star){
   }
 }
 
-/* 店舗報告モーダルのボタン */
+/* ========================
+   店舗報告モーダルのボタン
+======================== */
 document.querySelectorAll(".reportReasonOption").forEach(btn=>{
   btn.onclick = ()=>{
     const val = Number(btn.dataset.reason);
@@ -1473,13 +1557,64 @@ document.getElementById("submitStoreReportBtn").onclick = ()=>submitStoreReport(
 document.getElementById("closeStoreReportBtn").onclick = ()=>closeStoreReportModal();
 
 /* ========================
-   初回ロード
+   ✅ 初回ロード + ログイン後の「保留操作」自動実行
 ======================== */
+async function resumePendingActionIfAny(){
+  if(!pb.authStore.isValid) return;
+
+  const pending = loadPendingAction();
+  if(!pending) return;
+
+  // 15分以上前の保留は捨てる（事故防止）
+  if(pending.createdAt && (Date.now() - pending.createdAt) > 15 * 60 * 1000){
+    clearPendingAction();
+    return;
+  }
+
+  // 先にページを復元
+  if(pending.page && Number(pending.page) >= 1){
+    currentPage = Number(pending.page);
+  }
+
+  // 口コミパネルを開く指定
+  const open = takeOpenReview();
+  if(open) OPEN_REVIEW_TARGET = open;
+
+  try{
+    if(pending.kind === "vote"){
+      clearPendingAction();
+      await executeVote(pending.storeId, pending.choice);
+      return;
+    }
+
+    if(pending.kind === "review"){
+      clearPendingAction();
+      // 投稿してから再描画で反映
+      await submitReview(pending.storeId, pending.text || "", Number(pending.star) || 0);
+      return;
+    }
+
+    // 未知
+    clearPendingAction();
+  }catch(e){
+    console.error("resume pending failed:", e);
+    clearPendingAction();
+  }
+}
+
 (async ()=>{
+  // ログイン状態反映
   setNavLoggedIn(pb.authStore.isValid);
   await ensureAuthModel();
+
+  // お気に入りスキーマ
   await detectFavoriteSchema();
-  await loadPage(1);
+
+  // ✅ ログイン直後の保留処理（投票/口コミ）を先に拾う
+  await resumePendingActionIfAny();
+
+  // 表示
+  await loadPage(currentPage || 1);
 })();
 </script>
 
