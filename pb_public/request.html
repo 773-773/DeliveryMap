@@ -84,7 +84,6 @@
     font-size:.95em;
     outline:none;
   }
-  textarea{ min-height:90px; resize:vertical; }
 
   #submitBtn{
     width:100%;
@@ -194,7 +193,6 @@
 
       <div id="messageBox"></div>
 
-      <!-- ✅ 申請成功後だけ出す -->
       <div id="backWrap">
         <button type="button" id="backBtn">前のページに戻る</button>
       </div>
@@ -233,6 +231,27 @@ const THIS_PAGE = "request.html";
 const LOGIN_PAGE = "login.html";
 const KEY_NEXT_STORE = "fdel_next_url_v1";
 
+/* ===== from（申請元URL） ===== */
+const FROM_KEY = "fde_request_from_v1";
+function safeLocalPath(raw){
+  if(!raw) return null;
+  const v = String(raw).trim();
+  if(!v) return null;
+  if(/^https?:\/\//i.test(v)) return null;
+  if(v.startsWith("//")) return null;
+  if(/^\s*javascript:/i.test(v)) return null;
+  return v;
+}
+const qs = new URLSearchParams(location.search);
+const fromQuery = safeLocalPath(qs.get("from"));
+if(fromQuery){
+  // ✅ request.html?from=xxx を開いたら保存（ログイン挟んでも戻れる）
+  try{ sessionStorage.setItem(FROM_KEY, fromQuery); }catch{}
+}
+function getFrom(){
+  return fromQuery || safeLocalPath(sessionStorage.getItem(FROM_KEY));
+}
+
 /* ===== 自動申請の“戻り判定”フラグ ===== */
 const LOGIN_RETURN_FLAG = "fde_from_login_v1";
 const PENDING_KEY = "fde_pending_store_request_v1";
@@ -253,26 +272,28 @@ for(const p of prefs){
   prefEl.appendChild(o);
 }
 
-function hideBack(){
-  backWrap.style.display = "none";
-}
-function showBack(){
-  backWrap.style.display = "block";
-}
+function hideBack(){ backWrap.style.display = "none"; }
+function showBack(){ backWrap.style.display = "block"; }
 
 function showMsg(text,type="success"){
   msgBox.textContent = text;
   msgBox.className = type==="success" ? "msg-success" : "msg-error";
 }
 
-backBtn.addEventListener("click", ()=>{
-  // 履歴があれば戻る。無ければ index.html に戻す保険
-  if (window.history.length > 1) {
-    window.history.back();
-  } else {
-    window.location.href = "index.html";
+/* ✅ 戻る（from優先→history→index） */
+function goBack(){
+  const from = getFrom();
+  if(from){
+    window.location.href = from;
+    return;
   }
-});
+  if(window.history.length > 1){
+    window.history.back();
+    return;
+  }
+  window.location.href = "index.html";
+}
+backBtn.addEventListener("click", goBack);
 
 /* ===== ログイン表示 ===== */
 function updateStatus(){
@@ -376,8 +397,9 @@ function clearPending(){
 
 /* ===== loginへ ===== */
 function goLogin(){
-  try { localStorage.setItem(KEY_NEXT_STORE, THIS_PAGE); } catch {}
-  window.location.href = `${LOGIN_PAGE}?next=${encodeURIComponent(THIS_PAGE)}`;
+  try { localStorage.setItem(KEY_NEXT_STORE, THIS_PAGE + (getFrom() ? ("?from=" + encodeURIComponent(getFrom())) : "")); } catch {}
+  const next = THIS_PAGE + (getFrom() ? ("?from=" + encodeURIComponent(getFrom())) : "");
+  window.location.href = `${LOGIN_PAGE}?next=${encodeURIComponent(next)}`;
 }
 
 /* ===== 申請保存コレクションを自動判定（404対策） ===== */
