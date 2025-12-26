@@ -74,7 +74,7 @@
   }
   .req{ color:var(--ng); font-size:.8em; margin-left:6px; }
 
-  input, select{
+  input, select, textarea{
     width:100%;
     padding:10px 12px;
     border-radius:10px;
@@ -84,6 +84,7 @@
     font-size:.95em;
     outline:none;
   }
+  textarea{ min-height:90px; resize:vertical; }
 
   #submitBtn{
     width:100%;
@@ -186,6 +187,7 @@ if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
 const $ = (id)=>document.getElementById(id);
 
+/* ===== DOM ===== */
 const userStatus = $("userStatus");
 const logoutBtn  = $("logoutBtn");
 
@@ -200,17 +202,14 @@ const addrEl  = $("addressInput");
 
 const suggBox = $("nameSuggestions");
 
-/* =========================
-   ★あなたの実ファイル名に合わせて変更
-   例: "store-request.html" / "request-store.html" など
-========================= */
-const THIS_PAGE = "store-request.html";
+/* ===== ページ/遷移設定 ===== */
+const THIS_PAGE = "request.html";         // ✅ このページ
+const LOGIN_PAGE = "login.html";          // ✅ ログインページ
+const KEY_NEXT_STORE = "fdel_next_url_v1"; // login.html が見るやつ
 
-/* login.html 側が参照してるキー（あなたの login.html に合わせる） */
-const KEY_NEXT_STORE = "fdel_next_url_v1";
-
-/* pending（申請内容の一時保存） */
-const PENDING_KEY = "fde_pending_store_request_v1";
+/* ===== 自動申請の“戻り判定”フラグ ===== */
+const LOGIN_RETURN_FLAG = "fde_from_login_v1";           // ★戻りフラグ
+const PENDING_KEY = "fde_pending_store_request_v1";      // ★申請内容一時保存
 
 /* ===== 都道府県 ===== */
 const prefs = [
@@ -332,6 +331,13 @@ function clearPending(){
   try{ sessionStorage.removeItem(PENDING_KEY); }catch{}
 }
 
+/* ===== loginへ ===== */
+function goLogin(){
+  // login.html が見る next を両方入れる（どっちが効いてもOK）
+  try { localStorage.setItem(KEY_NEXT_STORE, THIS_PAGE); } catch {}
+  window.location.href = `${LOGIN_PAGE}?next=${encodeURIComponent(THIS_PAGE)}`;
+}
+
 /* ===== 申請保存コレクションを自動判定（404対策） ===== */
 const REQUEST_COLLECTION_CANDIDATES = [
   "storeRequests",
@@ -339,6 +345,7 @@ const REQUEST_COLLECTION_CANDIDATES = [
   "storeRequest",
   "store_request"
 ];
+
 let resolvedRequestCollection = null;
 
 async function resolveRequestCollection(){
@@ -382,7 +389,7 @@ async function submitRequest(payload){
       throw new Error("この店舗はすでに登録されています。");
     }
   }catch(checkErr){
-    // ここで投げた「すでに登録」は止める。それ以外はフィールド違い等の可能性で続行
+    // 「既に登録」は止める。それ以外はフィールド違い等の可能性があるので続行
     if(String(checkErr?.message || "").includes("すでに登録")) throw checkErr;
     console.warn("重複チェック失敗（フィールド名違い等の可能性）", checkErr);
   }
@@ -397,38 +404,45 @@ async function submitRequest(payload){
   });
 }
 
-/* ===== 未ログイン時：login.htmlへ飛ばす ===== */
-function goLogin(){
-  // login.html は next パラメータ or localStorage の next を見て戻す仕様
-  // 両方入れておく（どっちかが効けばOK）
-  try { localStorage.setItem(KEY_NEXT_STORE, THIS_PAGE); } catch {}
-  window.location.href = `login.html?next=${encodeURIComponent(THIS_PAGE)}`;
-}
-
-/* ===== 初回ロード時：ログイン済み＆pendingがあるなら自動申請 ===== */
+/* =========================
+   ★自動申請：loginから“戻ってきた時だけ”実行
+========================= */
 (async ()=>{
   updateStatus();
 
   const pending = loadPending();
-  if(pb.authStore.isValid && pending && pending.name && pending.pref && pending.city && pending.address){
+  const fromLogin = sessionStorage.getItem(LOGIN_RETURN_FLAG);
+
+  // ✅ login経由フラグが無いなら自動申請しない（ここが肝）
+  if(pb.authStore.isValid && pending && fromLogin === "1"){
     try{
       submit.disabled = true;
-      showMsg("ログイン状態を検出。申請を自動送信中…","success");
+      showMsg("ログイン完了。申請を自動送信中…","success");
 
       // authRefresh（できれば）で状態を確実化
       try{ await pb.collection("users").authRefresh(); }catch{}
 
       await submitRequest(pending);
 
-      clearPending();
       showMsg("申請が完了しました！","success");
       form.reset();
       suggBox.style.display = "none";
+      clearPending();
+
     }catch(err){
       console.error(err);
       showMsg("自動申請に失敗しました。\n\n--- 詳細 ---\n" + (err?.message || err), "error");
     }finally{
       submit.disabled = false;
+      // ✅ ここ必須：二重自動申請を防ぐ
+      sessionStorage.removeItem(LOGIN_RETURN_FLAG);
+    }
+  }else{
+    // フラグが無いのにpendingが残ってたら、勝手に送らず“消す”
+    // （過去の残骸で自動申請が走るのを完全に封じる）
+    if(pending && fromLogin !== "1"){
+      // ユーザーが意図してない可能性が高いので消す
+      clearPending();
     }
   }
 })();
@@ -453,6 +467,10 @@ form.onsubmit = async (e)=>{
   // 未ログイン：申請内容を保存して login.html へ
   if(!pb.authStore.isValid){
     savePending(payload);
+
+    // ✅ 重要：login経由フラグを立てる（これが無いと誤作動する）
+    try{ sessionStorage.setItem(LOGIN_RETURN_FLAG, "1"); }catch{}
+
     showMsg("ログインが必要です。ログイン画面へ移動します…","error");
     setTimeout(goLogin, 120);
     return;
@@ -465,7 +483,10 @@ form.onsubmit = async (e)=>{
 
     await submitRequest(payload);
 
+    // 念のため残骸を消す
     clearPending();
+    sessionStorage.removeItem(LOGIN_RETURN_FLAG);
+
     showMsg("申請が完了しました！","success");
     form.reset();
     suggBox.style.display = "none";
