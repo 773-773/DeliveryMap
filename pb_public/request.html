@@ -74,7 +74,7 @@
   }
   .req{ color:var(--ng); font-size:.8em; margin-left:6px; }
 
-  input, select, textarea{
+  input, select{
     width:100%;
     padding:10px 12px;
     border-radius:10px;
@@ -84,7 +84,6 @@
     font-size:.95em;
     outline:none;
   }
-  textarea{ min-height:90px; resize:vertical; }
 
   #submitBtn{
     width:100%;
@@ -133,40 +132,6 @@
     color:rgba(255,255,255,0.92);
   }
   #nameSuggestions li:hover{ background:rgba(255,255,255,0.06); }
-
-  /* login modal */
-  .modal{
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.75);
-    justify-content:center;
-    align-items:center;
-    z-index:9999;
-    padding:14px;
-  }
-  .modal .box{
-    width:min(380px, 100%);
-    background:var(--panel);
-    border:1px solid var(--hair);
-    border-radius:14px;
-    padding:16px;
-    text-align:center;
-  }
-  .modal h3{ margin:0 0 10px; }
-  .modal .muted{ color:var(--muted); font-size:.82em; line-height:1.35; }
-  .modal button{
-    width:100%;
-    padding:10px;
-    margin-top:10px;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    font-weight:900;
-  }
-  #googleLoginBtn{ background:#fff; color:#000; }
-  #goLoginPageBtn{ background:#1f1f28; color:#fff; border:1px solid rgba(255,255,255,.12); }
-  #closeModalBtn{ background:#333; color:#fff; }
 </style>
 </head>
 
@@ -213,23 +178,6 @@
   </div>
 </main>
 
-<div id="loginModal" class="modal">
-  <div class="box">
-    <h3>ログインが必要です</h3>
-
-    <button id="googleLoginBtn">Googleでログイン</button>
-
-    <button id="goLoginPageBtn">メール / Facebook / X でログイン（login.htmlへ）</button>
-
-    <button id="closeModalBtn">閉じる</button>
-
-    <div class="muted" style="margin-top:10px;">
-      ログインできたら<strong>自動で申請を完了</strong>します。<br>
-      （もう一回「申請する」を押さなくてOK）
-    </div>
-  </div>
-</div>
-
 <script type="module">
 import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
 
@@ -240,10 +188,6 @@ const $ = (id)=>document.getElementById(id);
 
 const userStatus = $("userStatus");
 const logoutBtn  = $("logoutBtn");
-const loginModal = $("loginModal");
-const googleBtn  = $("googleLoginBtn");
-const goLoginBtn = $("goLoginPageBtn");
-const closeBtn   = $("closeModalBtn");
 
 const form    = $("requestForm");
 const submit  = $("submitBtn");
@@ -256,6 +200,16 @@ const addrEl  = $("addressInput");
 
 const suggBox = $("nameSuggestions");
 
+/* =========================
+   ★あなたの実ファイル名に合わせて変更
+   例: "store-request.html" / "request-store.html" など
+========================= */
+const THIS_PAGE = "store-request.html";
+
+/* login.html 側が参照してるキー（あなたの login.html に合わせる） */
+const KEY_NEXT_STORE = "fdel_next_url_v1";
+
+/* pending（申請内容の一時保存） */
 const PENDING_KEY = "fde_pending_store_request_v1";
 
 /* ===== 都道府県 ===== */
@@ -296,8 +250,6 @@ logoutBtn.onclick = ()=>{
   updateStatus();
   showMsg("ログアウトしました。","success");
 };
-
-closeBtn.onclick = ()=> loginModal.style.display="none";
 
 /* ===== 匿名ID（ローカルブラウザごと） ===== */
 let browserId = localStorage.getItem("browserId");
@@ -365,6 +317,21 @@ function escapeFilter(s){
     .replaceAll("'","\\'");
 }
 
+/* ===== pending 保存/復元 ===== */
+function savePending(payload){
+  try{ sessionStorage.setItem(PENDING_KEY, JSON.stringify(payload)); }catch{}
+}
+function loadPending(){
+  try{
+    const raw = sessionStorage.getItem(PENDING_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  }catch{ return null; }
+}
+function clearPending(){
+  try{ sessionStorage.removeItem(PENDING_KEY); }catch{}
+}
+
 /* ===== 申請保存コレクションを自動判定（404対策） ===== */
 const REQUEST_COLLECTION_CANDIDATES = [
   "storeRequests",
@@ -394,21 +361,6 @@ async function resolveRequestCollection(){
   return null;
 }
 
-/* ===== pending 保存/復元 ===== */
-function savePending(payload){
-  try{ sessionStorage.setItem(PENDING_KEY, JSON.stringify(payload)); }catch{}
-}
-function loadPending(){
-  try{
-    const raw = sessionStorage.getItem(PENDING_KEY);
-    if(!raw) return null;
-    return JSON.parse(raw);
-  }catch{ return null; }
-}
-function clearPending(){
-  try{ sessionStorage.removeItem(PENDING_KEY); }catch{}
-}
-
 /* ===== 申請処理（本体）===== */
 async function submitRequest(payload){
   const { name, pref, city, address } = payload;
@@ -430,7 +382,7 @@ async function submitRequest(payload){
       throw new Error("この店舗はすでに登録されています。");
     }
   }catch(checkErr){
-    // ここで投げた「すでに登録」は止める。それ以外は「フィールド違い」等の可能性があるので続行
+    // ここで投げた「すでに登録」は止める。それ以外はフィールド違い等の可能性で続行
     if(String(checkErr?.message || "").includes("すでに登録")) throw checkErr;
     console.warn("重複チェック失敗（フィールド名違い等の可能性）", checkErr);
   }
@@ -445,98 +397,25 @@ async function submitRequest(payload){
   });
 }
 
-/* ===== popup系（iOS Safari対策）===== */
-function tryOpenPopup(){
-  let popup = null;
-  try { popup = window.open("about:blank", "_blank"); } catch {}
-  return popup;
-}
-function tryClosePopup(popup){
-  try { if (popup && !popup.closed) popup.close(); } catch {}
+/* ===== 未ログイン時：login.htmlへ飛ばす ===== */
+function goLogin(){
+  // login.html は next パラメータ or localStorage の next を見て戻す仕様
+  // 両方入れておく（どっちかが効けばOK）
+  try { localStorage.setItem(KEY_NEXT_STORE, THIS_PAGE); } catch {}
+  window.location.href = `login.html?next=${encodeURIComponent(THIS_PAGE)}`;
 }
 
-/* ===== Googleログイン（モーダルから）→ 成功したら即申請 ===== */
-googleBtn.onclick = async ()=>{
-  msgBox.textContent = "";
-  const pending = loadPending();
-
-  // pendingが無いなら、現在の入力値から作る（念のため）
-  const payload = pending || {
-    name: nameEl.value.trim(),
-    pref: prefEl.value,
-    city: cityEl.value.trim(),
-    address: addrEl.value.trim()
-  };
-
-  savePending(payload);
-
-  showMsg("Googleログイン処理中です…","success");
-
-  const popup = tryOpenPopup();
-  try{
-    await pb.collection("users").authWithOAuth2({
-      provider:"google",
-      urlCallback:(url)=>{
-        if (popup && !popup.closed) popup.location.href = url;
-        else window.location.href = url;
-      }
-    });
-
-    // authRefreshで確実化
-    try{ await pb.collection("users").authRefresh(); }catch{}
-
-    updateStatus();
-    loginModal.style.display="none";
-
-    // ここで自動申請
-    submit.disabled = true;
-    showMsg("ログイン成功。申請を送信中…","success");
-    await submitRequest(loadPending() || payload);
-
-    clearPending();
-    showMsg("申請が完了しました！","success");
-    form.reset();
-    suggBox.style.display = "none";
-
-    tryClosePopup(popup);
-
-  }catch(e){
-    tryClosePopup(popup);
-    console.error(e);
-    showMsg("Googleログインに失敗しました。","error");
-  }finally{
-    submit.disabled = false;
-  }
-};
-
-/* ===== login.html へ飛ばす（メール/FB/X）===== */
-goLoginBtn.onclick = ()=>{
-  // 入力をpendingに保存してからloginへ
-  const payload = {
-    name: nameEl.value.trim(),
-    pref: prefEl.value,
-    city: cityEl.value.trim(),
-    address: addrEl.value.trim()
-  };
-  savePending(payload);
-
-  // 次はこのページに戻す（ファイル名はあなたの実ファイル名に合わせて）
-  // 例: store-request.html / request-store.html など
-  const next = "store-request.html";
-  window.location.href = `login.html?next=${encodeURIComponent(next)}`;
-};
-
-/* ===== 画面ロード時：ログイン済み＆pendingがあるなら自動申請 ===== */
+/* ===== 初回ロード時：ログイン済み＆pendingがあるなら自動申請 ===== */
 (async ()=>{
   updateStatus();
-  const pending = loadPending();
 
+  const pending = loadPending();
   if(pb.authStore.isValid && pending && pending.name && pending.pref && pending.city && pending.address){
     try{
       submit.disabled = true;
       showMsg("ログイン状態を検出。申請を自動送信中…","success");
 
-      // authRefreshで確実化
+      // authRefresh（できれば）で状態を確実化
       try{ await pb.collection("users").authRefresh(); }catch{}
 
       await submitRequest(pending);
@@ -554,7 +433,7 @@ goLoginBtn.onclick = ()=>{
   }
 })();
 
-/* ===== submit（未ログインならpending保存→モーダル表示）===== */
+/* ===== submit ===== */
 form.onsubmit = async (e)=>{
   e.preventDefault();
   msgBox.textContent = "";
@@ -571,15 +450,15 @@ form.onsubmit = async (e)=>{
     return;
   }
 
-  // 未ログイン → 入力保存してログイン誘導
+  // 未ログイン：申請内容を保存して login.html へ
   if(!pb.authStore.isValid){
     savePending(payload);
-    loginModal.style.display="flex";
-    showMsg("ログイン後に申請できます。","error");
+    showMsg("ログインが必要です。ログイン画面へ移動します…","error");
+    setTimeout(goLogin, 120);
     return;
   }
 
-  // ログイン済み → 通常申請
+  // ログイン済み：通常申請
   try{
     submit.disabled = true;
     showMsg("送信中…","success");
