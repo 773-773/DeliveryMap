@@ -122,6 +122,57 @@
   }
   .msg-success{ color:var(--ok); }
   .msg-error{ color:var(--ng); }
+
+  /* ✅ 完了ビュー */
+  #doneView{
+    display:none;
+    margin-top:12px;
+  }
+  .doneCard{
+    background:var(--panel);
+    border:1px solid rgba(102,255,153,.25);
+    border-radius:14px;
+    padding:16px;
+  }
+  .doneTitle{
+    margin:0 0 8px;
+    font-weight:900;
+    color:var(--ok);
+    font-size:1.05em;
+  }
+  .doneText{
+    margin:0;
+    color:rgba(245,245,247,.78);
+    line-height:1.6;
+    font-size:.92em;
+  }
+  .doneBtns{
+    display:flex;
+    gap:10px;
+    margin-top:12px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    border:none;
+    border-radius:12px;
+    padding:12px 14px;
+    font-weight:900;
+    cursor:pointer;
+  }
+  .btn-primary{
+    background:var(--accent);
+    color:#000;
+    flex:1 1 220px;
+  }
+  .btn-ghost{
+    background:#1b1b1b;
+    color:#fff;
+    border:1px solid rgba(255,255,255,.12);
+    flex:1 1 220px;
+  }
+
+  /* フォーム非表示切替 */
+  #formWrap.hidden{ display:none; }
 </style>
 </head>
 
@@ -140,7 +191,8 @@
     申請内容は運営側で確認後、掲載します。
   </div>
 
-  <div class="card">
+  <!-- ✅ フォーム表示ブロック -->
+  <div id="formWrap" class="card">
     <form id="requestForm">
       <div class="row">
         <label>建物名 <span class="req">※必須</span></label>
@@ -182,6 +234,22 @@
       <div id="messageBox"></div>
     </form>
   </div>
+
+  <!-- ✅ 送信完了ビュー（同ページ内） -->
+  <section id="doneView">
+    <div class="doneCard">
+      <p class="doneTitle">✅ 申請が完了しました</p>
+      <p class="doneText">
+        申請内容は運営側で確認後に掲載されます。<br>
+        ご協力ありがとうございます。
+      </p>
+
+      <div class="doneBtns">
+        <button class="btn btn-primary" id="goTowerBtn" type="button">tower一覧へ戻る</button>
+        <button class="btn btn-ghost" id="newRequestBtn" type="button">続けて申請する</button>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script type="module">
@@ -195,9 +263,14 @@ const $ = (id)=>document.getElementById(id);
 const userStatus = $("userStatus");
 const logoutBtn  = $("logoutBtn");
 
+const formWrap = $("formWrap");
 const form    = $("requestForm");
 const submit  = $("submitBtn");
 const msgBox  = $("messageBox");
+
+const doneView = $("doneView");
+const goTowerBtn = $("goTowerBtn");
+const newRequestBtn = $("newRequestBtn");
 
 const nameEl  = $("nameInput");
 const prefEl  = $("prefSelect");
@@ -248,18 +321,8 @@ logoutBtn.onclick = ()=>{
   showMsg("ログアウトしました。","success");
 };
 
-function safeNextUrl(raw){
-  if(!raw) return null;
-  const v = String(raw).trim();
-  if(!v) return null;
-  if(/^https?:\/\//i.test(v)) return null;
-  if(v.startsWith("//")) return null;
-  if(/^\s*javascript:/i.test(v)) return null;
-  return v;
-}
-
 function buildReturnUrl(){
-  // 今開いてるファイル名（例: tower-request.html）
+  // 今開いてるファイル名（この申請ページに戻って自動送信）
   const file = (location.pathname.split("/").pop() || "tower-request.html");
   return file + "?autosubmit=1";
 }
@@ -269,10 +332,8 @@ function redirectToLoginForAutoSubmit(pendingData){
     localStorage.setItem(KEY_PENDING_REQ, JSON.stringify(pendingData));
     const ret = buildReturnUrl();
     localStorage.setItem(KEY_NEXT_STORE, ret);
-    // login.html 側が next を見るのでクエリにも付ける
     window.location.href = "login.html?next=" + encodeURIComponent(ret);
   }catch{
-    // 万一 localStorage が死んでても最低限 login へ
     window.location.href = "login.html?next=" + encodeURIComponent(buildReturnUrl());
   }
 }
@@ -288,27 +349,52 @@ async function ensureAuthFresh(){
   }
 }
 
+/* ✅ 完了画面へ */
+function showDoneView(){
+  formWrap.classList.add("hidden");
+  doneView.style.display = "block";
+  // メッセージ領域クリア（見た目整える）
+  msgBox.textContent = "";
+  msgBox.className = "";
+}
+
+/* ✅ フォームに戻す（続けて申請する） */
+function showFormView(){
+  doneView.style.display = "none";
+  formWrap.classList.remove("hidden");
+  msgBox.textContent = "";
+  msgBox.className = "";
+  // スクロール戻す
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+goTowerBtn.onclick = ()=>{ window.location.href = "tower.html"; };
+newRequestBtn.onclick = ()=>{
+  // 次の申請がしやすいようにフォームはリセットしておく
+  form.reset();
+  showFormView();
+};
+
 async function submitToPocketBase(data){
   submit.disabled = true;
   showMsg("送信中…","success");
   await pb.collection("tower_requests").create(data);
-  showMsg("申請が完了しました！","success");
+
+  // 成功したら「このページの完了画面」に切り替える
   form.reset();
+  showDoneView();
 }
 
 /* 自動送信（login成功後に戻ってきた時） */
 (async ()=>{
   const params = new URLSearchParams(location.search);
   const autosubmit = params.get("autosubmit") === "1";
-
   if(!autosubmit) return;
 
-  // まず認証が生きてるか更新
   const ok = await ensureAuthFresh();
   updateStatus();
   if(!ok) return;
 
-  // 保留データがあれば送信
   let pending = null;
   try{
     pending = JSON.parse(localStorage.getItem(KEY_PENDING_REQ) || "null");
@@ -316,13 +402,11 @@ async function submitToPocketBase(data){
 
   if(!pending) return;
 
-  // ここで削除（多重送信防止）
+  // 多重送信防止
   localStorage.removeItem(KEY_PENDING_REQ);
 
   try{
     await submitToPocketBase(pending);
-    // 完了したら一覧に戻す（好みで時間調整OK）
-    setTimeout(()=>{ window.location.href = "tower.html"; }, 900);
   }catch(err){
     console.error("PB error:", err);
     const detail =
@@ -356,7 +440,6 @@ form.onsubmit = async (e)=>{
     return;
   }
 
-  // 未ログインなら login.html へ飛ばして、ログイン後に自動送信
   const ok = await ensureAuthFresh();
   updateStatus();
 
