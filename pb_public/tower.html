@@ -1,1161 +1,1197 @@
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-438930905551232"
-crossorigin="anonymous"></script>
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>マンション 入館情報（tower）</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>マンション 入館情報（tower）</title>
 
-<style>
-:root{
-  --bg-main:#07070b;
-  --bg-elevated:#0c0c12;
-  --accent:#5bff9c;
-  --accent-soft:rgba(91,255,156,0.28);
-  --accent2:#23ffd1;
-  --text-main:#f5f5f7;
-  --text-muted:rgba(245,245,247,0.62);
-  --border-soft:rgba(255,255,255,0.08);
-  --border-hair:rgba(255,255,255,0.06);
-  --shadow-deep:0 26px 90px rgba(0,0,0,0.78);
-}
+  <!-- ✅ AdSense（必ず head 内） -->
+  <script async
+    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-438930905551232"
+    crossorigin="anonymous"></script>
 
-*{ box-sizing:border-box; }
-html,body{ height:100%; }
-body{
-  margin:0;
-  padding:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Inter","Noto Sans JP",sans-serif;
-  color:var(--text-main);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(91,255,156,0.09) 0, transparent 55%),
-    radial-gradient(circle at 90% 90%, rgba(255,255,255,0.03) 0, transparent 55%),
-    linear-gradient(180deg, #050507 0%, #07070b 60%, #050507 100%);
-}
-.page{
-  max-width:1040px;
-  margin:0 auto;
-  padding:18px 14px 42px;
-}
+  <style>
+    :root{
+      --bg-main:#07070b;
+      --bg-elevated:#0c0c12;
+      --accent:#5bff9c;
+      --accent-soft:rgba(91,255,156,0.28);
+      --accent2:#23ffd1;
+      --text-main:#f5f5f7;
+      --text-muted:rgba(245,245,247,0.62);
+      --border-soft:rgba(255,255,255,0.08);
+      --border-hair:rgba(255,255,255,0.06);
+      --shadow-deep:0 26px 90px rgba(0,0,0,0.78);
+    }
 
-/* =========================
-   ✅ 画像と同じヘッダー（共通）
-========================= */
-header.siteHeader{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:12px 14px;
-  border-radius:18px;
-  background:rgba(5,5,8,0.72);
-  border:1px solid var(--border-hair);
-  backdrop-filter:blur(22px);
-  box-shadow:0 18px 60px rgba(0,0,0,0.62);
-  margin-bottom:18px;
-  position:relative;
-  z-index:50;
-}
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      padding:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Inter","Noto Sans JP",sans-serif;
+      color:var(--text-main);
+      background:
+        radial-gradient(circle at 18% 0%, rgba(91,255,156,0.09) 0, transparent 55%),
+        radial-gradient(circle at 90% 90%, rgba(255,255,255,0.03) 0, transparent 55%),
+        linear-gradient(180deg, #050507 0%, #07070b 60%, #050507 100%);
+    }
+    .page{
+      max-width:1040px;
+      margin:0 auto;
+      padding:18px 14px 42px;
+    }
 
-.logoArea{ display:flex; align-items:center; min-width:0; }
-.logoLink{ display:inline-block; min-width:0; color:inherit; text-decoration:none; }
-.logoTextMain{
-  font-weight:900;
-  font-size:18px;
-  letter-spacing:0.06em;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.logoTextSub{
-  font-size:12px;
-  line-height:1.5;
-  color:rgba(245,245,247,0.55);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  margin-top:2px;
-}
+    /* =========================
+       ✅ ヘッダー（共通）
+    ========================= */
+    header.siteHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:12px 14px;
+      border-radius:18px;
+      background:rgba(5,5,8,0.72);
+      border:1px solid var(--border-hair);
+      backdrop-filter:blur(22px);
+      box-shadow:0 18px 60px rgba(0,0,0,0.62);
+      margin-bottom:18px;
+      position:relative;
+      z-index:50;
+    }
 
-.headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
-nav{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-nav a, nav button{
-  color:var(--text-muted);
-  text-decoration:none;
-  padding:8px 12px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,0.06);
-  background:rgba(255,255,255,0.02);
-  font-size:12px;
-  line-height:1;
-  transition:all .16s ease;
-  white-space:nowrap;
-  cursor:pointer;
-  font-family:inherit;
-}
-nav a:hover, nav button:hover{ color:var(--text-main); background:rgba(255,255,255,0.05); }
-nav .primary{
-  color:#050814;
-  background:var(--accent);
-  border-color:transparent;
-  font-weight:900;
-  box-shadow:0 0 18px var(--accent-soft);
-}
-nav .primary:hover{ background:#7affb2; }
-nav button{ appearance:none; -webkit-appearance:none; }
+    .logoArea{ display:flex; align-items:center; min-width:0; }
+    .logoLink{ display:inline-block; min-width:0; color:inherit; text-decoration:none; }
+    .logoTextMain{
+      font-weight:900;
+      font-size:18px;
+      letter-spacing:0.06em;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .logoTextSub{
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(245,245,247,0.55);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin-top:2px;
+    }
 
-/* ログイン中ピル（緑に発光） */
-.loggedPill{
-  display:inline-flex !important;
-  align-items:center;
-  gap:8px;
-  color:#07110a !important;
-  background:linear-gradient(180deg, rgba(91,255,156,0.95), rgba(91,255,156,0.78)) !important;
-  border-color:rgba(91,255,156,0.18) !important;
-  box-shadow:0 0 18px rgba(91,255,156,0.22), 0 12px 28px rgba(0,0,0,0.45);
-  font-weight:900;
-}
-.loggedLamp{
-  width:10px; height:10px; border-radius:50%;
-  background:var(--accent);
-  box-shadow:0 0 10px rgba(91,255,156,0.9), 0 0 24px rgba(91,255,156,0.38);
-  position:relative;
-}
-.loggedLamp::after{
-  content:"";
-  position:absolute;
-  inset:-8px;
-  border-radius:999px;
-  border:1px solid rgba(91,255,156,0.25);
-  animation:pulse 1.6s ease-in-out infinite;
-  opacity:.65;
-}
-@keyframes pulse{
-  0%{ transform:scale(0.72); opacity:0.25; }
-  55%{ transform:scale(1.08); opacity:0.75; }
-  100%{ transform:scale(1.35); opacity:0; }
-}
-.logoutPill{
-  color:rgba(245,245,247,0.88) !important;
-  border-color:rgba(255,255,255,0.10) !important;
-  background:rgba(255,255,255,0.03) !important;
-}
-.logoutPill:hover{ border-color:rgba(91,255,156,0.18) !important; }
+    .headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
+    nav{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    nav a, nav button{
+      color:var(--text-muted);
+      text-decoration:none;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.06);
+      background:rgba(255,255,255,0.02);
+      font-size:12px;
+      line-height:1;
+      transition:all .16s ease;
+      white-space:nowrap;
+      cursor:pointer;
+      font-family:inherit;
+    }
+    nav a:hover, nav button:hover{ color:var(--text-main); background:rgba(255,255,255,0.05); }
+    nav .primary{
+      color:#050814;
+      background:var(--accent);
+      border-color:transparent;
+      font-weight:900;
+      box-shadow:0 0 18px var(--accent-soft);
+    }
+    nav .primary:hover{ background:#7affb2; }
+    nav button{ appearance:none; -webkit-appearance:none; }
 
-@media (max-width:640px){
-  header.siteHeader{ flex-direction:column; align-items:stretch; gap:10px; }
-  .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
-  nav a, nav button{ padding:12px 14px; font-size:14px; }
-}
+    /* ログイン中ピル（緑に発光） */
+    .loggedPill{
+      display:inline-flex !important;
+      align-items:center;
+      gap:8px;
+      color:#07110a !important;
+      background:linear-gradient(180deg, rgba(91,255,156,0.95), rgba(91,255,156,0.78)) !important;
+      border-color:rgba(91,255,156,0.18) !important;
+      box-shadow:0 0 18px rgba(91,255,156,0.22), 0 12px 28px rgba(0,0,0,0.45);
+      font-weight:900;
+    }
+    .loggedLamp{
+      width:10px; height:10px; border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 10px rgba(91,255,156,0.9), 0 0 24px rgba(91,255,156,0.38);
+      position:relative;
+    }
+    .loggedLamp::after{
+      content:"";
+      position:absolute;
+      inset:-8px;
+      border-radius:999px;
+      border:1px solid rgba(91,255,156,0.25);
+      animation:pulse 1.6s ease-in-out infinite;
+      opacity:.65;
+    }
+    @keyframes pulse{
+      0%{ transform:scale(0.72); opacity:0.25; }
+      55%{ transform:scale(1.08); opacity:0.75; }
+      100%{ transform:scale(1.35); opacity:0; }
+    }
+    .logoutPill{
+      color:rgba(245,245,247,0.88) !important;
+      border-color:rgba(255,255,255,0.10) !important;
+      background:rgba(255,255,255,0.03) !important;
+    }
+    .logoutPill:hover{ border-color:rgba(91,255,156,0.18) !important; }
 
-/* =========================
-   ✅ ログアウト確認モーダル
-========================= */
-.confirmModal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.72);
-  justify-content:center;
-  align-items:center;
-  z-index:10000;
-  padding:14px;
-}
-.confirmBox{
-  width:min(420px, 100%);
-  background:rgba(15,16,20,0.92);
-  border:1px solid rgba(255,255,255,0.10);
-  border-radius:16px;
-  padding:16px;
-  box-shadow:0 22px 80px rgba(0,0,0,0.72);
-  backdrop-filter:blur(18px);
-}
-.confirmTitle{
-  margin:0 0 8px;
-  font-size:16px;
-  font-weight:900;
-  letter-spacing:.02em;
-}
-.confirmText{
-  margin:0 0 12px;
-  color:rgba(245,245,247,0.68);
-  line-height:1.5;
-  font-size:13px;
-}
-.confirmActions{
-  display:flex;
-  gap:10px;
-  justify-content:flex-end;
-  flex-wrap:wrap;
-}
-.confirmBtn{
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,0.10);
-  background:rgba(255,255,255,0.04);
-  color:rgba(245,245,247,0.9);
-  font-weight:900;
-  cursor:pointer;
-  font-family:inherit;
-}
-.confirmBtn:hover{ background:rgba(255,255,255,0.07); }
-.confirmBtnDanger{
-  border-color:rgba(255,150,150,0.25);
-  background:rgba(255,150,150,0.10);
-  color:#ffdede;
-}
-.confirmBtnDanger:hover{ background:rgba(255,150,150,0.16); }
+    @media (max-width:640px){
+      header.siteHeader{ flex-direction:column; align-items:stretch; gap:10px; }
+      .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
+      nav a, nav button{ padding:12px 14px; font-size:14px; }
+    }
 
-/* =========================
-   ▼ towerページUI
-========================= */
+    /* =========================
+       ✅ ログアウト確認モーダル
+    ========================= */
+    .confirmModal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.72);
+      justify-content:center;
+      align-items:center;
+      z-index:10000;
+      padding:14px;
+    }
+    .confirmBox{
+      width:min(420px, 100%);
+      background:rgba(15,16,20,0.92);
+      border:1px solid rgba(255,255,255,0.10);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 22px 80px rgba(0,0,0,0.72);
+      backdrop-filter:blur(18px);
+    }
+    .confirmTitle{
+      margin:0 0 8px;
+      font-size:16px;
+      font-weight:900;
+      letter-spacing:.02em;
+    }
+    .confirmText{
+      margin:0 0 12px;
+      color:rgba(245,245,247,0.68);
+      line-height:1.5;
+      font-size:13px;
+    }
+    .confirmActions{
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      flex-wrap:wrap;
+    }
+    .confirmBtn{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.04);
+      color:rgba(245,245,247,0.9);
+      font-weight:900;
+      cursor:pointer;
+      font-family:inherit;
+    }
+    .confirmBtn:hover{ background:rgba(255,255,255,0.07); }
+    .confirmBtnDanger{
+      border-color:rgba(255,150,150,0.25);
+      background:rgba(255,150,150,0.10);
+      color:#ffdede;
+    }
+    .confirmBtnDanger:hover{ background:rgba(255,150,150,0.16); }
 
-h2 { margin:12px 0 6px; }
+    /* =========================
+       ▼ towerページUI
+    ========================= */
+    h2 { margin:12px 0 6px; }
 
-#requestBtn {
-  display:inline-block;
-  margin:6px 0 10px;
-  font-size:0.85em;
-  color:#66ff99;
-  background:none;
-  border:none;
-  text-decoration:underline;
-  cursor:pointer;
-}
+    #requestBtn {
+      display:inline-block;
+      margin:6px 0 10px;
+      font-size:0.85em;
+      color:#66ff99;
+      background:none;
+      border:none;
+      text-decoration:underline;
+      cursor:pointer;
+    }
 
-.searchContainer {
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-  margin-bottom:10px;
-}
-.searchContainer div { display:flex; gap:8px; flex-wrap:wrap; }
-.searchContainer input,
-.searchContainer select{
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #333;
-  background:#0f0f12;
-  color:#fff;
-  font-size:0.95em;
-}
-.searchContainer button{
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid #333;
-  background:#ffa500;
-  color:#000;
-  cursor:pointer;
-  font-size:0.95em;
-  font-weight:800;
-}
-.searchRightDummy{ height:24px; min-width:1px; }
+    .searchContainer {
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .searchContainer div { display:flex; gap:8px; flex-wrap:wrap; }
+    .searchContainer input,
+    .searchContainer select{
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #333;
+      background:#0f0f12;
+      color:#fff;
+      font-size:0.95em;
+    }
+    .searchContainer button{
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid #333;
+      background:#ffa500;
+      color:#000;
+      cursor:pointer;
+      font-size:0.95em;
+      font-weight:800;
+    }
+    .searchRightDummy{ height:24px; min-width:1px; }
 
-/* ✅ ページネーション（15件ごと） */
-.paginationBar{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  justify-content:center;
-  margin:10px 0 14px;
-}
-.pageBtn{
-  width:44px;
-  height:44px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,0.10);
-  background:rgba(255,255,255,0.03);
-  color:rgba(245,245,247,0.92);
-  font-weight:900;
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  transition:all .16s ease;
-}
-.pageBtn:hover{ background:rgba(255,255,255,0.06); }
-.pageBtn.active{
-  background:#f3b23a;
-  color:#111;
-  border-color:rgba(255,255,255,0.0);
-  box-shadow:0 0 0 1px rgba(0,0,0,0.25) inset, 0 12px 30px rgba(0,0,0,0.35);
-}
-.pageNext{
-  width:auto;
-  padding:0 18px;
-}
-.pageBtn:disabled{ opacity:.45; cursor:not-allowed; }
+    /* ✅ ページネーション（15件ごと） */
+    .paginationBar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      margin:10px 0 14px;
+    }
+    .pageBtn{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.03);
+      color:rgba(245,245,247,0.92);
+      font-weight:900;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      transition:all .16s ease;
+    }
+    .pageBtn:hover{ background:rgba(255,255,255,0.06); }
+    .pageBtn.active{
+      background:#f3b23a;
+      color:#111;
+      border-color:rgba(255,255,255,0.0);
+      box-shadow:0 0 0 1px rgba(0,0,0,0.25) inset, 0 12px 30px rgba(0,0,0,0.35);
+    }
+    .pageNext{
+      width:auto;
+      padding:0 18px;
+    }
+    .pageBtn:disabled{ opacity:.45; cursor:not-allowed; }
 
-/* towerカード */
-.towerCard{
-  position:relative;
-  background:#0f1014;
-  border:1px solid #222;
-  border-radius:14px;
-  padding:12px;
-  margin-bottom:12px;
-  box-shadow:0 10px 24px rgba(0,0,0,0.35);
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.towerName{ font-weight:900; font-size:1.05em; color:#66ff99; }
-.addr{ font-size:0.9em; color:#bbb; line-height:1.5; }
+    /* towerカード */
+    .towerCard{
+      position:relative;
+      background:#0f1014;
+      border:1px solid #222;
+      border-radius:14px;
+      padding:12px;
+      margin-bottom:12px;
+      box-shadow:0 10px 24px rgba(0,0,0,0.35);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .towerName{ font-weight:900; font-size:1.05em; color:#66ff99; }
+    .addr{ font-size:0.9em; color:#bbb; line-height:1.5; }
 
-.addrLink{
-  color:#bbb;
-  text-decoration:underline;
-  text-underline-offset:3px;
-  cursor:pointer;
-}
-.addrLink:hover{ color:rgba(245,245,247,0.88); }
+    .addrLink{
+      color:#bbb;
+      text-decoration:underline;
+      text-underline-offset:3px;
+      cursor:pointer;
+    }
+    .addrLink:hover{ color:rgba(245,245,247,0.88); }
 
-.metaRow{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:flex-start;
-  color:#ddd;
-  font-size:0.92em;
-}
-.metaKey{ color:#999; min-width:72px; }
-.metaVal{ color:#eee; white-space:pre-wrap; }
+    .metaRow{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-start;
+      color:#ddd;
+      font-size:0.92em;
+    }
+    .metaKey{ color:#999; min-width:72px; }
+    .metaVal{ color:#eee; white-space:pre-wrap; }
 
-.actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  align-items:center;
-  margin-top:2px;
-}
-.btn{
-  border:none;
-  border-radius:10px;
-  padding:8px 10px;
-  cursor:pointer;
-  font-weight:900;
-  font-size:0.86em;
-  border:1px solid #333;
-}
-.btnEntry{ background:#66ff99; color:#000; }
-.btn:disabled{ opacity:.5; cursor:not-allowed; }
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:2px;
+    }
+    .btn{
+      border:none;
+      border-radius:10px;
+      padding:8px 10px;
+      cursor:pointer;
+      font-weight:900;
+      font-size:0.86em;
+      border:1px solid #333;
+    }
+    .btnEntry{ background:#66ff99; color:#000; }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
 
-.reportLink{
-  position:absolute;
-  right:12px;
-  bottom:12px;
-  font-size:0.82em;
-  color:rgba(245,245,247,0.62);
-  text-decoration:underline;
-  text-underline-offset:3px;
-  cursor:pointer;
-  user-select:none;
-}
-.reportLink:hover{ color:rgba(245,245,247,0.85); }
+    .reportLink{
+      position:absolute;
+      right:12px;
+      bottom:12px;
+      font-size:0.82em;
+      color:rgba(245,245,247,0.62);
+      text-decoration:underline;
+      text-underline-offset:3px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .reportLink:hover{ color:rgba(245,245,247,0.85); }
 
-.pendingPill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 10px;
-  border-radius:999px;
-  font-size:0.85em;
-  border:1px solid rgba(255,255,255,.10);
-  background:#14141a;
-  color:#bdbdbd;
-}
-.dot{
-  width:10px; height:10px;
-  border-radius:50%;
-  background:#8f8f8f;
-  box-shadow:0 0 12px rgba(255,255,255,.08);
-}
+    .pendingPill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      font-size:0.85em;
+      border:1px solid rgba(255,255,255,.10);
+      background:#14141a;
+      color:#bdbdbd;
+    }
+    .dot{
+      width:10px; height:10px;
+      border-radius:50%;
+      background:#8f8f8f;
+      box-shadow:0 0 12px rgba(255,255,255,.08);
+    }
 
-/* モーダル（tower用） */
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.72);
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-  padding:14px;
-}
-.modalBox{
-  width:min(420px, 100%);
-  background:#111;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:16px;
-  padding:16px;
-  box-shadow:0 22px 80px rgba(0,0,0,0.72);
-}
-.modalBox h3{ margin:0 0 10px; }
-.modalBox .muted{ color:#bbb; font-size:0.9em; line-height:1.55; }
-.modalBox textarea{
-  width:100%;
-  min-height:92px;
-  margin-top:10px;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #333;
-  background:#0f0f12;
-  color:#fff;
-  resize:vertical;
-}
-.modalBox select{
-  width:100%;
-  margin-top:10px;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #333;
-  background:#111;
-  color:#fff;
-}
-.modalActions{
-  display:flex;
-  gap:10px;
-  margin-top:12px;
-  flex-wrap:wrap;
-}
-.modalActions button{
-  flex:1;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid #333;
-  cursor:pointer;
-  font-weight:900;
-}
-.modalOk{ background:#66ff99; color:#000; }
-.modalCancel{ background:#333; color:#fff; }
-</style>
+    /* モーダル（tower用） */
+    .modal{
+      display:none;
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.72);
+      justify-content:center;
+      align-items:center;
+      z-index:9999;
+      padding:14px;
+    }
+    .modalBox{
+      width:min(420px, 100%);
+      background:#111;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:16px;
+      box-shadow:0 22px 80px rgba(0,0,0,0.72);
+    }
+    .modalBox h3{ margin:0 0 10px; }
+    .modalBox .muted{ color:#bbb; font-size:0.9em; line-height:1.55; }
+    .modalBox textarea{
+      width:100%;
+      min-height:92px;
+      margin-top:10px;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #333;
+      background:#0f0f12;
+      color:#fff;
+      resize:vertical;
+    }
+    .modalBox select{
+      width:100%;
+      margin-top:10px;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #333;
+      background:#111;
+      color:#fff;
+    }
+    .modalActions{
+      display:flex;
+      gap:10px;
+      margin-top:12px;
+      flex-wrap:wrap;
+    }
+    .modalActions button{
+      flex:1;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid #333;
+      cursor:pointer;
+      font-weight:900;
+    }
+    .modalOk{ background:#66ff99; color:#000; }
+    .modalCancel{ background:#333; color:#fff; }
+  </style>
 </head>
 
 <body>
-<div class="page">
+  <div class="page">
 
-  <!-- ✅ ヘッダー -->
-  <header class="siteHeader">
-    <div class="logoArea">
-      <a class="logoLink" href="index.html" aria-label="トップページへ戻る">
-        <div style="min-width:0;">
-          <div class="logoTextMain">FoodDeliveryEye</div>
-          <div class="logoTextSub">配達員の体験を、みんなの安心と効率へ</div>
-        </div>
-      </a>
-    </div>
-
-    <div class="headerRight">
-      <nav>
-        <!-- 未ログイン時 -->
-        <a id="navAbout" href="about.html">このサイトについて</a>
-        <a id="navLogin" href="login.html">ログイン</a>
-        <a id="navSignup" href="signup.html" class="primary">新規登録</a>
-
-        <!-- ログイン時 -->
-        <a id="navLoggedIn" href="mypage.html" style="display:none;">
-          <span class="loggedLamp" aria-hidden="true"></span>
-          ログイン中
+    <!-- ✅ ヘッダー -->
+    <header class="siteHeader">
+      <div class="logoArea">
+        <a class="logoLink" href="index.html" aria-label="トップページへ戻る">
+          <div style="min-width:0;">
+            <div class="logoTextMain">FoodDeliveryEye</div>
+            <div class="logoTextSub">配達員の体験を、みんなの安心と効率へ</div>
+          </div>
         </a>
-        <button id="navLogout" type="button" class="logoutPill" style="display:none;">ログアウトする</button>
-      </nav>
+      </div>
+
+      <div class="headerRight">
+        <nav>
+          <!-- 未ログイン時 -->
+          <a id="navAbout" href="about.html">このサイトについて</a>
+          <a id="navLogin" href="login.html">ログイン</a>
+          <a id="navSignup" href="signup.html" class="primary">新規登録</a>
+
+          <!-- ログイン時 -->
+          <a id="navLoggedIn" href="mypage.html" style="display:none;">
+            <span class="loggedLamp" aria-hidden="true"></span>
+            ログイン中
+          </a>
+          <button id="navLogout" type="button" class="logoutPill" style="display:none;">ログアウトする</button>
+        </nav>
+      </div>
+    </header>
+
+    <h2>配達員マンション入館方法</h2>
+
+    <!-- ✅ 申請ページへ -->
+    <button id="requestBtn" type="button" onclick="location.href='tower_request_form.html'">
+      マンション掲載申請はこちら
+    </button>
+
+    <!-- ✅ 検索欄 -->
+    <div class="searchContainer">
+      <input id="nameInput" placeholder="建物名で検索">
+      <div>
+        <select id="prefSelect"><option value="">都道府県を選択</option></select>
+        <select id="citySelect" style="display:none;"><option value="">市区町村を選択</option></select>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+        <button id="searchBtn" type="button">検索</button>
+        <span class="searchRightDummy" aria-hidden="true"></span>
+      </div>
     </div>
-  </header>
 
-  <h2>配達員マンション入館方法</h2>
+    <div id="towerContainer"></div>
+    <div id="pagination" class="paginationBar" aria-label="ページネーション"></div>
 
-  <button id="requestBtn" type="button" onclick="location.href='tower_request_form.html'">
-    マンション掲載申請はこちら
-  </button>
+  </div>
 
-  <div class="searchContainer">
-    <input id="nameInput" placeholder="建物名で検索">
-    <div>
-      <select id="prefSelect"><option value="">都道府県を選択</option></select>
-      <select id="citySelect" style="display:none;"><option value="">市区町村を選択</option></select>
-    </div>
-    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
-      <button id="searchBtn" type="button">検索</button>
-      <span class="searchRightDummy" aria-hidden="true"></span>
+  <!-- ✅ ログアウト確認 -->
+  <div id="logoutConfirmModal" class="confirmModal" aria-hidden="true">
+    <div class="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h3 class="confirmTitle" id="confirmTitle">本当にログアウトしますか？</h3>
+      <p class="confirmText">ログアウトすると、申請や報告ができなくなります。</p>
+      <div class="confirmActions">
+        <button id="cancelLogoutBtn" class="confirmBtn" type="button">キャンセル</button>
+        <button id="confirmLogoutBtn" class="confirmBtn confirmBtnDanger" type="button">ログアウト</button>
+      </div>
     </div>
   </div>
 
-  <div id="towerContainer"></div>
-  <div id="pagination" class="paginationBar" aria-label="ページネーション"></div>
+  <!-- 入館申請モーダル -->
+  <div id="entryModal" class="modal" aria-hidden="true">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="entryTitle">
+      <h3 id="entryTitle">入館方法の申請</h3>
+      <div class="muted">入館方法を選んで送信してください（必要なら詳細も）。</div>
 
-</div>
+      <select id="entryTypeSelect">
+        <option value="">選択してください</option>
+        <option value="正面可">正面可</option>
+        <option value="正面入り口で手続き">正面入り口で手続き</option>
+        <option value="防災センター経由">防災センター経由</option>
+        <option value="その他">その他</option>
+      </select>
 
-<!-- ✅ ログアウト確認 -->
-<div id="logoutConfirmModal" class="confirmModal" aria-hidden="true">
-  <div class="confirmBox" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <h3 class="confirmTitle" id="confirmTitle">本当にログアウトしますか？</h3>
-    <p class="confirmText">ログアウトすると、申請や報告ができなくなります。</p>
-    <div class="confirmActions">
-      <button id="cancelLogoutBtn" class="confirmBtn" type="button">キャンセル</button>
-      <button id="confirmLogoutBtn" class="confirmBtn confirmBtnDanger" type="button">ログアウト</button>
+      <textarea id="entryComment" placeholder="詳細（任意）"></textarea>
+
+      <div class="modalActions">
+        <button id="sendEntryBtn" class="modalOk" type="button">送信</button>
+        <button id="closeEntryBtn" class="modalCancel" type="button">閉じる</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- 入館申請モーダル -->
-<div id="entryModal" class="modal" aria-hidden="true">
-  <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="entryTitle">
-    <h3 id="entryTitle">入館方法の申請</h3>
-    <div class="muted">入館方法を選んで送信してください（必要なら詳細も）。</div>
+  <!-- 報告モーダル -->
+  <div id="reportModal" class="modal" aria-hidden="true">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+      <h3 id="reportTitle">報告</h3>
+      <div class="muted" id="reportInfo">対象：</div>
 
-    <select id="entryTypeSelect">
-      <option value="">選択してください</option>
-      <option value="正面可">正面可</option>
-      <option value="正面入り口で手続き">正面入り口で手続き</option>
-      <option value="防災センター経由">防災センター経由</option>
-      <option value="その他">その他</option>
-    </select>
+      <select id="reportReason">
+        <option value="">理由を選択</option>
+        <option value="情報が違う">情報が違う</option>
+        <option value="入館方法が変わった">入館方法が変わった</option>
+        <option value="備考を追加したい">備考を追加したい</option>
+        <option value="その他">その他</option>
+      </select>
 
-    <textarea id="entryComment" placeholder="詳細（任意）"></textarea>
+      <textarea id="reportComment" placeholder="詳細（必須）"></textarea>
 
-    <div class="modalActions">
-      <button id="sendEntryBtn" class="modalOk" type="button">送信</button>
-      <button id="closeEntryBtn" class="modalCancel" type="button">閉じる</button>
+      <div class="modalActions">
+        <button id="sendReportBtn" class="modalOk" type="button">送信</button>
+        <button id="closeReportBtn" class="modalCancel" type="button">閉じる</button>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- 報告モーダル -->
-<div id="reportModal" class="modal" aria-hidden="true">
-  <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
-    <h3 id="reportTitle">報告</h3>
-    <div class="muted" id="reportInfo">対象：</div>
+  <script type="module">
+    import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
+    const pb = new PocketBase("https://delivery-eye.onrender.com");
 
-    <select id="reportReason">
-      <option value="">理由を選択</option>
-      <option value="情報が違う">情報が違う</option>
-      <option value="入館方法が変わった">入館方法が変わった</option>
-      <option value="備考を追加したい">備考を追加したい</option>
-      <option value="その他">その他</option>
-    </select>
+    /* ========================
+       ✅ “ログイン後に元の状態へ戻す”ための保存キー
+    ========================= */
+    const KEY_TOWER_UI_STATE = "tower_ui_state_v1";     // 検索/ページ/スクロール
+    const KEY_TOWER_INTENT   = "tower_intent_v1";       // 申請/報告の続き（どの物件で何をするか）
+    const KEY_LOCAL_PENDING  = "tower_entry_pending_ids_v1"; // ログアウト後も「承認待ち」維持
 
-    <textarea id="reportComment" placeholder="詳細（必須）"></textarea>
-
-    <div class="modalActions">
-      <button id="sendReportBtn" class="modalOk" type="button">送信</button>
-      <button id="closeReportBtn" class="modalCancel" type="button">閉じる</button>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pocketbase.es.mjs";
-const pb = new PocketBase("https://delivery-eye.onrender.com");
-
-/* ================
-   ✅ 状態保持キー
-================ */
-const KEY_NEXT_STORE = "fdel_next_url_v1";
-const KEY_TOWER_STATE = "fde_tower_state_v1";
-const KEY_TOWER_RESUME = "fde_tower_resume_action_v1";
-
-/* ========================
-   ✅ ヘッダー（ログイン状態で出し分け）
-======================== */
-const navAbout    = document.getElementById("navAbout");
-const navLogin    = document.getElementById("navLogin");
-const navSignup   = document.getElementById("navSignup");
-const navLoggedIn = document.getElementById("navLoggedIn");
-const navLogout   = document.getElementById("navLogout");
-
-function setNavLoggedIn(isLoggedIn){
-  if(isLoggedIn){
-    navAbout.style.display = "none";
-    navLogin.style.display = "none";
-    navSignup.style.display = "none";
-
-    navLoggedIn.style.display = "";
-    navLoggedIn.classList.add("loggedPill");
-
-    navLogout.style.display = "";
-  }else{
-    navAbout.style.display = "";
-    navLogin.style.display = "";
-    navSignup.style.display = "";
-
-    navLoggedIn.style.display = "none";
-    navLoggedIn.classList.remove("loggedPill");
-
-    navLogout.style.display = "none";
-  }
-}
-
-async function ensureAuthModel(){
-  if(!pb.authStore.isValid){
-    setNavLoggedIn(false);
-    return;
-  }
-  try{
-    if (pb.collection && pb.collection("users")?.authRefresh) {
-      await pb.collection("users").authRefresh();
-    }
-    setNavLoggedIn(true);
-  }catch{
-    pb.authStore.clear();
-    setNavLoggedIn(false);
-  }
-}
-
-/* ========================
-   ✅ ログアウト確認（ワンクッション）
-======================== */
-const logoutConfirmModal = document.getElementById("logoutConfirmModal");
-const cancelLogoutBtn = document.getElementById("cancelLogoutBtn");
-const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
-
-let logoutBusy = false;
-
-function openLogoutConfirm(){
-  logoutConfirmModal.style.display = "flex";
-  logoutConfirmModal.setAttribute("aria-hidden","false");
-}
-function closeLogoutConfirm(){
-  logoutConfirmModal.style.display = "none";
-  logoutConfirmModal.setAttribute("aria-hidden","true");
-}
-async function doLogout(){
-  if(logoutBusy) return;
-  logoutBusy = true;
-  try{
-    pb.authStore.clear();
-    setNavLoggedIn(false);
-    closeLogoutConfirm();
-    alert("ログアウトしました");
-  }finally{
-    logoutBusy = false;
-  }
-}
-
-if(navLogout) navLogout.addEventListener("click", openLogoutConfirm);
-if(cancelLogoutBtn) cancelLogoutBtn.addEventListener("click", closeLogoutConfirm);
-if(confirmLogoutBtn) confirmLogoutBtn.addEventListener("click", doLogout);
-logoutConfirmModal.addEventListener("click", (e)=>{ if(e.target === logoutConfirmModal) closeLogoutConfirm(); });
-document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && logoutConfirmModal.style.display==="flex") closeLogoutConfirm(); });
-
-/* ========================
-   ユーティリティ
-======================== */
-function escapeHtml(s){
-  return String(s ?? "").replace(/[&<>"']/g, c=>({
-    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  }[c]));
-}
-function escapeFilter(s){
-  return String(s ?? "").replaceAll("\\","\\\\").replaceAll('"','\\"').replaceAll("'","\\'");
-}
-function buildAddressOnly(t){
-  const pref = String(t?.prefecture ?? "").trim();
-  const city = String(t?.city ?? "").trim();
-  const addr = String(t?.address ?? "").trim();
-  const parts = [pref, city, addr].filter(Boolean);
-  return parts.join(" ").trim();
-}
-function mapUrlFromAddress(address){
-  const q = encodeURIComponent(address);
-  return `https://www.google.com/maps/search/?api=1&query=${q}`;
-}
-
-/* ========================
-   ✅ tower状態の保存/復元
-======================== */
-function safeNextUrl(raw){
-  if(!raw) return null;
-  const v = String(raw).trim();
-  if(!v) return null;
-  if(/^https?:\/\//i.test(v)) return null;
-  if(v.startsWith("//")) return null;
-  if(/^\s*javascript:/i.test(v)) return null;
-  return v;
-}
-function getThisPagePath(){
-  const file = (location.pathname.split("/").pop() || "tower.html");
-  const qs = location.search ? location.search : "";
-  return file + qs;
-}
-function saveTowerState(){
-  const state = {
-    name: document.getElementById("nameInput").value.trim(),
-    pref: prefSelect.value,
-    city: citySelect.value,
-    page: currentPage
-  };
-  try{ localStorage.setItem(KEY_TOWER_STATE, JSON.stringify(state)); }catch{}
-}
-function loadTowerState(){
-  let st = null;
-  try{ st = JSON.parse(localStorage.getItem(KEY_TOWER_STATE) || "null"); }catch{ st = null; }
-  return st;
-}
-function clearResumeAction(){
-  try{ localStorage.removeItem(KEY_TOWER_RESUME); }catch{}
-}
-function saveResumeAction(action){
-  try{ localStorage.setItem(KEY_TOWER_RESUME, JSON.stringify(action)); }catch{}
-}
-function loadResumeAction(){
-  let a = null;
-  try{ a = JSON.parse(localStorage.getItem(KEY_TOWER_RESUME) || "null"); }catch{ a = null; }
-  return a;
-}
-function redirectToLoginWithReturn(resumeAction){
-  saveTowerState();
-  if(resumeAction) saveResumeAction(resumeAction);
-
-  const ret = safeNextUrl(getThisPagePath()) || "tower.html";
-  try{ localStorage.setItem(KEY_NEXT_STORE, ret); }catch{}
-
-  alert("ログインが必要です。ログイン画面に移動します。");
-  window.location.href = "login.html?next=" + encodeURIComponent(ret);
-}
-
-/* ========================
-   都道府県
-======================== */
-const prefs=[ "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都",
-"神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府",
-"兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県",
-"長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県" ];
-
-const prefSelect=document.getElementById("prefSelect");
-prefs.forEach(p=>{
-  const o=document.createElement("option");
-  o.value=p; o.textContent=p;
-  prefSelect.appendChild(o);
-});
-const citySelect=document.getElementById("citySelect");
-
-const TOKYO_CITY_ORDER = [
-  "千代田区","中央区","港区","新宿区","文京区","台東区","墨田区","江東区","品川区","目黒区","大田区","世田谷区","渋谷区","中野区","杉並区",
-  "豊島区","北区","荒川区","板橋区","練馬区","足立区","葛飾区","江戸川区",
-  "八王子市","立川市","武蔵野市","三鷹市","青梅市","府中市","昭島市","調布市","町田市","小金井市","小平市","日野市","東村山市",
-  "国分寺市","国立市","福生市","狛江市","東大和市","清瀬市","東久留米市","武蔵村山市","多摩市","稲城市","羽村市","あきる野市","西東京市"
-];
-
-prefSelect.onchange = async ()=>{
-  const pref = prefSelect.value;
-  citySelect.value = "";
-  if(!pref){
-    citySelect.style.display="none";
-    citySelect.innerHTML = '<option value="">市区町村を選択</option>';
-    return;
-  }
-
-  citySelect.innerHTML = '<option value="">市区町村を選択</option>';
-
-  if(pref === "東京都"){
-    TOKYO_CITY_ORDER.forEach(c=>{
-      const o=document.createElement("option");
-      o.value=c; o.textContent=c;
-      citySelect.appendChild(o);
-    });
-    citySelect.style.display="block";
-    return;
-  }
-
-  try{
-    const res = await pb.collection("towers").getList(1,500,{ filter:`prefecture="${escapeFilter(pref)}"` });
-    const cities=[...new Set(res.items.map(i=>i.city).filter(Boolean))].sort();
-    cities.forEach(c=>{
-      const o=document.createElement("option");
-      o.value=c; o.textContent=c;
-      citySelect.appendChild(o);
-    });
-    citySelect.style.display="block";
-  }catch{
-    citySelect.style.display="block";
-  }
-};
-
-/* ========================
-   tower描画
-======================== */
-const towerContainer = document.getElementById("towerContainer");
-const searchBtn = document.getElementById("searchBtn");
-const pagination = document.getElementById("pagination");
-
-let currentTowerId = null;
-
-const PER_PAGE = 15;
-let currentPage = 1;
-let totalPages = 1;
-
-function isEntryLocked(t){
-  if(!!t.entryApproved) return true;
-  const et = String(t.entryType ?? "").trim();
-  if(et && et !== "未設定") return true;
-  return false;
-}
-
-/* ✅✅✅ ここが修正の核：送信直後でも必ず“承認待ち”表示にする */
-const pendingLocal = new Set(); // towerIdを即マーク（PB反映ラグ対策）
-
-let browserId = localStorage.getItem("towerBrowserId");
-if(!browserId){
-  browserId = "id-" + Math.random().toString(36).slice(2);
-  localStorage.setItem("towerBrowserId", browserId);
-}
-
-async function hasPendingRequest(towerId){
-  // 送信直後はまずローカル判定（確実に「承認待ち」になる）
-  if(pendingLocal.has(towerId)) return true;
-
-  try{
-    await pb.collection("entry_requests").getFirstListItem(
-      `towerId="${escapeFilter(towerId)}" && browserId="${escapeFilter(browserId)}" && status="pending"`
-    );
-    return true;
-  }catch{
-    return false;
-  }
-}
-
-searchBtn.onclick = ()=>{
-  currentPage = 1;
-  saveTowerState();
-  loadTowers();
-};
-
-function renderPagination(){
-  pagination.innerHTML = "";
-  if(!totalPages || totalPages <= 1) return;
-
-  const groupStart = Math.floor((currentPage - 1) / 5) * 5 + 1;
-  const groupEnd = Math.min(groupStart + 4, totalPages);
-
-  for(let p = groupStart; p <= groupEnd; p++){
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "pageBtn" + (p === currentPage ? " active" : "");
-    b.textContent = String(p);
-    b.onclick = ()=>{
-      currentPage = p;
-      saveTowerState();
-      loadTowers();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-    pagination.appendChild(b);
-  }
-
-  const next = document.createElement("button");
-  next.type = "button";
-  next.className = "pageBtn pageNext";
-  next.textContent = "次へ";
-  const nextPage = groupEnd + 1;
-  next.disabled = nextPage > totalPages;
-  next.onclick = ()=>{
-    if(next.disabled) return;
-    currentPage = nextPage;
-    saveTowerState();
-    loadTowers();
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
-  pagination.appendChild(next);
-}
-
-async function loadTowers(){
-  towerContainer.innerHTML = "読み込み中…";
-
-  const name = document.getElementById("nameInput").value.trim();
-  const pref = prefSelect.value;
-  const city = citySelect.value;
-
-  let filter = "";
-  if(name) filter += `name~"${escapeFilter(name)}"`;
-  if(pref) filter += (filter ? " && " : "") + `prefecture="${escapeFilter(pref)}"`;
-  if(city) filter += (filter ? " && " : "") + `city="${escapeFilter(city)}"`;
-
-  try{
-    const list = await pb.collection("towers").getList(currentPage, PER_PAGE, { filter, sort:"name" });
-    totalPages = Math.max(1, Number(list.totalPages || 1));
-    if(currentPage > totalPages) currentPage = totalPages;
-
-    renderTowers(list.items);
-    renderPagination();
-  }catch(e){
-    console.error(e);
-    towerContainer.textContent = "読み込みエラー";
-  }
-}
-
-function renderTowers(items){
-  towerContainer.innerHTML = "";
-  if(!items.length){
-    towerContainer.textContent = "該当なし";
-    return;
-  }
-
-  items.forEach(async (t)=>{
-    const card = document.createElement("div");
-    card.className = "towerCard";
-
-    const name = document.createElement("div");
-    name.className = "towerName";
-    name.textContent = t.name || "（名称未設定）";
-
-    const addr = document.createElement("div");
-    addr.className = "addr";
-
-    const addressOnly = buildAddressOnly(t);
-    if(addressOnly){
-      const a = document.createElement("a");
-      a.className = "addrLink";
-      a.href = mapUrlFromAddress(addressOnly);
-      a.target = "_blank";
-      a.rel = "noopener noreferrer";
-      a.textContent = addressOnly;
-      addr.appendChild(a);
-    }else{
-      addr.textContent = "住所不明";
+    function safeJsonParse(s, fallback){
+      try{ return JSON.parse(s); }catch{ return fallback; }
     }
 
-    const row1 = document.createElement("div");
-    row1.className = "metaRow";
-    row1.innerHTML = `<div class="metaKey">入館方法</div><div class="metaVal">${escapeHtml((t.entryType && String(t.entryType).trim()) ? t.entryType : "未設定")}</div>`;
+    function saveUiState(){
+      const st = {
+        name: document.getElementById("nameInput").value.trim(),
+        pref: prefSelect.value || "",
+        city: citySelect.value || "",
+        page: currentPage,
+        scrollY: window.scrollY || 0
+      };
+      localStorage.setItem(KEY_TOWER_UI_STATE, JSON.stringify(st));
+    }
 
-    const row2 = document.createElement("div");
-    row2.className = "metaRow";
-    row2.innerHTML = `<div class="metaKey">備考</div><div class="metaVal">${escapeHtml((t.memo && String(t.memo).trim()) ? t.memo : "なし")}</div>`;
+    function restoreUiState(){
+      const st = safeJsonParse(localStorage.getItem(KEY_TOWER_UI_STATE) || "null", null);
+      if(!st) return;
 
-    const actions = document.createElement("div");
-    actions.className = "actions";
+      // 入力復元
+      document.getElementById("nameInput").value = st.name || "";
 
-    const locked = isEntryLocked(t);
-    if(!locked){
-      const pending = await hasPendingRequest(t.id);
-      if(pending){
-        const pill = document.createElement("div");
-        pill.className = "pendingPill";
-        pill.innerHTML = `<span class="dot"></span> 入館方法：承認待ち`;
-        actions.appendChild(pill);
+      // 都道府県/市区町村復元（citySelectはprefによって項目が変わるので順番重要）
+      if(st.pref){
+        prefSelect.value = st.pref;
+      }
+      // prefSelect.onchange で city options を作るので、手動で呼ぶ
+      // その後 city をセット
+      setTimeout(async ()=>{
+        await prefSelect.onchange?.();
+        if(st.city){
+          citySelect.value = st.city;
+        }
+        currentPage = Number(st.page || 1);
+        await loadTowers();
+        // スクロール復元
+        setTimeout(()=>{
+          window.scrollTo({ top: Number(st.scrollY || 0), behavior: "auto" });
+        }, 50);
+      }, 0);
+    }
+
+    function saveIntent(intent){
+      // intent例:
+      // { type:"entry", towerId:"xxx" }
+      // { type:"report", towerId:"xxx" }
+      localStorage.setItem(KEY_TOWER_INTENT, JSON.stringify(intent));
+    }
+    function popIntent(){
+      const it = safeJsonParse(localStorage.getItem(KEY_TOWER_INTENT) || "null", null);
+      localStorage.removeItem(KEY_TOWER_INTENT);
+      return it;
+    }
+
+    function loadLocalPending(){
+      return safeJsonParse(localStorage.getItem(KEY_LOCAL_PENDING) || "[]", []);
+    }
+    function saveLocalPending(arr){
+      const uniq = Array.from(new Set(arr.filter(Boolean)));
+      localStorage.setItem(KEY_LOCAL_PENDING, JSON.stringify(uniq));
+    }
+    function addLocalPending(towerId){
+      const arr = loadLocalPending();
+      if(!arr.includes(towerId)) arr.push(towerId);
+      saveLocalPending(arr);
+    }
+    function hasLocalPending(towerId){
+      return loadLocalPending().includes(towerId);
+    }
+    function removeLocalPending(towerId){
+      const arr = loadLocalPending().filter(id => id !== towerId);
+      saveLocalPending(arr);
+    }
+
+    /* ========================
+       ✅ ヘッダー（ログイン状態で出し分け）
+    ========================= */
+    const navAbout    = document.getElementById("navAbout");
+    const navLogin    = document.getElementById("navLogin");
+    const navSignup   = document.getElementById("navSignup");
+    const navLoggedIn = document.getElementById("navLoggedIn");
+    const navLogout   = document.getElementById("navLogout");
+
+    function setNavLoggedIn(isLoggedIn){
+      if(isLoggedIn){
+        navAbout.style.display = "none";
+        navLogin.style.display = "none";
+        navSignup.style.display = "none";
+
+        navLoggedIn.style.display = "";
+        navLoggedIn.classList.add("loggedPill");
+
+        navLogout.style.display = "";
       }else{
-        const entryBtn = document.createElement("button");
-        entryBtn.className = "btn btnEntry";
-        entryBtn.textContent = "入館方法を申請";
-        entryBtn.onclick = ()=>{
-          if(!pb.authStore.isValid){
-            redirectToLoginWithReturn({ type:"entry", towerId: t.id });
-            return;
-          }
-          openEntryModal(t.id);
-        };
-        actions.appendChild(entryBtn);
+        navAbout.style.display = "";
+        navLogin.style.display = "";
+        navSignup.style.display = "";
+
+        navLoggedIn.style.display = "none";
+        navLoggedIn.classList.remove("loggedPill");
+
+        navLogout.style.display = "none";
       }
     }
 
-    const reportLink = document.createElement("span");
-    reportLink.className = "reportLink";
-    reportLink.textContent = "報告";
-    reportLink.onclick = ()=>{
+    async function ensureAuthModel(){
       if(!pb.authStore.isValid){
-        redirectToLoginWithReturn({ type:"report", towerId: t.id });
+        setNavLoggedIn(false);
+        return false;
+      }
+      try{
+        if (pb.collection && pb.collection("users")?.authRefresh) {
+          await pb.collection("users").authRefresh();
+        }
+        setNavLoggedIn(true);
+        return true;
+      }catch{
+        pb.authStore.clear();
+        setNavLoggedIn(false);
+        return false;
+      }
+    }
+
+    /* ========================
+       ✅ ログアウト確認（ワンクッション）
+    ========================= */
+    const logoutConfirmModal = document.getElementById("logoutConfirmModal");
+    const cancelLogoutBtn = document.getElementById("cancelLogoutBtn");
+    const confirmLogoutBtn = document.getElementById("confirmLogoutBtn");
+
+    let logoutBusy = false;
+
+    function openLogoutConfirm(){
+      logoutConfirmModal.style.display = "flex";
+      logoutConfirmModal.setAttribute("aria-hidden","false");
+    }
+    function closeLogoutConfirm(){
+      logoutConfirmModal.style.display = "none";
+      logoutConfirmModal.setAttribute("aria-hidden","true");
+    }
+    async function doLogout(){
+      if(logoutBusy) return;
+      logoutBusy = true;
+      try{
+        pb.authStore.clear();
+        setNavLoggedIn(false);
+        closeLogoutConfirm();
+        alert("ログアウトしました");
+        // ✅ ログアウト後も検索/ページ状態は保持したいので保存
+        saveUiState();
+      }finally{
+        logoutBusy = false;
+      }
+    }
+
+    if(navLogout) navLogout.addEventListener("click", openLogoutConfirm);
+    if(cancelLogoutBtn) cancelLogoutBtn.addEventListener("click", closeLogoutConfirm);
+    if(confirmLogoutBtn) confirmLogoutBtn.addEventListener("click", doLogout);
+    logoutConfirmModal.addEventListener("click", (e)=>{ if(e.target === logoutConfirmModal) closeLogoutConfirm(); });
+    document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && logoutConfirmModal.style.display==="flex") closeLogoutConfirm(); });
+
+    /* ========================
+       ユーティリティ
+    ========================= */
+    function escapeHtml(s){
+      return String(s ?? "").replace(/[&<>"']/g, c=>({
+        "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+      }[c]));
+    }
+    function escapeFilter(s){
+      return String(s ?? "").replaceAll("\\","\\\\").replaceAll('"','\\"').replaceAll("'","\\'");
+    }
+    function buildAddressOnly(t){
+      const pref = String(t?.prefecture ?? "").trim();
+      const city = String(t?.city ?? "").trim();
+      const addr = String(t?.address ?? "").trim();
+      const parts = [pref, city, addr].filter(Boolean);
+      return parts.join(" ").trim();
+    }
+    function mapUrlFromAddress(address){
+      const q = encodeURIComponent(address);
+      return `https://www.google.com/maps/search/?api=1&query=${q}`;
+    }
+
+    function goLoginAndComeBack(){
+      // ✅ 今の検索/ページ/スクロールを保持
+      saveUiState();
+      // ✅ login.html 側が next を読む前提（あなたの他ページと合わせる）
+      const next = location.pathname.split("/").pop() + location.search;
+      window.location.href = "login.html?next=" + encodeURIComponent(next);
+    }
+
+    /* ========================
+       ✅ 「申請/報告」押した時、ログイン後に“続き”をやる
+    ========================= */
+    function requireLoginWithIntent(intent){
+      // intent: {type:"entry"|"report", towerId:"xxx"}
+      saveIntent(intent);
+      goLoginAndComeBack();
+    }
+
+    /* ========================
+       都道府県
+    ========================= */
+    const prefs=[ "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県","茨城県","栃木県","群馬県","埼玉県","千葉県","東京都",
+      "神奈川県","新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県","三重県","滋賀県","京都府","大阪府",
+      "兵庫県","奈良県","和歌山県","鳥取県","島根県","岡山県","広島県","山口県","徳島県","香川県","愛媛県","高知県","福岡県","佐賀県",
+      "長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県" ];
+
+    const prefSelect=document.getElementById("prefSelect");
+    prefs.forEach(p=>{
+      const o=document.createElement("option");
+      o.value=p; o.textContent=p;
+      prefSelect.appendChild(o);
+    });
+    const citySelect=document.getElementById("citySelect");
+
+    const TOKYO_CITY_ORDER = [
+      "千代田区","中央区","港区","新宿区","文京区","台東区","墨田区","江東区","品川区","目黒区","大田区","世田谷区","渋谷区","中野区","杉並区",
+      "豊島区","北区","荒川区","板橋区","練馬区","足立区","葛飾区","江戸川区",
+      "八王子市","立川市","武蔵野市","三鷹市","青梅市","府中市","昭島市","調布市","町田市","小金井市","小平市","日野市","東村山市",
+      "国分寺市","国立市","福生市","狛江市","東大和市","清瀬市","東久留米市","武蔵村山市","多摩市","稲城市","羽村市","あきる野市","西東京市"
+    ];
+
+    prefSelect.onchange = async ()=>{
+      const pref = prefSelect.value;
+      if(!pref){
+        citySelect.style.display="none";
+        citySelect.innerHTML = '<option value="">市区町村を選択</option>';
         return;
       }
-      openReportModal(t);
+
+      citySelect.innerHTML = '<option value="">市区町村を選択</option>';
+
+      if(pref === "東京都"){
+        TOKYO_CITY_ORDER.forEach(c=>{
+          const o=document.createElement("option");
+          o.value=c; o.textContent=c;
+          citySelect.appendChild(o);
+        });
+        citySelect.style.display="block";
+        return;
+      }
+
+      try{
+        const res = await pb.collection("towers").getList(1,500,{ filter:`prefecture="${escapeFilter(pref)}"` });
+        const cities=[...new Set(res.items.map(i=>i.city).filter(Boolean))].sort();
+        cities.forEach(c=>{
+          const o=document.createElement("option");
+          o.value=c; o.textContent=c;
+          citySelect.appendChild(o);
+        });
+      }catch{
+        // towersが取れない時でもUIは壊さない
+      }
+      citySelect.style.display="block";
     };
 
-    card.appendChild(name);
-    card.appendChild(addr);
-    card.appendChild(row1);
-    card.appendChild(row2);
-    card.appendChild(actions);
-    card.appendChild(reportLink);
+    /* ========================
+       tower描画
+    ========================= */
+    const towerContainer = document.getElementById("towerContainer");
+    const searchBtn = document.getElementById("searchBtn");
+    const pagination = document.getElementById("pagination");
 
-    towerContainer.appendChild(card);
-  });
-}
+    let currentTowerId = null;
 
-/* ========================
-   入館申請モーダル
-======================== */
-const entryModal = document.getElementById("entryModal");
-const entryTypeSelect = document.getElementById("entryTypeSelect");
-const entryComment = document.getElementById("entryComment");
-const sendEntryBtn = document.getElementById("sendEntryBtn");
-const closeEntryBtn = document.getElementById("closeEntryBtn");
+    const PER_PAGE = 15;
+    let currentPage = 1;
+    let totalPages = 1;
 
-function openEntryModal(towerId){
-  currentTowerId = towerId;
-  entryTypeSelect.value = "";
-  entryComment.value = "";
-  entryModal.style.display = "flex";
-  entryModal.setAttribute("aria-hidden","false");
-}
-function closeEntryModal(){
-  entryModal.style.display = "none";
-  entryModal.setAttribute("aria-hidden","true");
-  currentTowerId = null;
-}
-closeEntryBtn.onclick = closeEntryModal;
-entryModal.addEventListener("click",(e)=>{ if(e.target===entryModal) closeEntryModal(); });
-document.addEventListener("keydown",(e)=>{ if(e.key==="Escape" && entryModal.style.display==="flex") closeEntryModal(); });
-
-sendEntryBtn.onclick = async ()=>{
-  if(!currentTowerId) return;
-  const method = entryTypeSelect.value.trim();
-  const comment = entryComment.value.trim();
-  if(!method) return alert("入館方法を選択してください");
-
-  try{
-    const t = await pb.collection("towers").getOne(currentTowerId);
-    if(isEntryLocked(t)){
-      alert("この物件は申請できません（承認済/設定済）");
-      closeEntryModal();
-      return;
-    }
-    const pending = await hasPendingRequest(currentTowerId);
-    if(pending){
-      alert("既に申請済（承認待ち）です。");
-      closeEntryModal();
-      return;
+    function isEntryLocked(t){
+      if(!!t.entryApproved) return true;
+      const et = String(t.entryType ?? "").trim();
+      if(et && et !== "未設定") return true;
+      return false;
     }
 
-    await pb.collection("entry_requests").create({
-      towerId: currentTowerId,
-      method,
-      comment,
-      browserId,
-      status:"pending"
-    });
+    let browserId = localStorage.getItem("towerBrowserId");
+    if(!browserId){
+      browserId = "id-" + Math.random().toString(36).slice(2);
+      localStorage.setItem("towerBrowserId", browserId);
+    }
 
-    /* ✅✅✅ 送信成功した瞬間にローカルで即「承認待ち」へ */
-    pendingLocal.add(currentTowerId);
+    // ✅ ここが重要：ログアウトしても「反映待ち」を維持
+    async function hasPendingRequest(towerId){
+      // ログアウト中はPB検索できない → ローカルで判定
+      if(!pb.authStore.isValid){
+        return hasLocalPending(towerId);
+      }
 
-    alert("入館方法を申請しました。ありがとうございます。");
-    closeEntryModal();
-
-    // すぐUI反映（PB側のラグがあっても必ず承認待ちになる）
-    loadTowers();
-  }catch(e){
-    console.error(e);
-    alert("申請に失敗しました。");
-  }
-};
-
-/* ========================
-   報告モーダル
-======================== */
-const reportModal = document.getElementById("reportModal");
-const reportInfo = document.getElementById("reportInfo");
-const reportReason = document.getElementById("reportReason");
-const reportComment = document.getElementById("reportComment");
-const sendReportBtn = document.getElementById("sendReportBtn");
-const closeReportBtn = document.getElementById("closeReportBtn");
-
-let reportTowerId = null;
-
-function openReportModal(t){
-  reportTowerId = t.id;
-
-  const addressOnly = buildAddressOnly(t);
-  reportInfo.innerHTML = `対象：<b>${escapeHtml(t.name || "（名称未設定）")}</b><br>住所：${escapeHtml(addressOnly || "住所不明")}`;
-
-  reportReason.value = "";
-  reportComment.value = "";
-  reportModal.style.display = "flex";
-  reportModal.setAttribute("aria-hidden","false");
-}
-function closeReportModal(){
-  reportModal.style.display = "none";
-  reportModal.setAttribute("aria-hidden","true");
-  reportTowerId = null;
-}
-closeReportBtn.onclick = closeReportModal;
-reportModal.addEventListener("click",(e)=>{ if(e.target===reportModal) closeReportModal(); });
-document.addEventListener("keydown",(e)=>{ if(e.key==="Escape" && reportModal.style.display==="flex") closeReportModal(); });
-
-sendReportBtn.onclick = async ()=>{
-  const reason = reportReason.value.trim();
-  const comment = reportComment.value.trim();
-  if(!reportTowerId) return;
-  if(!reason) return alert("理由を選択してください");
-  if(!comment) return alert("詳細（必須）を書いてください");
-
-  try{
-    await pb.collection("towerReports").create({
-      towerId: reportTowerId,
-      reason,
-      comment,
-      browserId
-    });
-    alert("報告を送信しました。ありがとうございます。");
-    closeReportModal();
-  }catch(e){
-    console.error(e);
-    alert("報告に失敗しました。");
-  }
-};
-
-/* ========================
-   ✅ ログイン復帰後：状態復元＆モーダル再開
-======================== */
-async function restoreTowerStateAndResume(){
-  const st = loadTowerState();
-  if(st){
-    const nameEl = document.getElementById("nameInput");
-    if(st.name && !nameEl.value) nameEl.value = st.name;
-
-    if(st.pref && !prefSelect.value){
-      prefSelect.value = st.pref;
-      await prefSelect.onchange();
-      if(st.city) citySelect.value = st.city;
-    }else{
-      if(prefSelect.value){
-        await prefSelect.onchange();
-        if(st.city) citySelect.value = st.city;
+      // ログイン中はPBで正を取りに行く
+      try{
+        await pb.collection("entry_requests").getFirstListItem(
+          `towerId="${escapeFilter(towerId)}" && browserId="${escapeFilter(browserId)}" && status="pending"`
+        );
+        // サーバにあるならローカルも保持（OK）
+        return true;
+      }catch{
+        // サーバに無いならローカルは外す（整合）
+        removeLocalPending(towerId);
+        return false;
       }
     }
-    if(st.page) currentPage = Math.max(1, Number(st.page || 1));
-  }
 
-  await loadTowers();
+    searchBtn.onclick = ()=>{
+      currentPage = 1;
+      saveUiState();
+      loadTowers();
+    };
 
-  if(!pb.authStore.isValid) return;
+    function renderPagination(){
+      pagination.innerHTML = "";
+      if(!totalPages || totalPages <= 1) return;
 
-  const action = loadResumeAction();
-  if(!action || !action.type || !action.towerId) return;
+      const groupStart = Math.floor((currentPage - 1) / 5) * 5 + 1;
+      const groupEnd = Math.min(groupStart + 4, totalPages);
 
-  clearResumeAction();
+      for(let p = groupStart; p <= groupEnd; p++){
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "pageBtn" + (p === currentPage ? " active" : "");
+        b.textContent = String(p);
+        b.onclick = ()=>{
+          currentPage = p;
+          saveUiState();
+          loadTowers();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+        pagination.appendChild(b);
+      }
 
-  if(action.type === "entry"){
-    try{
-      const t = await pb.collection("towers").getOne(action.towerId);
-      if(isEntryLocked(t)){
-        alert("この物件は申請できません（承認済/設定済）");
+      const next = document.createElement("button");
+      next.type = "button";
+      next.className = "pageBtn pageNext";
+      next.textContent = "次へ";
+      const nextPage = groupEnd + 1;
+      next.disabled = nextPage > totalPages;
+      next.onclick = ()=>{
+        if(next.disabled) return;
+        currentPage = nextPage;
+        saveUiState();
+        loadTowers();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+      pagination.appendChild(next);
+    }
+
+    async function loadTowers(){
+      towerContainer.innerHTML = "読み込み中…";
+
+      const name = document.getElementById("nameInput").value.trim();
+      const pref = prefSelect.value;
+      const city = citySelect.value;
+
+      let filter = "";
+      if(name) filter += `name~"${escapeFilter(name)}"`;
+      if(pref) filter += (filter ? " && " : "") + `prefecture="${escapeFilter(pref)}"`;
+      if(city) filter += (filter ? " && " : "") + `city="${escapeFilter(city)}"`;
+
+      try{
+        const list = await pb.collection("towers").getList(currentPage, PER_PAGE, { filter, sort:"name" });
+        totalPages = Math.max(1, Number(list.totalPages || 1));
+        if(currentPage > totalPages) currentPage = totalPages;
+
+        renderTowers(list.items);
+        renderPagination();
+
+        // 状態保存（ページ移動や再ログインで戻す）
+        saveUiState();
+      }catch(e){
+        console.error(e);
+        towerContainer.textContent = "読み込みエラー";
+      }
+    }
+
+    function renderTowers(items){
+      towerContainer.innerHTML = "";
+      if(!items.length){
+        towerContainer.textContent = "該当なし";
         return;
       }
-      const pending = await hasPendingRequest(action.towerId);
-      if(pending){
-        alert("既に申請済（承認待ち）です。");
+
+      items.forEach(async (t)=>{
+        const card = document.createElement("div");
+        card.className = "towerCard";
+
+        const name = document.createElement("div");
+        name.className = "towerName";
+        name.textContent = t.name || "（名称未設定）";
+
+        const addr = document.createElement("div");
+        addr.className = "addr";
+
+        const addressOnly = buildAddressOnly(t);
+        if(addressOnly){
+          const a = document.createElement("a");
+          a.className = "addrLink";
+          a.href = mapUrlFromAddress(addressOnly);
+          a.target = "_blank";
+          a.rel = "noopener noreferrer";
+          a.textContent = addressOnly;
+          addr.appendChild(a);
+        }else{
+          addr.textContent = "住所不明";
+        }
+
+        const row1 = document.createElement("div");
+        row1.className = "metaRow";
+        row1.innerHTML = `<div class="metaKey">入館方法</div><div class="metaVal">${escapeHtml((t.entryType && String(t.entryType).trim()) ? t.entryType : "未設定")}</div>`;
+
+        const row2 = document.createElement("div");
+        row2.className = "metaRow";
+        row2.innerHTML = `<div class="metaKey">備考</div><div class="metaVal">${escapeHtml((t.memo && String(t.memo).trim()) ? t.memo : "なし")}</div>`;
+
+        const actions = document.createElement("div");
+        actions.className = "actions";
+
+        const locked = isEntryLocked(t);
+        if(!locked){
+          const pending = await hasPendingRequest(t.id);
+          if(pending){
+            const pill = document.createElement("div");
+            pill.className = "pendingPill";
+            pill.innerHTML = `<span class="dot"></span> 入館方法：承認待ち`;
+            actions.appendChild(pill);
+          }else{
+            const entryBtn = document.createElement("button");
+            entryBtn.className = "btn btnEntry";
+            entryBtn.textContent = "入館方法を申請";
+            entryBtn.onclick = ()=>openEntryModal(t.id);
+            actions.appendChild(entryBtn);
+          }
+        }
+
+        const reportLink = document.createElement("span");
+        reportLink.className = "reportLink";
+        reportLink.textContent = "報告";
+        reportLink.onclick = ()=>openReportModal(t);
+
+        card.appendChild(name);
+        card.appendChild(addr);
+        card.appendChild(row1);
+        card.appendChild(row2);
+        card.appendChild(actions);
+        card.appendChild(reportLink);
+
+        towerContainer.appendChild(card);
+      });
+    }
+
+    /* ========================
+       入館申請モーダル
+    ========================= */
+    const entryModal = document.getElementById("entryModal");
+    const entryTypeSelect = document.getElementById("entryTypeSelect");
+    const entryComment = document.getElementById("entryComment");
+    const sendEntryBtn = document.getElementById("sendEntryBtn");
+    const closeEntryBtn = document.getElementById("closeEntryBtn");
+
+    function openEntryModal(towerId){
+      // ✅ 未ログインなら「ログイン後に続き」へ
+      if(!pb.authStore.isValid){
+        requireLoginWithIntent({ type:"entry", towerId });
         return;
       }
-      openEntryModal(action.towerId);
-    }catch{}
-  }
+      currentTowerId = towerId;
+      entryTypeSelect.value = "";
+      entryComment.value = "";
+      entryModal.style.display = "flex";
+      entryModal.setAttribute("aria-hidden","false");
+      saveUiState();
+    }
+    function closeEntryModal(){
+      entryModal.style.display = "none";
+      entryModal.setAttribute("aria-hidden","true");
+      currentTowerId = null;
+    }
+    closeEntryBtn.onclick = closeEntryModal;
+    entryModal.addEventListener("click",(e)=>{ if(e.target===entryModal) closeEntryModal(); });
+    document.addEventListener("keydown",(e)=>{ if(e.key==="Escape" && entryModal.style.display==="flex") closeEntryModal(); });
 
-  if(action.type === "report"){
-    try{
-      const t = await pb.collection("towers").getOne(action.towerId);
-      openReportModal(t);
-    }catch{}
-  }
-}
+    sendEntryBtn.onclick = async ()=>{
+      if(!currentTowerId) return;
+      const method = entryTypeSelect.value.trim();
+      const comment = entryComment.value.trim();
+      if(!method) return alert("入館方法を選択してください");
 
-/* ========================
-   初回ロード
-======================== */
-(async ()=>{
-  setNavLoggedIn(pb.authStore.isValid);
-  await ensureAuthModel();
-  await restoreTowerStateAndResume();
-})();
-</script>
+      try{
+        // 念のためリフレッシュ
+        await ensureAuthModel();
 
+        const t = await pb.collection("towers").getOne(currentTowerId);
+        if(isEntryLocked(t)){
+          alert("この物件は申請できません（承認済/設定済）");
+          closeEntryModal();
+          return;
+        }
+
+        const pending = await hasPendingRequest(currentTowerId);
+        if(pending){
+          alert("既に申請済（承認待ち）です。");
+          closeEntryModal();
+          await loadTowers();
+          return;
+        }
+
+        await pb.collection("entry_requests").create({
+          towerId: currentTowerId,
+          method,
+          comment,
+          browserId,
+          status:"pending"
+        });
+
+        // ✅ ここが重要：ログアウト/再起動しても「承認待ち」維持
+        addLocalPending(currentTowerId);
+
+        alert("入館方法を申請しました。ありがとうございます。");
+        closeEntryModal();
+        await loadTowers();
+      }catch(e){
+        console.error(e);
+        alert("申請に失敗しました。");
+      }
+    };
+
+    /* ========================
+       報告モーダル
+    ========================= */
+    const reportModal = document.getElementById("reportModal");
+    const reportInfo = document.getElementById("reportInfo");
+    const reportReason = document.getElementById("reportReason");
+    const reportComment = document.getElementById("reportComment");
+    const sendReportBtn = document.getElementById("sendReportBtn");
+    const closeReportBtn = document.getElementById("closeReportBtn");
+
+    let reportTowerId = null;
+
+    function openReportModal(t){
+      // ✅ 未ログインなら「ログイン後に続き」へ
+      if(!pb.authStore.isValid){
+        requireLoginWithIntent({ type:"report", towerId: t.id });
+        return;
+      }
+      reportTowerId = t.id;
+
+      const addressOnly = buildAddressOnly(t);
+      reportInfo.innerHTML = `対象：<b>${escapeHtml(t.name || "（名称未設定）")}</b><br>住所：${escapeHtml(addressOnly || "住所不明")}`;
+
+      reportReason.value = "";
+      reportComment.value = "";
+      reportModal.style.display = "flex";
+      reportModal.setAttribute("aria-hidden","false");
+      saveUiState();
+    }
+    function closeReportModal(){
+      reportModal.style.display = "none";
+      reportModal.setAttribute("aria-hidden","true");
+      reportTowerId = null;
+    }
+    closeReportBtn.onclick = closeReportModal;
+    reportModal.addEventListener("click",(e)=>{ if(e.target===reportModal) closeReportModal(); });
+    document.addEventListener("keydown",(e)=>{ if(e.key==="Escape" && reportModal.style.display==="flex") closeReportModal(); });
+
+    sendReportBtn.onclick = async ()=>{
+      const reason = reportReason.value.trim();
+      const comment = reportComment.value.trim();
+      if(!reportTowerId) return;
+      if(!reason) return alert("理由を選択してください");
+      if(!comment) return alert("詳細（必須）を書いてください");
+
+      try{
+        await ensureAuthModel();
+
+        await pb.collection("towerReports").create({
+          towerId: reportTowerId,
+          reason,
+          comment,
+          browserId
+        });
+        alert("報告を送信しました。ありがとうございます。");
+        closeReportModal();
+      }catch(e){
+        console.error(e);
+        alert("報告に失敗しました。");
+      }
+    };
+
+    /* ========================
+       ✅ ログイン後に「続き」を自動再開
+    ========================= */
+    async function resumeIntentIfAny(){
+      const it = popIntent();
+      if(!it) return;
+
+      // ログインできてないなら無視
+      const ok = await ensureAuthModel();
+      if(!ok) return;
+
+      // 表示は復元済みの前提（restoreUiState→loadTowers後に呼ぶ想定）
+      if(it.type === "entry" && it.towerId){
+        openEntryModal(it.towerId);
+        return;
+      }
+      if(it.type === "report" && it.towerId){
+        try{
+          const t = await pb.collection("towers").getOne(it.towerId);
+          openReportModal(t);
+        }catch{
+          // 取れなくても壊さない
+        }
+      }
+    }
+
+    /* ========================
+       初回ロード
+    ========================= */
+    (async ()=>{
+      setNavLoggedIn(pb.authStore.isValid);
+      await ensureAuthModel();
+
+      // ✅ まず状態復元があればそれを優先
+      const hasState = !!localStorage.getItem(KEY_TOWER_UI_STATE);
+      if(hasState){
+        restoreUiState();
+        // restoreUiState 内で loadTowers を呼ぶので、intent再開は少し遅らせる
+        setTimeout(()=>{ resumeIntentIfAny(); }, 600);
+      }else{
+        await loadTowers();
+        await resumeIntentIfAny();
+      }
+    })();
+  </script>
 </body>
 </html>
