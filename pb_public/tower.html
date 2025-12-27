@@ -211,6 +211,7 @@ nav button{ appearance:none; -webkit-appearance:none; }
 /* =========================
    ▼ towerページUI
 ========================= */
+
 h2 { margin:12px 0 6px; }
 
 #requestBtn {
@@ -465,12 +466,10 @@ h2 { margin:12px 0 6px; }
 
   <h2>配達員マンション入館方法</h2>
 
-  <!-- ✅✅✅ 申請ページへ -->
   <button id="requestBtn" type="button" onclick="location.href='tower_request_form.html'">
     マンション掲載申請はこちら
   </button>
 
-  <!-- ✅✅✅ 検索欄 -->
   <div class="searchContainer">
     <input id="nameInput" placeholder="建物名で検索">
     <div>
@@ -553,9 +552,9 @@ const pb = new PocketBase("https://delivery-eye.onrender.com");
 /* ================
    ✅ 状態保持キー
 ================ */
-const KEY_NEXT_STORE = "fdel_next_url_v1";                 // login.html が読む
-const KEY_TOWER_STATE = "fde_tower_state_v1";              // towerの検索/ページ状態
-const KEY_TOWER_RESUME = "fde_tower_resume_action_v1";     // ログイン後にやること（entry/report)
+const KEY_NEXT_STORE = "fdel_next_url_v1";
+const KEY_TOWER_STATE = "fde_tower_state_v1";
+const KEY_TOWER_RESUME = "fde_tower_resume_action_v1";
 
 /* ========================
    ✅ ヘッダー（ログイン状態で出し分け）
@@ -675,13 +674,11 @@ function safeNextUrl(raw){
   if(/^\s*javascript:/i.test(v)) return null;
   return v;
 }
-
 function getThisPagePath(){
   const file = (location.pathname.split("/").pop() || "tower.html");
   const qs = location.search ? location.search : "";
   return file + qs;
 }
-
 function saveTowerState(){
   const state = {
     name: document.getElementById("nameInput").value.trim(),
@@ -691,37 +688,28 @@ function saveTowerState(){
   };
   try{ localStorage.setItem(KEY_TOWER_STATE, JSON.stringify(state)); }catch{}
 }
-
 function loadTowerState(){
   let st = null;
   try{ st = JSON.parse(localStorage.getItem(KEY_TOWER_STATE) || "null"); }catch{ st = null; }
   return st;
 }
-
 function clearResumeAction(){
   try{ localStorage.removeItem(KEY_TOWER_RESUME); }catch{}
 }
-
 function saveResumeAction(action){
-  // action: {type:"entry"|"report", towerId:"xxx"}
   try{ localStorage.setItem(KEY_TOWER_RESUME, JSON.stringify(action)); }catch{}
 }
-
 function loadResumeAction(){
   let a = null;
   try{ a = JSON.parse(localStorage.getItem(KEY_TOWER_RESUME) || "null"); }catch{ a = null; }
   return a;
 }
-
-/* ✅ 未ログイン → loginへ。戻り先(next)と状態を保存して飛ばす */
 function redirectToLoginWithReturn(resumeAction){
   saveTowerState();
   if(resumeAction) saveResumeAction(resumeAction);
 
   const ret = safeNextUrl(getThisPagePath()) || "tower.html";
-  try{
-    localStorage.setItem(KEY_NEXT_STORE, ret);
-  }catch{}
+  try{ localStorage.setItem(KEY_NEXT_STORE, ret); }catch{}
 
   alert("ログインが必要です。ログイン画面に移動します。");
   window.location.href = "login.html?next=" + encodeURIComponent(ret);
@@ -805,6 +793,9 @@ function isEntryLocked(t){
   return false;
 }
 
+/* ✅✅✅ ここが修正の核：送信直後でも必ず“承認待ち”表示にする */
+const pendingLocal = new Set(); // towerIdを即マーク（PB反映ラグ対策）
+
 let browserId = localStorage.getItem("towerBrowserId");
 if(!browserId){
   browserId = "id-" + Math.random().toString(36).slice(2);
@@ -812,6 +803,9 @@ if(!browserId){
 }
 
 async function hasPendingRequest(towerId){
+  // 送信直後はまずローカル判定（確実に「承認待ち」になる）
+  if(pendingLocal.has(towerId)) return true;
+
   try{
     await pb.collection("entry_requests").getFirstListItem(
       `towerId="${escapeFilter(towerId)}" && browserId="${escapeFilter(browserId)}" && status="pending"`
@@ -945,7 +939,6 @@ function renderTowers(items){
         entryBtn.className = "btn btnEntry";
         entryBtn.textContent = "入館方法を申請";
         entryBtn.onclick = ()=>{
-          // ✅ 未ログインなら「状態保持＆この物件の申請を再開」してログインへ
           if(!pb.authStore.isValid){
             redirectToLoginWithReturn({ type:"entry", towerId: t.id });
             return;
@@ -960,7 +953,6 @@ function renderTowers(items){
     reportLink.className = "reportLink";
     reportLink.textContent = "報告";
     reportLink.onclick = ()=>{
-      // ✅ 未ログインなら「状態保持＆この物件の報告を再開」してログインへ
       if(!pb.authStore.isValid){
         redirectToLoginWithReturn({ type:"report", towerId: t.id });
         return;
@@ -1032,8 +1024,13 @@ sendEntryBtn.onclick = async ()=>{
       status:"pending"
     });
 
+    /* ✅✅✅ 送信成功した瞬間にローカルで即「承認待ち」へ */
+    pendingLocal.add(currentTowerId);
+
     alert("入館方法を申請しました。ありがとうございます。");
     closeEntryModal();
+
+    // すぐUI反映（PB側のラグがあっても必ず承認待ちになる）
     loadTowers();
   }catch(e){
     console.error(e);
@@ -1099,7 +1096,6 @@ sendReportBtn.onclick = async ()=>{
    ✅ ログイン復帰後：状態復元＆モーダル再開
 ======================== */
 async function restoreTowerStateAndResume(){
-  // 1) 状態復元
   const st = loadTowerState();
   if(st){
     const nameEl = document.getElementById("nameInput");
@@ -1107,36 +1103,27 @@ async function restoreTowerStateAndResume(){
 
     if(st.pref && !prefSelect.value){
       prefSelect.value = st.pref;
-      // city候補を作るため onchange を呼ぶ
       await prefSelect.onchange();
-      if(st.city){
-        citySelect.value = st.city;
-      }
+      if(st.city) citySelect.value = st.city;
     }else{
-      // 既にprefが入ってる/東京以外でcity候補欲しいケース
       if(prefSelect.value){
         await prefSelect.onchange();
         if(st.city) citySelect.value = st.city;
       }
     }
-
     if(st.page) currentPage = Math.max(1, Number(st.page || 1));
   }
 
-  // 2) towersをロード（復元した条件で）
   await loadTowers();
 
-  // 3) 再開アクション（ログイン後にモーダル開く）
-  if(!pb.authStore.isValid) return; // まだ未ログインなら何もしない
+  if(!pb.authStore.isValid) return;
 
   const action = loadResumeAction();
   if(!action || !action.type || !action.towerId) return;
 
-  // 多重実行防止
   clearResumeAction();
 
   if(action.type === "entry"){
-    // 対象towerを取得して申請可能なら開く
     try{
       const t = await pb.collection("towers").getOne(action.towerId);
       if(isEntryLocked(t)){
@@ -1149,18 +1136,14 @@ async function restoreTowerStateAndResume(){
         return;
       }
       openEntryModal(action.towerId);
-    }catch{
-      // 取得失敗時は何もしない
-    }
+    }catch{}
   }
 
   if(action.type === "report"){
     try{
       const t = await pb.collection("towers").getOne(action.towerId);
       openReportModal(t);
-    }catch{
-      // 取得失敗時は何もしない
-    }
+    }catch{}
   }
 }
 
