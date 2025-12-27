@@ -543,6 +543,44 @@ const pb = new PocketBase("https://delivery-eye.onrender.com");
 if (typeof pb.autoCancellation === "function") pb.autoCancellation(false);
 
 /* ========================
+   ✅ 検索状態を「投票/口コミの反映後も」保持する（今回の肝）
+======================== */
+const SEARCH_STATE_KEY = "fde_vote_search_state_v1";
+function clampInt(n, min, max){
+  const x = Number(n);
+  if(!Number.isFinite(x)) return min;
+  return Math.min(max, Math.max(min, Math.floor(x)));
+}
+function getSearchStateSnapshot(){
+  const name = (document.getElementById("nameInput")?.value || "").trim();
+  const pref = (document.getElementById("prefSelect")?.value || "").trim();
+  const city = (document.getElementById("citySelect")?.value || "").trim();
+  const favOnly = !!document.getElementById("favOnlyCheckbox")?.checked;
+  return {
+    name, pref, city, favOnly,
+    page: clampInt(currentPage || 1, 1, 9999),
+    savedAt: Date.now()
+  };
+}
+function saveSearchState(override = {}){
+  try{
+    const state = { ...getSearchStateSnapshot(), ...override, savedAt: Date.now() };
+    sessionStorage.setItem(SEARCH_STATE_KEY, JSON.stringify(state));
+  }catch{}
+}
+function loadSearchState(){
+  try{
+    const raw = sessionStorage.getItem(SEARCH_STATE_KEY);
+    if(!raw) return null;
+    const obj = JSON.parse(raw);
+    if(!obj || typeof obj !== "object") return null;
+    return obj;
+  }catch{
+    return null;
+  }
+}
+
+/* ========================
    ✅ ここが今回の肝：ログイン後に vote.html に戻って自動実行
 ======================== */
 const KEY_NEXT_STORE   = "fdel_next_url_v1";          // login.html と同じ
@@ -574,10 +612,13 @@ function redirectToLogin(){
 }
 function savePendingAction(obj){
   try{
+    // ✅ pending にも検索状態を入れておく（ログイン復帰時に確実に戻す）
+    const searchState = getSearchStateSnapshot();
     sessionStorage.setItem(KEY_PENDING_ACT, JSON.stringify({
       ...obj,
       createdAt: Date.now(),
-      page: currentPage || 1
+      page: currentPage || 1,
+      searchState
     }));
   }catch{}
 }
@@ -743,6 +784,10 @@ async function doLogout(){
     favOnlyCheckbox.checked = false;
 
     closeLogoutConfirm();
+
+    // ✅ ログアウトでも検索状態は保持（面倒なリセット防止）
+    saveSearchState({ favOnly:false });
+
     loadPage(1);
     alert("ログアウトしました");
   }finally{
@@ -850,6 +895,9 @@ const TOKYO_CITY_ORDER = [
 
 prefSelect.onchange = async ()=>{
   const pref = prefSelect.value;
+  // ✅ 都道府県を変えたら即保存（リセット防止）
+  saveSearchState({ pref, city:"", page:1 });
+
   if(!pref){
     citySelect.style.display="none";
     citySelect.innerHTML = '<option value="">市区町村を選択</option>';
@@ -886,7 +934,11 @@ prefSelect.onchange = async ()=>{
 /* ========================
    検索 & お気に入り絞り込み & ページング
 ======================== */
-document.getElementById("searchBtn").onclick=()=>loadPage(1);
+document.getElementById("searchBtn").onclick=()=>{
+  // ✅ 検索を押したら状態保存して1ページ目へ
+  saveSearchState({ page:1 });
+  loadPage(1);
+};
 
 let pageSize=10;
 
@@ -904,8 +956,25 @@ favOnlyCheckbox.onchange = ()=>{
     return;
   }
   favoriteOnly = favOnlyCheckbox.checked;
+  // ✅ チェック操作も保存
+  saveSearchState({ favOnly: favoriteOnly, page:1 });
   loadPage(1);
 };
+
+// ✅ 店舗名入力も（入力のたびに）保存しておく：投票/口コミ後に戻すため
+const nameInputEl = document.getElementById("nameInput");
+if(nameInputEl){
+  nameInputEl.addEventListener("input", ()=>{
+    saveSearchState({ page:1 });
+  });
+}
+
+// ✅ 市区町村変更も保存
+if(citySelect){
+  citySelect.addEventListener("change", ()=>{
+    saveSearchState({ page:1, city: citySelect.value || "" });
+  });
+}
 
 async function loadFavoriteMap(){
   favoriteMap = new Map();
@@ -934,10 +1003,14 @@ async function loadFavoriteMap(){
 }
 
 async function loadPage(page=1){
+  // ✅ 表示更新のたびに、今の検索条件＋ページを保存（これで投票/口コミ後も戻る）
+  currentPage = Number(page) || 1;
+  saveSearchState({ page: currentPage });
+
   const container=document.getElementById("storeContainer");
   container.innerHTML="読み込み中…";
 
-  const name=document.getElementById("nameInput").value.trim();
+  const name=(document.getElementById("nameInput")?.value || "").trim();
   const pref=prefSelect.value;
   const city=citySelect.value;
 
@@ -949,11 +1022,14 @@ async function loadPage(page=1){
   try{
     await loadFavoriteMap();
 
-    const list=await pb.collection("stores").getList(page,pageSize,{filter,sort:"name"});
+    const list=await pb.collection("stores").getList(currentPage,pageSize,{filter,sort:"name"});
     let stores=list.items;
 
     currentPage = list.page;
     totalPages = list.totalPages || 1;
+
+    // ✅ サーバーがページ補正した可能性があるので、確定したページで保存
+    saveSearchState({ page: currentPage });
 
     if(favoriteOnly){
       stores = stores.filter(s => favoriteMap.has(s.id));
@@ -1000,6 +1076,8 @@ function renderPagination(){
     btn.onclick = ()=>{
       const page = Number(btn.dataset.page) || 1;
       if(page === currentPage) return;
+      // ✅ ページ移動も保存
+      saveSearchState({ page });
       loadPage(page);
       window.scrollTo({top:0, behavior:"smooth"});
     };
@@ -1084,7 +1162,11 @@ function renderStores(stores){
       });
       const btn=document.createElement("button");
       btn.textContent="投票";
-      btn.onclick=()=>vote(s.id, sel.value);
+      btn.onclick=()=>{
+        // ✅ 投票押下時点で検索状態を保存（念押し）
+        saveSearchState({ page: currentPage });
+        vote(s.id, sel.value);
+      };
       vBox.appendChild(sel);
       vBox.appendChild(btn);
     }
@@ -1176,6 +1258,9 @@ function renderStores(stores){
 
     /* ✅ 口コミ投稿（未ログインなら「保留保存 → login → 戻ったら自動投稿」） */
     panel.querySelector(`#reviewBtn-${s.id}`).onclick=()=>{
+      // ✅ 投稿前に検索状態を保存（念押し）
+      saveSearchState({ page: currentPage });
+
       const textEl = document.getElementById(`reviewInput-${s.id}`);
       const text = textEl.value.trim();
 
@@ -1253,7 +1338,10 @@ async function handleFavoriteClick(storeId, btn){
       btn.classList.remove("active");
       btn.textContent="♡";
 
-      if(favoriteOnly) loadPage(1);
+      if(favoriteOnly){
+        saveSearchState({ page:1 });
+        loadPage(1);
+      }
       return;
     }
 
@@ -1271,7 +1359,10 @@ async function handleFavoriteClick(storeId, btn){
     btn.classList.add("active");
     btn.textContent="♥";
 
-    if(favoriteOnly) loadPage(1);
+    if(favoriteOnly){
+      saveSearchState({ page:1 });
+      loadPage(1);
+    }
 
   }catch(e){
     console.error(e);
@@ -1369,6 +1460,9 @@ async function executeVote(id, choice){
     localStorage.setItem(key,"1");
 
     alert("投票しました！");
+
+    // ✅ ここが重要：検索状態を保存済みなので、そのまま同条件・同ページで再読み込み
+    saveSearchState({ page: currentPage });
     loadPage(currentPage);
   }catch(e){
     console.error(e);
@@ -1533,6 +1627,9 @@ async function submitReview(storeId,text,star){
 
     const input = document.getElementById(`reviewInput-${storeId}`);
     if(input) input.value="";
+
+    // ✅ ここが重要：検索状態を保存済みなので、そのまま同条件・同ページで再読み込み
+    saveSearchState({ page: currentPage });
     loadPage(currentPage);
 
   }catch(e){
@@ -1559,6 +1656,45 @@ document.getElementById("closeStoreReportBtn").onclick = ()=>closeStoreReportMod
 /* ========================
    ✅ 初回ロード + ログイン後の「保留操作」自動実行
 ======================== */
+async function restoreSearchStateToUI(){
+  const state = loadSearchState();
+  if(!state) return;
+
+  const nameEl = document.getElementById("nameInput");
+  if(nameEl) nameEl.value = state.name || "";
+
+  // favOnly
+  const favEl = document.getElementById("favOnlyCheckbox");
+  if(favEl){
+    favEl.checked = !!state.favOnly;
+    favoriteOnly = !!state.favOnly;
+  }
+
+  // pref/city は city一覧を作る必要があるので async
+  if(state.pref){
+    prefSelect.value = state.pref;
+
+    // onchange を呼んで city を作る
+    try{
+      await prefSelect.onchange();
+    }catch{}
+
+    if(state.city){
+      citySelect.value = state.city;
+      if(prefSelect.value) citySelect.style.display = "block";
+    }
+  }else{
+    prefSelect.value = "";
+    citySelect.value = "";
+    citySelect.style.display = "none";
+  }
+
+  // ページ
+  if(state.page && Number(state.page) >= 1){
+    currentPage = Number(state.page);
+  }
+}
+
 async function resumePendingActionIfAny(){
   if(!pb.authStore.isValid) return;
 
@@ -1569,6 +1705,11 @@ async function resumePendingActionIfAny(){
   if(pending.createdAt && (Date.now() - pending.createdAt) > 15 * 60 * 1000){
     clearPendingAction();
     return;
+  }
+
+  // ✅ pending に検索状態が入ってる場合は復元（ログイン復帰でも絶対リセットさせない）
+  if(pending.searchState && typeof pending.searchState === "object"){
+    try{ sessionStorage.setItem(SEARCH_STATE_KEY, JSON.stringify(pending.searchState)); }catch{}
   }
 
   // 先にページを復元
@@ -1610,10 +1751,13 @@ async function resumePendingActionIfAny(){
   // お気に入りスキーマ
   await detectFavoriteSchema();
 
+  // ✅ まずUIに検索状態を復元（これがないとリセットされる）
+  await restoreSearchStateToUI();
+
   // ✅ ログイン直後の保留処理（投票/口コミ）を先に拾う
   await resumePendingActionIfAny();
 
-  // 表示
+  // ✅ 最後に「復元された条件」で表示
   await loadPage(currentPage || 1);
 })();
 </script>
