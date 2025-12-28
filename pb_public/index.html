@@ -1443,6 +1443,18 @@
     }
 
     async function fetchActiveTopic(){
+      // ✅ 1) まず isHero=true を優先（あればそれをトップ表示）
+      try{
+        const resHero = await pb.collection("poll_topics").getList(1, 1, {
+          filter: `published=true && isHero=true`,
+          sort: "-heroPriority,-created"
+        });
+        if(resHero?.items?.[0]) return resHero.items[0];
+      }catch(e){
+        // isHeroフィールド未作成/権限/クエリ不可でも落とさない
+      }
+
+      // ✅ 2) 見つからなければ従来通り active の最新
       const res = await pb.collection("poll_topics").getList(1, 1, {
         filter: `status="active" && published=true`,
         sort: "-created"
