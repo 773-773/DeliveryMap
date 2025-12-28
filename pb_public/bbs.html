@@ -668,9 +668,6 @@ function saveLocalModeration(){
 
 /* =========================
    ✅ NGフィルタ（緩くした版）
-   - 1文字禁止を撤去（? だけでもOK）
-   - 連続記号は10個以上でNG
-   - NGワードは「殺害/自殺/テロ」系の強いものだけ
 ========================= */
 const NG_WORDS = [
   "死ね","しね","殺す","ころす","殺害","自殺","自害","リスカ","テロ","爆破","爆弾"
@@ -875,10 +872,13 @@ async function renderThreadList(){
     }
 
     const items = res.items || [];
-    const enriched = await Promise.all(items.map(async t=>{
+
+    /* ✅ ここが修正点：Promise.all をやめて順番に取得（auto-cancel回避） */
+    const enriched = [];
+    for(const t of items){
       const info = await fetchLatestPostForThread(t.id);
-      return { t, info, lastAt: info.lastAt || new Date(t.created).getTime() };
-    }));
+      enriched.push({ t, info, lastAt: info.lastAt || new Date(t.created).getTime() });
+    }
     enriched.sort((a,b)=> (b.lastAt||0) - (a.lastAt||0));
 
     list.innerHTML = "";
