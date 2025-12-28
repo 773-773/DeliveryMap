@@ -532,6 +532,12 @@ import PocketBase from "https://cdn.jsdelivr.net/npm/pocketbase@0.21.2/dist/pock
 const pb = new PocketBase("https://delivery-eye.onrender.com");
 
 /* =========================
+   1ページあたり件数
+========================= */
+const THREADS_PER_PAGE = 20;
+const POSTS_PER_PAGE = 20;
+
+/* =========================
    ナビ（既存挙動維持）
 ========================= */
 const KEY_NEXT_STORE = "fdel_next_url_v1";
@@ -656,9 +662,6 @@ const REPORT_THRESHOLD = 2;
 const THREAD_REPORT_THRESHOLD = 5;
 const USER_TOTAL_REPORT_THRESHOLD = 10;
 
-const THREADS_PER_PAGE = 20;
-const POSTS_PER_PAGE = 20;
-
 function saveLocalModeration(){
   saveJson(BANNED_NAMES_KEY, bannedNames);
   saveJson(HIDDEN_POST_IDS_KEY, hiddenPostIds);
@@ -667,7 +670,7 @@ function saveLocalModeration(){
 }
 
 /* =========================
-   ✅ NGフィルタ（緩くした版）
+   NGフィルタ（緩くした版）
 ========================= */
 const NG_WORDS = [
   "死ね","しね","殺す","ころす","殺害","自殺","自害","リスカ","テロ","爆破","爆弾"
@@ -678,19 +681,14 @@ function isDisallowedContent(text){
   const s = String(text);
   const t = s.toLowerCase();
 
-  // URL / メールはNG（スパム対策）
   if(/https?:\/\//.test(t)) return true;
   if(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/i.test(s)) return true;
 
-  // 記号連打（緩め：10以上）
   if(/[!?！？]{10,}/.test(s)) return true;
 
-  // 強いNGワードのみ
   for(const w of NG_WORDS){
     if(t.includes(w.toLowerCase())) return true;
   }
-
-  // 文字数が0だけNG（空は別で弾く）
   return false;
 }
 
@@ -782,12 +780,9 @@ async function createReport(targetType, targetId, reason){
   }));
 }
 
-/* ✅ PB上でスレッドを非表示化 */
 async function hideThreadInPB(threadId){
   await pbSafe(()=>pb.collection("threads").update(threadId, { isHidden:true }));
 }
-
-/* ✅ PB上で投稿を非表示化（本人だけ） */
 async function hidePostInPB(postId){
   await pbSafe(()=>pb.collection("posts").update(postId, { isHidden:true }));
 }
@@ -873,7 +868,7 @@ async function renderThreadList(){
 
     const items = res.items || [];
 
-    /* ✅ ここが修正点：Promise.all をやめて順番に取得（auto-cancel回避） */
+    /* auto-cancel回避（順番に取得） */
     const enriched = [];
     for(const t of items){
       const info = await fetchLatestPostForThread(t.id);
@@ -946,6 +941,16 @@ async function createThread(){
       ownerViewerId: viewerId,
       isHidden: false
     }));
+
+    /* 総数から最後のページへ（20件で自動繰り上げ） */
+    try{
+      const stat = await pbSafe(()=>pb.collection("threads").getList(1, 1, {
+        filter: "isHidden = false"
+      }));
+      const total = Number(stat.totalItems || 0);
+      state.threadPage = Math.max(1, Math.ceil(total / THREADS_PER_PAGE));
+    }catch{}
+
     enterThread(created.id);
   }catch(e){
     alert("スレッド作成に失敗しました。PocketBaseのCreateルールを確認してください。");
@@ -999,6 +1004,7 @@ async function renderThreadPage(){
       <button class="btn" onclick="postToThread()">投稿</button>
     </div>
 
+    <!-- ✅ ここを「投稿一覧」だけに（件数表示を消す） -->
     <h3 id="postCountTitle">投稿一覧</h3>
     <div id="postList"></div>
     <div id="postPager"></div>
@@ -1044,7 +1050,8 @@ async function renderPosts(){
   const totalPages = Math.max(1, Number(res.totalPages || 1));
   state.postPage = clampPage(state.postPage, totalPages);
 
-  title.textContent = `投稿一覧（${total}件）`;
+  /* ✅ 件数を表示しない */
+  title.textContent = "投稿一覧";
 
   if(total === 0){
     list.innerHTML = `<div style="color:#777;">まだ投稿がありません。</div>`;
@@ -1067,7 +1074,7 @@ async function renderPosts(){
   }else{
     visible.forEach((p)=>{
       const name = (p.name && p.name.trim()) ? p.name.trim() : "名無し";
-      const canDeletePost = (p.viewerId && p.viewerId === viewerId); // ✅ 本人だけ
+      const canDeletePost = (p.viewerId && p.viewerId === viewerId);
 
       const card = document.createElement("div");
       card.className = "post-card";
@@ -1087,7 +1094,6 @@ async function renderPosts(){
       card.querySelector(".post-name").textContent = name;
       card.querySelector(".post-body").textContent = p.body || "";
 
-      /* ✅ 返信先：IDじゃなくて名前にする（保存済みの replyToName / replyToSnippet を使う） */
       if(p.replyToPostId){
         const rtName = (p.replyToName && String(p.replyToName).trim()) ? String(p.replyToName).trim() : "名無し";
         const rtSnip = (p.replyToSnippet && String(p.replyToSnippet).trim()) ? String(p.replyToSnippet).trim() : "";
@@ -1142,7 +1148,6 @@ async function postToThread(){
 
   if(!body){ alert("本文を入力してください。"); return; }
 
-  // ✅ 判定は「URL/メール/強NGのみ」
   if(isDisallowedContent(name) || isDisallowedContent(body)){
     alert("URL/メール/強いNG表現が含まれているため投稿できません。");
     return;
@@ -1163,14 +1168,23 @@ async function postToThread(){
     document.getElementById("bodyInput").value = "";
     replyContext = null;
 
-    state.postPage = 1;
+    /* 総数から最後のページへ（20件で自動繰り上げ） */
+    try{
+      const stat = await pbSafe(()=>pb.collection("posts").getList(1, 1, {
+        filter: `thread = "${state.currentThreadId}" && isHidden = false`
+      }));
+      const total = Number(stat.totalItems || 0);
+      state.postPage = Math.max(1, Math.ceil(total / POSTS_PER_PAGE));
+    }catch{
+      state.postPage = 1;
+    }
+
     await renderThreadPage();
   }catch(e){
     alert("投稿に失敗しました。postsのCreateルールを確認してください。");
   }
 }
 
-/* ✅ 投稿削除：本人だけ & PB上で isHidden=true */
 async function deletePost(postId){
   if(!confirm("この投稿を削除しますか？（PocketBase上でも非表示になります）")) return;
 
