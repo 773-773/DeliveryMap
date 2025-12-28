@@ -14,9 +14,11 @@
     --text:#fff;
     --input:#1a1a1a;
     --border:#333;
-    --accent:#ffa500;
-    --ok:#66ff99;
+    --accent:#ffa500; /* オレンジ */
+    --ok:#66ff99;     /* グリーン */
     --ng:#ff6666;
+    --shadow:0 18px 60px rgba(0,0,0,.55);
+    --r:14px;
   }
   *{ box-sizing:border-box; }
   body{
@@ -30,71 +32,76 @@
     display:flex;
     justify-content:space-between;
     align-items:center;
-    padding:8px;
+    padding:10px 10px;
     background:var(--panel);
     border-bottom:1px solid var(--hair);
     position:sticky;
     top:0;
     z-index:10;
+    border-radius:12px;
   }
-  header .status{ font-size:.8em;color:var(--muted); }
+  header .status{ font-size:.82em;color:var(--muted); }
   #logoutBtn{
     display:none;
-    background:#333;color:#fff;border:none;
-    padding:6px 10px;border-radius:8px;
-    cursor:pointer;font-weight:800;font-size:.8em;
+    background:#2a2a2a;color:#fff;border:none;
+    padding:8px 12px;border-radius:10px;
+    cursor:pointer;font-weight:900;font-size:.82em;
   }
 
-  main{ max-width:720px; margin:10px auto 30px; }
-  h2{ margin:12px 0 6px; }
+  main{ max-width:720px; margin:12px auto 30px; }
+  h2{ margin:12px 2px 8px; font-size:1.35rem; letter-spacing:.02em; }
 
   .desc{
     background:var(--panel);
     border:1px solid var(--hair);
-    border-radius:10px;
-    padding:10px;
+    border-radius:12px;
+    padding:12px 12px;
     color:var(--muted);
-    font-size:.85em;
-    line-height:1.6;
+    font-size:.88em;
+    line-height:1.65;
     margin-bottom:12px;
+    box-shadow:var(--shadow);
   }
 
   .card{
     background:var(--panel);
     border:1px solid var(--hair);
-    border-radius:12px;
+    border-radius:16px;
     padding:14px;
+    box-shadow:var(--shadow);
   }
 
   .row{ margin-bottom:10px; position:relative; }
   label{
     display:block;
-    font-size:.85em;
+    font-size:.88em;
     margin-bottom:6px;
+    color:rgba(255,255,255,.92);
   }
   .req{ color:var(--ng); font-size:.8em; margin-left:6px; }
 
   input, select, textarea{
     width:100%;
-    padding:10px 12px;
-    border-radius:10px;
+    padding:11px 12px;
+    border-radius:12px;
     border:1px solid var(--border);
     background:var(--input);
     color:var(--text);
-    font-size:.95em;
+    font-size:.98em;
     outline:none;
   }
 
   #submitBtn{
     width:100%;
     margin-top:8px;
-    padding:12px;
+    padding:14px 12px;
     border:none;
-    border-radius:12px;
+    border-radius:14px;
     background:var(--accent);
     color:#000;
-    font-weight:900;
+    font-weight:1000;
     cursor:pointer;
+    letter-spacing:.02em;
   }
   #submitBtn:disabled{ opacity:.55; cursor:not-allowed; }
 
@@ -117,7 +124,7 @@
     list-style:none;
     margin:0;
     padding:6px;
-    border-radius:10px;
+    border-radius:12px;
     border:1px solid var(--border);
     background:rgba(17,17,17,0.98);
     max-height:180px;
@@ -125,30 +132,75 @@
     z-index:50;
   }
   #nameSuggestions li{
-    padding:8px 10px;
-    border-radius:8px;
+    padding:10px 10px;
+    border-radius:10px;
     cursor:pointer;
-    font-size:.92em;
+    font-size:.95em;
     color:rgba(255,255,255,0.92);
   }
   #nameSuggestions li:hover{ background:rgba(255,255,255,0.06); }
 
-  /* ✅ 完了後の戻るボタン */
-  #backWrap{
+  /* ✅ 申請完了UI（スクショ風） */
+  #doneWrap{
     display:none;
-    margin-top:10px;
+    border:2px solid rgba(102,255,153,.40);
+    border-radius:18px;
+    padding:16px;
+    background:linear-gradient(180deg, rgba(102,255,153,.06), rgba(0,0,0,0));
   }
-  #backBtn{
+  .doneTitle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size:1.15rem;
+    font-weight:1000;
+    color:var(--ok);
+    margin:2px 2px 10px;
+    letter-spacing:.01em;
+  }
+  .doneTitle .check{
+    width:34px;height:34px;border-radius:10px;
+    display:grid;place-items:center;
+    background:rgba(102,255,153,.18);
+    border:1px solid rgba(102,255,153,.30);
+    font-size:18px;
+  }
+  .doneText{
+    color:rgba(255,255,255,.86);
+    line-height:1.7;
+    font-size:.92em;
+    margin:0 2px 14px;
+  }
+  .doneBtns{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .btnPrimary{
     width:100%;
-    padding:12px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,0.14);
-    background:rgba(255,255,255,0.06);
+    padding:14px 12px;
+    border:none;
+    border-radius:14px;
+    background:var(--accent);
+    color:#000;
+    font-weight:1000;
+    cursor:pointer;
+    letter-spacing:.02em;
+  }
+  .btnGhost{
+    width:100%;
+    padding:14px 12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.06);
     color:#fff;
-    font-weight:900;
+    font-weight:1000;
     cursor:pointer;
   }
-  #backBtn:hover{ filter:brightness(1.06); }
+  .btnGhost:hover{ filter:brightness(1.06); }
+
+  /* フォーム側を隠す用 */
+  #formWrap{ display:block; }
 </style>
 </head>
 
@@ -167,36 +219,52 @@
   </div>
 
   <div class="card">
-    <form id="requestForm">
-      <div class="row">
-        <label>店舗名 <span class="req">※必須</span></label>
-        <input id="nameInput" type="text" placeholder="例：マクドナルド 渋谷店" autocomplete="off">
-        <ul id="nameSuggestions" aria-label="店舗名候補"></ul>
+
+    <!-- ✅ 申請フォーム -->
+    <div id="formWrap">
+      <form id="requestForm">
+        <div class="row">
+          <label>店舗名 <span class="req">※必須</span></label>
+          <input id="nameInput" type="text" placeholder="例：マクドナルド 渋谷店" autocomplete="off">
+          <ul id="nameSuggestions" aria-label="店舗名候補"></ul>
+        </div>
+
+        <div class="row">
+          <label>都道府県 <span class="req">※必須</span></label>
+          <select id="prefSelect"><option value="">選択してください</option></select>
+        </div>
+
+        <div class="row">
+          <label>市区町村 <span class="req">※必須</span></label>
+          <input id="cityInput" type="text" placeholder="例）渋谷区、港区、横浜市西区">
+        </div>
+
+        <div class="row">
+          <label>以下住所 <span class="req">※必須</span></label>
+          <input id="addressInput" type="text" placeholder="例：道玄坂2-11-1">
+        </div>
+
+        <button id="submitBtn" type="submit">この内容で申請する</button>
+        <div id="messageBox"></div>
+      </form>
+    </div>
+
+    <!-- ✅ 申請完了（スクショ風） -->
+    <div id="doneWrap" aria-live="polite">
+      <div class="doneTitle">
+        <div class="check">✅</div>
+        <div>申請が完了しました</div>
       </div>
-
-      <div class="row">
-        <label>都道府県 <span class="req">※必須</span></label>
-        <select id="prefSelect"><option value="">選択してください</option></select>
+      <p class="doneText">
+        申請内容は運営側で確認後に掲載されます。<br>
+        ご協力ありがとうございます。
+      </p>
+      <div class="doneBtns">
+        <button class="btnPrimary" type="button" id="doneBackBtn">一覧へ戻る</button>
+        <button class="btnGhost" type="button" id="doneAgainBtn">続けて申請する</button>
       </div>
+    </div>
 
-      <div class="row">
-        <label>市区町村 <span class="req">※必須</span></label>
-        <input id="cityInput" type="text" placeholder="例）渋谷区、港区、横浜市西区">
-      </div>
-
-      <div class="row">
-        <label>以下住所 <span class="req">※必須</span></label>
-        <input id="addressInput" type="text" placeholder="例：道玄坂2-11-1">
-      </div>
-
-      <button id="submitBtn" type="submit">この内容で申請する</button>
-
-      <div id="messageBox"></div>
-
-      <div id="backWrap">
-        <button type="button" id="backBtn">前のページに戻る</button>
-      </div>
-    </form>
   </div>
 </main>
 
@@ -223,8 +291,11 @@ const addrEl  = $("addressInput");
 
 const suggBox = $("nameSuggestions");
 
-const backWrap = $("backWrap");
-const backBtn  = $("backBtn");
+/* ✅ 完了UI */
+const formWrap = $("formWrap");
+const doneWrap = $("doneWrap");
+const doneBackBtn = $("doneBackBtn");
+const doneAgainBtn = $("doneAgainBtn");
 
 /* ===== ページ/遷移設定 ===== */
 const THIS_PAGE = "request.html";
@@ -245,12 +316,44 @@ function safeLocalPath(raw){
 const qs = new URLSearchParams(location.search);
 const fromQuery = safeLocalPath(qs.get("from"));
 if(fromQuery){
-  // ✅ request.html?from=xxx を開いたら保存（ログイン挟んでも戻れる）
   try{ sessionStorage.setItem(FROM_KEY, fromQuery); }catch{}
 }
 function getFrom(){
   return fromQuery || safeLocalPath(sessionStorage.getItem(FROM_KEY));
 }
+
+/* ✅ 戻る（from優先→history→index） */
+function goBack(){
+  const from = getFrom();
+  if(from){
+    window.location.href = from;
+    return;
+  }
+  if(window.history.length > 1){
+    window.history.back();
+    return;
+  }
+  window.location.href = "index.html";
+}
+
+/* ✅ 完了表示/フォーム復帰 */
+function showDone(){
+  formWrap.style.display = "none";
+  msgBox.textContent = "";
+  doneWrap.style.display = "block";
+}
+function showFormAgain(){
+  doneWrap.style.display = "none";
+  formWrap.style.display = "block";
+  try{ nameEl.focus(); }catch{}
+}
+
+doneBackBtn.addEventListener("click", goBack);
+doneAgainBtn.addEventListener("click", ()=>{
+  form.reset();
+  suggBox.style.display = "none";
+  showFormAgain();
+});
 
 /* ===== 自動申請の“戻り判定”フラグ ===== */
 const LOGIN_RETURN_FLAG = "fde_from_login_v1";
@@ -272,28 +375,10 @@ for(const p of prefs){
   prefEl.appendChild(o);
 }
 
-function hideBack(){ backWrap.style.display = "none"; }
-function showBack(){ backWrap.style.display = "block"; }
-
 function showMsg(text,type="success"){
   msgBox.textContent = text;
   msgBox.className = type==="success" ? "msg-success" : "msg-error";
 }
-
-/* ✅ 戻る（from優先→history→index） */
-function goBack(){
-  const from = getFrom();
-  if(from){
-    window.location.href = from;
-    return;
-  }
-  if(window.history.length > 1){
-    window.history.back();
-    return;
-  }
-  window.location.href = "index.html";
-}
-backBtn.addEventListener("click", goBack);
 
 /* ===== ログイン表示 ===== */
 function updateStatus(){
@@ -310,7 +395,8 @@ updateStatus();
 logoutBtn.onclick = ()=>{
   pb.authStore.clear();
   updateStatus();
-  hideBack();
+  // ログアウトしても完了画面が残ると紛らわしいのでフォームに戻す
+  showFormAgain();
   showMsg("ログアウトしました。","success");
 };
 
@@ -397,7 +483,9 @@ function clearPending(){
 
 /* ===== loginへ ===== */
 function goLogin(){
-  try { localStorage.setItem(KEY_NEXT_STORE, THIS_PAGE + (getFrom() ? ("?from=" + encodeURIComponent(getFrom())) : "")); } catch {}
+  try {
+    localStorage.setItem(KEY_NEXT_STORE, THIS_PAGE + (getFrom() ? ("?from=" + encodeURIComponent(getFrom())) : ""));
+  } catch {}
   const next = THIS_PAGE + (getFrom() ? ("?from=" + encodeURIComponent(getFrom())) : "");
   window.location.href = `${LOGIN_PAGE}?next=${encodeURIComponent(next)}`;
 }
@@ -479,30 +567,28 @@ async function submitRequest(payload){
   if(pb.authStore.isValid && pending && fromLogin === "1"){
     try{
       submit.disabled = true;
-      hideBack();
+      showFormAgain();
       showMsg("ログイン完了。申請を自動送信中…","success");
 
       try{ await pb.collection("users").authRefresh(); }catch{}
 
       await submitRequest(pending);
 
-      showMsg("申請が完了しました！","success");
-      showBack();
-
+      // ✅ スクショ風の完了画面
       form.reset();
       suggBox.style.display = "none";
       clearPending();
+      showDone();
 
     }catch(err){
       console.error(err);
-      hideBack();
+      showFormAgain();
       showMsg("自動申請に失敗しました。\n\n--- 詳細 ---\n" + (err?.message || err), "error");
     }finally{
       submit.disabled = false;
       sessionStorage.removeItem(LOGIN_RETURN_FLAG);
     }
   }else{
-    // フラグ無しの残骸は勝手に送らない＆消す
     if(pending && fromLogin !== "1"){
       clearPending();
     }
@@ -513,7 +599,7 @@ async function submitRequest(payload){
 form.onsubmit = async (e)=>{
   e.preventDefault();
   msgBox.textContent = "";
-  hideBack();
+  showFormAgain();
 
   const payload = {
     name: nameEl.value.trim(),
@@ -546,15 +632,14 @@ form.onsubmit = async (e)=>{
     clearPending();
     sessionStorage.removeItem(LOGIN_RETURN_FLAG);
 
-    showMsg("申請が完了しました！","success");
-    showBack();
-
+    // ✅ スクショ風の完了画面
     form.reset();
     suggBox.style.display = "none";
+    showDone();
 
   }catch(err){
     console.error("PB error:", err);
-    hideBack();
+    showFormAgain();
 
     const status = err?.status ? `status: ${err.status}\n` : "";
     const msg = err?.message ? `message: ${err.message}\n` : "";
