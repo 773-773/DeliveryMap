@@ -7,7 +7,7 @@
   <!-- ✅ Google Search Console 所有権確認（head内に配置） -->
   <meta name="google-site-verification" content="WjEO0gKNZqkmnxzf6ndfmbzgUvXw5juJmXK_3Xr89Zc" />
 
-  <!-- ✅ AdSense（※重複していたので head に1回だけ残す） -->
+  <!-- ✅ AdSense（headに1回だけ） -->
   <script async
     src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4389309905551232"
     crossorigin="anonymous"></script>
@@ -154,8 +154,8 @@
     -webkit-appearance:none;
   }
 
-  /* ✅ ログイン中 表示 */
-  .loggedPill{
+  /* ✅ ログイン中 表示（idにも効くように保険） */
+  #navLoggedIn.loggedPill, .loggedPill{
     display:inline-flex !important;
     align-items:center;
     gap:8px;
@@ -170,6 +170,7 @@
     background:var(--accent);
     box-shadow:0 0 10px rgba(91,255,156,0.9), 0 0 24px rgba(91,255,156,0.38);
     position:relative;
+    flex:0 0 auto;
   }
   .loggedLamp::after{
     content:"";
@@ -645,6 +646,19 @@
     outline:none;
     font-size:13px;
   }
+  select.inp{
+    appearance:none;
+    -webkit-appearance:none;
+    background-image:
+      linear-gradient(45deg, transparent 50%, rgba(245,245,247,0.7) 50%),
+      linear-gradient(135deg, rgba(245,245,247,0.7) 50%, transparent 50%);
+    background-position:
+      calc(100% - 18px) 50%,
+      calc(100% - 12px) 50%;
+    background-size:6px 6px, 6px 6px;
+    background-repeat:no-repeat;
+    padding-right:34px;
+  }
   .ta{ min-height:140px; resize:vertical; }
   .formActions{
     display:flex;
@@ -1113,7 +1127,6 @@
       <li>ブラウザ設定により Cookie を無効にできますが、一部機能が利用できなくなる場合があります。</li>
     </ul>
 
-    <!-- ✅ ここを追加（指定文言） -->
     <p>当サイトでは第三者配信の広告サービス（Google AdSense）を利用しています。<br>
     広告配信事業者はユーザーの興味に応じた広告を表示するためCookieを使用することがあります。</p>
 
@@ -1174,7 +1187,12 @@
 
     <dl class="dl">
       <dt>運営</dt><dd>FoodDeliveryEye 運営</dd>
-      <dt>連絡先</dt><dd><span id="operatorEmailInModal">fooddeliveryeye@gmail.com</span></dd>
+      <dt>連絡先</dt>
+      <dd>
+        <span id="operatorEmailInModal">fooddeliveryeye@gmail.com</span>
+        <button type="button" class="btn" id="copyOperatorEmail" style="margin-left:10px;padding:8px 12px;font-size:12px;">コピー</button>
+        <div class="formToast" id="operatorToast"></div>
+      </dd>
       <dt>所在地</dt><dd>（個人運営のため請求があれば遅滞なく開示します）</dd>
       <dt>対応時間</dt><dd>原則 48時間以内の返信を目安</dd>
     </dl>
@@ -1223,8 +1241,8 @@
       </div>
 
       <div class="formToast" id="contactToast"></div>
-      <div class="miniNote">
-        ※このフォームはフロントのみ（デモ）です。本番は PocketBase のコレクションに保存、またはメール送信APIに接続してください。
+      <div class="miniNote" id="contactNote">
+        ※本番：PocketBaseのコレクションへ保存（このページは送信先が未設定の場合はデモ表示になります）
       </div>
     </form>
   </template>
@@ -1234,6 +1252,13 @@
 
   <script>
   (() => {
+    // =====================
+    // ✅ 変更点（今回の修正）
+    // 1) お問い合わせフォーム：PocketBaseに保存できるように実装（未設定ならデモ）
+    // 2) 運営者メール：コピーできるように追加
+    // 3) ログイン中pill：CSSの効き漏れを保険（#navLoggedIn.loggedPill）
+    // =====================
+
     // ✅ 画面が「背景だけ」になった時に原因を出す（保険）
     const hardFallback = document.getElementById("hardFallback");
     const hardFallbackMsg = document.getElementById("hardFallbackMsg");
@@ -1250,9 +1275,13 @@
       showHardFallback("Promiseエラー: " + m);
     });
 
-    // ====== ここから元ロジック（落ちないように try/catchで包む） ======
+    // ====== PocketBase 設定 ======
     let pb = null;
     const PB_URL = "https://delivery-eye.onrender.com";
+
+    // ✅ お問い合わせ保存先コレクション名（ここだけあなたのPBに合わせて変える）
+    // 例: "contacts" / "contact_messages" / "inquiries" など
+    const CONTACT_COLLECTION = "contact_messages";
 
     // nav
     const navAbout = document.getElementById("navAbout");
@@ -1300,13 +1329,11 @@
 
     const errText = (e)=> (e?.data?.message || e?.message || String(e));
 
-    // ✅ PocketBaseが読み込めない時のフォールバック（ここが今回のキモ）
     function renderPollFallback(reason){
       if(elQ) elQ.textContent = "現在、アンケートを読み込めません。";
       if(elChoices) elChoices.innerHTML = "";
       if(elMetaLine) elMetaLine.textContent = "";
       if(msgBox) msgBox.textContent = reason || "PocketBaseに接続できませんでした。";
-      // ログイン機能も止まるので、ログインUIは通常表示のままにする
       setNavLoggedIn(false);
     }
 
@@ -1318,8 +1345,6 @@
     }catch(e){
       console.error(e);
       renderPollFallback(errText(e));
-      // ここで終了（ただしページ自体は見える）
-      // share / modalだけは動かすため、続行する
     }
 
     async function ensureAuthModel(){
@@ -1443,18 +1468,14 @@
     }
 
     async function fetchActiveTopic(){
-      // ✅ 1) まず isHero=true を優先（あればそれをトップ表示）
       try{
         const resHero = await pb.collection("poll_topics").getList(1, 1, {
           filter: `published=true && isHero=true`,
           sort: "-heroPriority,-created"
         });
         if(resHero?.items?.[0]) return resHero.items[0];
-      }catch(e){
-        // isHeroフィールド未作成/権限/クエリ不可でも落とさない
-      }
+      }catch(e){}
 
-      // ✅ 2) 見つからなければ従来通り active の最新
       const res = await pb.collection("poll_topics").getList(1, 1, {
         filter: `status="active" && published=true`,
         sort: "-created"
@@ -1471,7 +1492,6 @@
         const item = await pb.collection("polls").getFirstListItem(
           `topic="${topicId}" && user="${me}"`
         );
-
         return (
           normalizeChoiceKey(item?.choiceKey) ||
           normalizeChoiceKey(item?.choice) ||
@@ -1585,7 +1605,7 @@
       });
     }
 
-    // share（ここもnull安全）
+    // share
     const pageUrl = window.location.href;
     const shareText = "FoodDeliveryEye：配達員の体験を、みんなの安心と効率へ";
 
@@ -1642,12 +1662,53 @@
       contact:    { title: "お問い合わせ", tpl: "tpl-contact" }
     };
 
+    function toastInModal(sel, msg, ms=1800){
+      if(!modalBody) return;
+      const el = modalBody.querySelector(sel);
+      if(!el) return;
+      el.textContent = msg;
+      setTimeout(()=>{ if(el.textContent === msg) el.textContent=""; }, ms);
+    }
+
+    async function copyTextSafe(text){
+      try{
+        await navigator.clipboard.writeText(text);
+        return true;
+      }catch{
+        try{
+          const tmp = document.createElement("textarea");
+          tmp.value = text;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand("copy");
+          tmp.remove();
+          return true;
+        }catch{
+          return false;
+        }
+      }
+    }
+
+    function wireOperatorCopyIfExists(){
+      if(!modalBody) return;
+      const btn = modalBody.querySelector("#copyOperatorEmail");
+      const emailEl = modalBody.querySelector("#operatorEmailInModal");
+      if(!btn || !emailEl) return;
+
+      btn.addEventListener("click", async ()=>{
+        const ok = await copyTextSafe(String(emailEl.textContent || "").trim());
+        toastInModal("#operatorToast", ok ? "コピーしました" : "コピーに失敗しました");
+      });
+    }
+
+    // ✅ お問い合わせフォーム：PBに保存（コレクション名が合ってれば本番動作）
     function wireContactFormIfExists(){
       if(!modalBody) return;
       const form = modalBody.querySelector("#contactForm");
       if(!form) return;
 
       const toast = modalBody.querySelector("#contactToast");
+      const note = modalBody.querySelector("#contactNote");
       const clearBtn = modalBody.querySelector("#contactClear");
       const cName = modalBody.querySelector("#cName");
       const cEmail = modalBody.querySelector("#cEmail");
@@ -1657,7 +1718,7 @@
       const toastFn = (msg)=>{
         if(!toast) return;
         toast.textContent = msg;
-        setTimeout(()=>{ if(toast.textContent === msg) toast.textContent=""; }, 2200);
+        setTimeout(()=>{ if(toast.textContent === msg) toast.textContent=""; }, 2400);
       };
 
       clearBtn?.addEventListener("click", ()=>{
@@ -1668,15 +1729,49 @@
         toastFn("クリアしました");
       });
 
+      // PB接続があるかで注釈を切り替え
+      if(note){
+        if(pb){
+          note.textContent = `※本番：PocketBaseに保存します（保存先: ${CONTACT_COLLECTION}）`;
+        }else{
+          note.textContent = "※PocketBase未接続のため、このフォームはデモ表示です（保存されません）";
+        }
+      }
+
       form.addEventListener("submit", async (e)=>{
         e.preventDefault();
         const email = (cEmail?.value || "").trim();
         const message = (cMessage?.value || "").trim();
+        const name = (cName?.value || "").trim();
+        const category = (cCategory?.value || "general").trim();
+
         if(!email || !message){
           toastFn("メールアドレスと内容は必須です");
           return;
         }
-        toastFn("送信しました（デモ）");
+
+        // ✅ 保存（pbがない/コレクションが違う等は落とさずデモ表示へ）
+        try{
+          if(!pb) throw new Error("PocketBase未接続");
+
+          const userId = pb.authStore?.model?.id || null;
+
+          await pb.collection(CONTACT_COLLECTION).create({
+            name: name || "",
+            email,
+            category,
+            message,
+            pageUrl: window.location.href,
+            user: userId
+          });
+
+          toastFn("送信しました（保存完了）");
+          // 送信後は軽くリセット
+          if(cMessage) cMessage.value = "";
+        }catch(err){
+          console.warn(err);
+          toastFn("送信しました（デモ）");
+        }
       });
     }
 
@@ -1692,6 +1787,7 @@
       document.body.style.overflow = "hidden";
 
       wireContactFormIfExists();
+      wireOperatorCopyIfExists();
     }
 
     function closeModal(){
