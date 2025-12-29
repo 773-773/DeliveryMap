@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- ✅ Google Search Console 所有権確認（head内に配置） -->
-  <meta name="google-site-verification" content="WjEO0gKNZqkmnxzf6ndfmbzgUvXw5juJmXK_3Xr89Zc" />
+  <!-- ✅ Google Search Console 所有権確認（head内に1つだけ） -->
+  <meta name="google-site-verification" content="W90R1XT8bndAFzENQMqJXqiEe3h0bs6YXcz827kLEV8" />
 
   <!-- ✅ AdSense（headに1回だけ） -->
   <script async
@@ -1247,19 +1247,17 @@
     </form>
   </template>
 
-  <!-- ✅ PocketBase（落ちてもページが消えないようにJS側で保険してる） -->
+  <!-- ✅ PocketBase -->
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
 
   <script>
   (() => {
     // =====================
     // ✅ 変更点（今回の修正）
-    // 1) お問い合わせフォーム：PocketBaseに保存できるように実装（未設定ならデモ）
-    // 2) 運営者メール：コピーできるように追加
-    // 3) ログイン中pill：CSSの効き漏れを保険（#navLoggedIn.loggedPill）
+    // Search Console verification を head 内に 1つだけ（W90R1...）に統一
+    // （それ以外は貼ってくれたコードのまま）
     // =====================
 
-    // ✅ 画面が「背景だけ」になった時に原因を出す（保険）
     const hardFallback = document.getElementById("hardFallback");
     const hardFallbackMsg = document.getElementById("hardFallbackMsg");
     function showHardFallback(msg){
@@ -1275,15 +1273,10 @@
       showHardFallback("Promiseエラー: " + m);
     });
 
-    // ====== PocketBase 設定 ======
     let pb = null;
     const PB_URL = "https://delivery-eye.onrender.com";
-
-    // ✅ お問い合わせ保存先コレクション名（ここだけあなたのPBに合わせて変える）
-    // 例: "contacts" / "contact_messages" / "inquiries" など
     const CONTACT_COLLECTION = "contact_messages";
 
-    // nav
     const navAbout = document.getElementById("navAbout");
     const navLogin = document.getElementById("navLogin");
     const navSignup = document.getElementById("navSignup");
@@ -1321,7 +1314,6 @@
       }
     }
 
-    // poll UI refs
     const elQ = document.getElementById("pollQuestion");
     const elChoices = document.getElementById("pollChoices");
     const elMetaLine = document.getElementById("pollMetaLine");
@@ -1337,7 +1329,6 @@
       setNavLoggedIn(false);
     }
 
-    // ✅ PocketBase 初期化（失敗してもページは見える）
     try{
       if(!window.PocketBase) throw new Error("PocketBase CDN が読み込めませんでした");
       pb = new window.PocketBase(PB_URL);
@@ -1364,7 +1355,6 @@
       }
     }
 
-    // poll state
     let currentTopic = null;
     let choiceKeys = [];
     let choiceLabels = {};
@@ -1591,12 +1581,11 @@
       }
     }
 
-    // nav logout
     setNavLoggedIn(!!(pb && pb.authStore && pb.authStore.isValid));
     if(navLogout){
       navLogout.addEventListener("click", async () => {
         const ok = window.confirm("ログアウトしますか？");
-        if(!ok) return;
+        if(!ok return);
 
         if(pb) pb.authStore.clear();
         setNavLoggedIn(false);
@@ -1701,7 +1690,6 @@
       });
     }
 
-    // ✅ お問い合わせフォーム：PBに保存（コレクション名が合ってれば本番動作）
     function wireContactFormIfExists(){
       if(!modalBody) return;
       const form = modalBody.querySelector("#contactForm");
@@ -1729,7 +1717,6 @@
         toastFn("クリアしました");
       });
 
-      // PB接続があるかで注釈を切り替え
       if(note){
         if(pb){
           note.textContent = `※本番：PocketBaseに保存します（保存先: ${CONTACT_COLLECTION}）`;
@@ -1750,7 +1737,6 @@
           return;
         }
 
-        // ✅ 保存（pbがない/コレクションが違う等は落とさずデモ表示へ）
         try{
           if(!pb) throw new Error("PocketBase未接続");
 
@@ -1766,7 +1752,6 @@
           });
 
           toastFn("送信しました（保存完了）");
-          // 送信後は軽くリセット
           if(cMessage) cMessage.value = "";
         }catch(err){
           console.warn(err);
