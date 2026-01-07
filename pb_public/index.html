@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- ✅ Google Search Console 所有権確認（head内に1つだけ） -->
-  <meta name="google-site-verification" content="W90R1XT8bndAFzENQMqJXqiEe3h0bs6YXcz827kLEV8" />
+  <!-- ✅ Google Search Console 所有権確認（head内に配置） -->
+  <meta name="google-site-verification" content="WjEO0gKNZqkmnxzf6ndfmbzgUvXw5juJmXK_3Xr89Zc" />
 
   <!-- ✅ AdSense（headに1回だけ） -->
   <script async
@@ -30,6 +30,7 @@
     --fb-blue: #1877F2;
     --line-green: #06C755;
 
+    /* ✅ カード別：色を“もう少し強く”（派手ではないが分かりやすい） */
     --c-feature: rgba(91,255,156,0.62);
     --c-guide:   rgba(120,165,255,0.62);
     --c-comm:    rgba(255,198,120,0.62);
@@ -120,6 +121,8 @@
     text-overflow:ellipsis;
     margin-top:2px;
   }
+
+  .headerRight{ display:flex; align-items:center; gap:10px; flex:0 0 auto; min-width:0; }
 
   /* nav */
   nav { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
@@ -784,6 +787,7 @@
   @media (max-width: 640px){
     .page { padding:14px 12px 38px; }
     header{ flex-direction:column; align-items:stretch; gap:10px; }
+    .headerRight{ flex-direction:column; align-items:stretch; gap:10px; }
     nav a, nav button{ padding:12px 14px; font-size:14px; }
     .hero{ padding:18px 14px; border-radius:20px; }
     .heroTag{
@@ -844,17 +848,19 @@
         </a>
       </div>
 
-      <nav>
-        <a id="navAbout" href="about.html">このサイトについて</a>
-        <a id="navLogin" href="login.html?next=index.html&v=20251220">ログイン</a>
-        <a id="navSignup" href="signup.html" class="primary">新規登録</a>
+      <div class="headerRight">
+        <nav>
+          <a id="navAbout" href="about.html">このサイトについて</a>
+          <a id="navLogin" href="login.html?next=index.html&v=20251220">ログイン</a>
+          <a id="navSignup" href="signup.html" class="primary">新規登録</a>
 
-        <a id="navLoggedIn" href="mypage.html" style="display:none;">
-          <span class="loggedLamp" aria-hidden="true"></span>
-          ログイン中
-        </a>
-        <button id="navLogout" type="button" class="logoutPill" style="display:none;">ログアウトする</button>
-      </nav>
+          <a id="navLoggedIn" href="mypage.html" style="display:none;">
+            <span class="loggedLamp" aria-hidden="true"></span>
+            ログイン中
+          </a>
+          <button id="navLogout" type="button" class="logoutPill" style="display:none;">ログアウトする</button>
+        </nav>
+      </div>
     </header>
 
     <section class="hero">
@@ -968,8 +974,7 @@
       </div>
 
       <div class="urlBox">
-        <!-- ✅ JSが動かなくても“空”に見えないように初期値を入れる（後でJSで上書き） -->
-        <input class="urlInput" id="siteUrl" type="text" readonly value="読み込み中…" aria-label="サイトURL">
+        <input class="urlInput" id="siteUrl" type="text" readonly value="" aria-label="サイトURL">
         <div class="urlHint">ボタンを押すと、このサイトのURLを共有できます。</div>
       </div>
 
@@ -1007,10 +1012,6 @@
         <button type="button" data-open="guideline">コミュニティガイドライン</button>
         <span class="footerSep">•</span>
         <button type="button" data-open="disclaimer">免責事項</button>
-        <span class="footerSep">•</span>
-        <button type="button" data-open="operator">運営者情報</button>
-        <span class="footerSep">•</span>
-        <button type="button" data-open="contact">お問い合わせ</button>
       </div>
       <div class="copyright">© FoodDeliveryEye – 配達員のための情報レーダー</div>
     </footer>
@@ -1121,8 +1122,10 @@
       <li>当サイトはログイン状態の保持、利便性向上、不正対策のため Cookie 等を使用する場合があります。</li>
       <li>ブラウザ設定により Cookie を無効にできますが、一部機能が利用できなくなる場合があります。</li>
     </ul>
+
     <p>当サイトでは第三者配信の広告サービス（Google AdSense）を利用しています。<br>
     広告配信事業者はユーザーの興味に応じた広告を表示するためCookieを使用することがあります。</p>
+
     <h3>6. 安全管理</h3>
     <p>当サイトは、個人情報への不正アクセス、漏えい、滅失または毀損の防止等のため、必要かつ適切な安全管理措置を講じます。</p>
     <h3>7. 開示・訂正・削除等</h3>
@@ -1173,82 +1176,16 @@
     </ul>
   </template>
 
-  <template id="tpl-operator">
-    <h2>運営者情報</h2>
-    <p class="small">最終更新日：2025年12月20日</p>
-    <p>当サイトは、配達員の体験共有を通じて、安全と効率の向上に役立つ情報を集めることを目的として運営しています。</p>
-
-    <dl class="dl">
-      <dt>運営</dt><dd>FoodDeliveryEye 運営</dd>
-      <dt>連絡先</dt>
-      <dd>
-        <span id="operatorEmailInModal">fooddeliveryeye@gmail.com</span>
-        <button type="button" class="btn" id="copyOperatorEmail" style="margin-left:10px;padding:8px 12px;font-size:12px;">コピー</button>
-        <div class="formToast" id="operatorToast"></div>
-      </dd>
-      <dt>所在地</dt><dd>（個人運営のため請求があれば遅滞なく開示します）</dd>
-      <dt>対応時間</dt><dd>原則 48時間以内の返信を目安</dd>
-    </dl>
-
-    <hr class="hr">
-    <p class="miniNote">※削除依頼・権利侵害・プライバシーに関するご相談は「お問い合わせ」からご連絡ください。</p>
-  </template>
-
-  <template id="tpl-contact">
-    <h2>お問い合わせ</h2>
-    <p class="small">最終更新日：2025年12月20日</p>
-
-    <p>ご意見・不具合報告・削除依頼などはこちらからお送りください。</p>
-
-    <form id="contactForm" novalidate>
-      <div class="formRow">
-        <label for="cName">お名前（任意）</label>
-        <input class="inp" id="cName" name="name" type="text" placeholder="例）山田 太郎">
-      </div>
-
-      <div class="formRow">
-        <label for="cEmail">メールアドレス（必須）</label>
-        <input class="inp" id="cEmail" name="email" type="email" required placeholder="例）example@gmail.com">
-      </div>
-
-      <div class="formRow">
-        <label for="cCategory">種別</label>
-        <select class="inp" id="cCategory" name="category">
-          <option value="general">一般のお問い合わせ</option>
-          <option value="report">不適切投稿の通報</option>
-          <option value="privacy">個人情報/プライバシー</option>
-          <option value="rights">権利侵害（削除依頼等）</option>
-          <option value="bug">不具合報告</option>
-          <option value="business">提携・取材</option>
-        </select>
-      </div>
-
-      <div class="formRow">
-        <label for="cMessage">内容（必須）</label>
-        <textarea class="ta" id="cMessage" name="message" required placeholder="対象ページURLや状況など、できるだけ具体的にお願いします。"></textarea>
-      </div>
-
-      <div class="formActions">
-        <button class="btn btnPrimary" type="submit">送信する</button>
-        <button class="btn" type="button" id="contactClear">クリア</button>
-      </div>
-
-      <div class="formToast" id="contactToast"></div>
-      <div class="miniNote" id="contactNote">
-        ※本番：PocketBaseのコレクションへ保存（このページは送信先が未設定の場合はデモ表示になります）
-      </div>
-    </form>
-  </template>
-
-  <!-- ✅ PocketBase -->
+  <!-- ✅ PocketBase（落ちてもページが消えないようにJS側で保険してる） -->
   <script src="https://cdn.jsdelivr.net/npm/pocketbase@0.21.1/dist/pocketbase.umd.js"></script>
 
   <script>
   (() => {
     // =====================
-    // ✅ 今回の修正ポイント
-    // - 共有URLの設定を「最初に」「単独try/catch」で必ず動かす（JSが途中で落ちてもURLは出る）
-    // - アンケートも try/catch を強化し、失敗理由を poll欄に表示（真っ白回避）
+    // ✅ 変更点（今回の修正）
+    // 1) お問い合わせフォーム：PocketBaseに保存できるように実装（未設定ならデモ）
+    // 2) 運営者メール：コピーできるように追加
+    // 3) ログイン中pill：CSSの効き漏れを保険（#navLoggedIn.loggedPill）
     // =====================
 
     // ✅ 画面が「背景だけ」になった時に原因を出す（保険）
@@ -1267,68 +1204,12 @@
       showHardFallback("Promiseエラー: " + m);
     });
 
-    // =====================
-    // ✅ 共有URL（ここは“最優先”でセット）
-    // =====================
-    (function initShareSafely(){
-      try{
-        const pageUrl = String(window.location.href || "");
-        const shareText = "FoodDeliveryEye：配達員の体験を、みんなの安心と効率へ";
-
-        const siteUrlInput = document.getElementById("siteUrl");
-        const shareXBottom = document.getElementById("shareXBottom");
-        const shareFBBottom = document.getElementById("shareFBBottom");
-        const shareLineBottom = document.getElementById("shareLineBottom");
-        const copyBottom = document.getElementById("copyBottom");
-        const toastBottom = document.getElementById("copyToastBottom");
-
-        if(siteUrlInput){
-          // file://で開いていると“共有しづらい”ので警告テキストも出す
-          siteUrlInput.value = pageUrl || "(URL取得に失敗)";
-          siteUrlInput.addEventListener("click", () => siteUrlInput.select());
-        }
-
-        if(shareXBottom) shareXBottom.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
-        if(shareFBBottom) shareFBBottom.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
-        if(shareLineBottom) shareLineBottom.href = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(pageUrl)}`;
-
-        function showToastBottom(msg){
-          if(!toastBottom) return;
-          toastBottom.textContent = msg;
-          setTimeout(()=>{ if(toastBottom.textContent === msg) toastBottom.textContent=""; }, 1600);
-        }
-
-        if(copyBottom){
-          copyBottom.addEventListener("click", async () => {
-            try {
-              await navigator.clipboard.writeText(pageUrl);
-              showToastBottom("コピーしました");
-            } catch {
-              try{
-                const tmp = document.createElement("textarea");
-                tmp.value = pageUrl;
-                document.body.appendChild(tmp);
-                tmp.select();
-                document.execCommand("copy");
-                tmp.remove();
-                showToastBottom("コピーしました");
-              }catch{
-                showToastBottom("コピーに失敗しました");
-              }
-            }
-          });
-        }
-      }catch(e){
-        console.error(e);
-        showHardFallback("共有URLの初期化で失敗: " + (e?.message || e));
-      }
-    })();
-
     // ====== PocketBase 設定 ======
     let pb = null;
     const PB_URL = "https://delivery-eye.onrender.com";
 
-    // ✅ お問い合わせ保存先コレクション名（あなたのPBに合わせて）
+    // ✅ お問い合わせ保存先コレクション名（ここだけあなたのPBに合わせて変える）
+    // 例: "contacts" / "contact_messages" / "inquiries" など
     const CONTACT_COLLECTION = "contact_messages";
 
     // nav
@@ -1382,6 +1263,7 @@
       if(elChoices) elChoices.innerHTML = "";
       if(elMetaLine) elMetaLine.textContent = "";
       if(msgBox) msgBox.textContent = reason || "PocketBaseに接続できませんでした。";
+      setNavLoggedIn(false);
     }
 
     // ✅ PocketBase 初期化（失敗してもページは見える）
@@ -1396,13 +1278,14 @@
 
     async function ensureAuthModel(){
       if(!pb) return;
-      if(!pb.authStore?.isValid){
+      if(!pb.authStore.isValid){
         setNavLoggedIn(false);
         return;
       }
       try{
-        // ✅ “users”以外に変えている場合でも落ちないように try/catch
-        await pb.collection("users").authRefresh();
+        if (pb.collection && pb.collection("users")?.authRefresh) {
+          await pb.collection("users").authRefresh();
+        }
         setNavLoggedIn(true);
       }catch{
         pb.authStore.clear();
@@ -1470,7 +1353,7 @@
         btn.addEventListener("click", async ()=>{
           if(!pb || !currentTopic || isBusy) return;
 
-          if(!pb.authStore?.isValid){
+          if(!pb.authStore.isValid){
             if(msgBox){
               msgBox.innerHTML = `
                 <div style="margin-top:6px;">
@@ -1497,7 +1380,6 @@
           }catch(e){
             const m = errText(e);
             console.error(e);
-            // unique制約や競合は「投票済み」として扱う
             if (String(m).includes("already") || String(m).includes("unique") || String(m).includes("409")) {
               await refreshResults();
               if(msgBox) msgBox.textContent = "投票済みです。";
@@ -1515,14 +1397,13 @@
     }
 
     async function fetchActiveTopic(){
-      // ✅ poll_topics が無い/権限NGのときはここで落ちる → 呼び出し側でcatch
       try{
         const resHero = await pb.collection("poll_topics").getList(1, 1, {
           filter: `published=true && isHero=true`,
           sort: "-heroPriority,-created"
         });
         if(resHero?.items?.[0]) return resHero.items[0];
-      }catch(_){}
+      }catch(e){}
 
       const res = await pb.collection("poll_topics").getList(1, 1, {
         filter: `status="active" && published=true`,
@@ -1532,7 +1413,7 @@
     }
 
     async function getMyVote(topicId){
-      if(!pb || !pb.authStore?.isValid) return null;
+      if(!pb || !pb.authStore.isValid) return null;
       const me = pb.authStore.model?.id;
       if(!me) return null;
 
@@ -1550,13 +1431,12 @@
       }
     }
 
-    // ✅ getFullList は件数が多いと重いので、最大300件までに制限（必要なら増やしてOK）
     async function fetchAllVotes(topicId){
-      const res = await pb.collection("polls").getList(1, 300, {
+      const items = await pb.collection("polls").getFullList({
         filter: `topic="${topicId}"`,
         sort: "-created"
       });
-      return res?.items || [];
+      return items || [];
     }
 
     async function saveVoteOnce(topicId, choiceKey){
@@ -1634,7 +1514,8 @@
         await refreshResults();
       }catch(e){
         console.error(e);
-        renderPollFallback("Poll取得に失敗: " + errText(e));
+        if(elQ) elQ.textContent = "読み込みに失敗しました。";
+        if(msgBox) msgBox.textContent = errText(e);
         showHardFallback("Poll読み込み失敗: " + errText(e));
       }
     }
@@ -1653,6 +1534,48 @@
       });
     }
 
+    // share
+    const pageUrl = window.location.href;
+    const shareText = "FoodDeliveryEye：配達員の体験を、みんなの安心と効率へ";
+
+    const siteUrlInput = document.getElementById("siteUrl");
+    const shareXBottom = document.getElementById("shareXBottom");
+    const shareFBBottom = document.getElementById("shareFBBottom");
+    const shareLineBottom = document.getElementById("shareLineBottom");
+    const copyBottom = document.getElementById("copyBottom");
+    const toastBottom = document.getElementById("copyToastBottom");
+
+    if(siteUrlInput){
+      siteUrlInput.value = pageUrl;
+      siteUrlInput.addEventListener("click", () => siteUrlInput.select());
+    }
+    if(shareXBottom) shareXBottom.href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(pageUrl)}`;
+    if(shareFBBottom) shareFBBottom.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(pageUrl)}`;
+    if(shareLineBottom) shareLineBottom.href = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(pageUrl)}`;
+
+    function showToastBottom(msg){
+      if(!toastBottom) return;
+      toastBottom.textContent = msg;
+      setTimeout(()=>{ if(toastBottom.textContent === msg) toastBottom.textContent=""; }, 1600);
+    }
+
+    if(copyBottom){
+      copyBottom.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pageUrl);
+          showToastBottom("コピーしました");
+        } catch {
+          const tmp = document.createElement("textarea");
+          tmp.value = pageUrl;
+          document.body.appendChild(tmp);
+          tmp.select();
+          document.execCommand("copy");
+          tmp.remove();
+          showToastBottom("コピーしました");
+        }
+      });
+    }
+
     // modal
     const overlay = document.getElementById("modalOverlay");
     const modalTitle = document.getElementById("modalTitle");
@@ -1663,9 +1586,7 @@
       terms:      { title: "利用規約", tpl: "tpl-terms" },
       privacy:    { title: "プライバシーポリシー", tpl: "tpl-privacy" },
       guideline:  { title: "コミュニティガイドライン", tpl: "tpl-guideline" },
-      disclaimer: { title: "免責事項", tpl: "tpl-disclaimer" },
-      operator:   { title: "運営者情報", tpl: "tpl-operator" },
-      contact:    { title: "お問い合わせ", tpl: "tpl-contact" }
+      disclaimer: { title: "免責事項", tpl: "tpl-disclaimer" }
     };
 
     function toastInModal(sel, msg, ms=1800){
@@ -1735,6 +1656,7 @@
         toastFn("クリアしました");
       });
 
+      // PB接続があるかで注釈を切り替え
       if(note){
         if(pb){
           note.textContent = `※本番：PocketBaseに保存します（保存先: ${CONTACT_COLLECTION}）`;
@@ -1755,8 +1677,10 @@
           return;
         }
 
+        // ✅ 保存（pbがない/コレクションが違う等は落とさずデモ表示へ）
         try{
           if(!pb) throw new Error("PocketBase未接続");
+
           const userId = pb.authStore?.model?.id || null;
 
           await pb.collection(CONTACT_COLLECTION).create({
@@ -1769,6 +1693,7 @@
           });
 
           toastFn("送信しました（保存完了）");
+          // 送信後は軽くリセット
           if(cMessage) cMessage.value = "";
         }catch(err){
           console.warn(err);
@@ -1820,7 +1745,6 @@
       }catch(e){
         console.error(e);
         showHardFallback("初期化で失敗: " + errText(e));
-        renderPollFallback("初期化で失敗: " + errText(e));
       }
     })();
   })();
